@@ -1,7 +1,9 @@
 bin
 include
 lib
+.env
 .DS_Store
+.vscode
 *.pyc
 __pycache__
 dist
