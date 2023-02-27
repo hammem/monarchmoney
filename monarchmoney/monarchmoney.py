@@ -1,4 +1,3 @@
-import asyncio
 import pickle
 from typing import Any, Dict, List, Optional
 
@@ -6,6 +5,8 @@ from aiohttp import ClientSession
 from aiohttp.client import DEFAULT_TIMEOUT
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
+from graphql import DocumentNode
+
 
 AUTH_HEADER_KEY = "authorization"
 CSRF_KEY = "csrftoken"
@@ -35,7 +36,7 @@ class LoginFailedException(Exception):
 
 class MonarchMoney(object):
 
-  def __init__(self) -> "MonarchMoney":
+  def __init__(self) -> None:
     self._cookies = None
     self._headers = {
       'Client-Platform': 'web',
@@ -325,7 +326,7 @@ class MonarchMoney(object):
   async def gql_call(
     self, 
     operation: str, 
-    graphql_query: gql, 
+    graphql_query: DocumentNode, 
     variables: Dict[str, Any] = {},
   ) -> Dict[str, Any]:
     """
@@ -374,7 +375,7 @@ class MonarchMoney(object):
     }
 
     async with ClientSession(headers=self._headers) as session:
-      async with self._session.post(
+      async with session.post(
         MonarchMoneyEndpoints.getLoginEndpoint(), 
         data=data
       ) as resp:
@@ -405,16 +406,20 @@ class MonarchMoney(object):
         "username": email,
       }
 
-      async with self._session.post(MonarchMoneyEndpoints.getLoginEndpoint(), data=data) as resp:
-        if resp.status != 200:
+      async with ClientSession(headers=self._headers) as session:
+        async with session.post(
+          MonarchMoneyEndpoints.getLoginEndpoint(), 
+          data=data
+        ) as resp:
+          if resp.status != 200:
+            response = await resp.json()
+            error_message = response["error_code"] if response is not None else "Unknown error"
+            raise LoginFailedException(error_message) 
+        
           response = await resp.json()
-          error_message = response["error_code"] if response is not None else "Unknown error"
-          raise LoginFailedException(error_message) 
-      
-        response = await resp.json()
-        self._cookies = resp.cookies
-        self._token = response["token"]
-        self._headers["Authorization"] = f"Token {self._token}"
+          self._cookies = resp.cookies
+          self._token = response["token"]
+          self._headers["Authorization"] = f"Token {self._token}"
 
   def _get_graphql_client(self) -> Client:
     """

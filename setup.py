@@ -3,8 +3,8 @@ import os
 from setuptools import setup, find_packages
 
 install_requires = [
-    "aiohttp>=3.8",
-    "gql>=3.5",
+    "aiohttp>=3.8.4",
+    "gql>=3.4",
 ]
 
 setup(
