@@ -1,6 +1,6 @@
 # Monarch Money
 
-Python library for accessing Monarch Money data.
+Python library for accessing [Monarch Money](https://www.monarchmoney.com/referral/ngam2i643l) data.
 
 # Installation
 
