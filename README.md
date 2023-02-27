@@ -10,7 +10,17 @@ Clone this repository from Git
 
 `git clone https://github.com/hammem/monarchmoney.git`
 
-## Instantiate & Login
+## From Tarball
+
+Download it from GitHub
+
+`curl -OJL https://github.com/hammem/monarchmoney/tarball/master`
+
+and then install it:
+
+`python setup.py install`
+
+# Instantiate & Login
 
 Before you can access any of your data, you'll need to create an instance and login:
 
@@ -25,7 +35,7 @@ This may throw a `RequireMFAException`.  If it does, you'll need to get a multi-
 mm.multi_factor_authenticate(email, password, multi_factor_code)
 ```
 
-## Accessing Data
+# Accessing Data
 
 As of writing this README, the following methods are supported:
 
