@@ -1,0 +1,16 @@
+# Ensures proactive management of this library's dependencies
+
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "hammem"
+    commit-message:
+      prefix: "[pip] "
+      include: "scope"
+    lables:
+      - "pip"
+      - "dependencies"
