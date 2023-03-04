@@ -42,7 +42,7 @@ class MonarchMoney(object):
     self._headers = {
       'Client-Platform': 'web',
     }
-    self.session_file = session_file
+    self._session_file = session_file
     self._token = None
     self._timeout = 10
 
@@ -61,9 +61,9 @@ class MonarchMoney(object):
     save_session: bool=True
   ) -> None:
     """Performs an interactive login for iPython and similar environments."""
-    if use_saved_session and os.path.exists(self.session_file):
-      print(f"Using saved session found at {self.session_file}")
-      self.load_session(self.session_file)
+    if use_saved_session and os.path.exists(self._session_file):
+      print(f"Using saved session found at {self._session_file}")
+      self.load_session(self._session_file)
       return
 
     email = input('Email: ')
@@ -73,7 +73,7 @@ class MonarchMoney(object):
     except RequireMFAException:
         await self.multi_factor_authenticate(email, passwd, input('Two Factor Code: '))
     if save_session:
-        self.save_session(self.session_file)
+        self.save_session(self._session_file)
 
   async def login(
     self, 
