@@ -1,5 +1,6 @@
+import os
 import pickle
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from aiohttp import ClientSession
 from aiohttp.client import DEFAULT_TIMEOUT
@@ -11,7 +12,7 @@ from graphql import DocumentNode
 AUTH_HEADER_KEY = "authorization"
 CSRF_KEY = "csrftoken"
 ERRORS_KEY = "error_code"
-USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
+SESSION_FILE = '.mm/mm_session.pickle'
 
 
 class MonarchMoneyEndpoints(object):
@@ -36,12 +37,12 @@ class LoginFailedException(Exception):
 
 class MonarchMoney(object):
 
-  def __init__(self) -> None:
+  def __init__(self, session_file: str=SESSION_FILE) -> None:
     self._cookies = None
     self._headers = {
       'Client-Platform': 'web',
-      'User-Agent': USER_AGENT
     }
+    self.session_file = session_file
     self._token = None
     self._timeout = 10
 
@@ -53,7 +54,27 @@ class MonarchMoney(object):
   def set_timeout(self, timeout_secs: int) -> None:
     """Sets the default timeout on GraphQL API calls, in seconds."""
     self._timeout = timeout_secs
-  
+
+  async def interactive_login(
+    self, 
+    use_saved_session: bool=True, 
+    save_session: bool=True
+  ) -> None:
+    """Performs an interactive login for iPython and similar environments."""
+    if use_saved_session and os.path.exists(self.session_file):
+      print(f"Using saved session found at {self.session_file}")
+      self.load_session(self.session_file)
+      return
+
+    email = input('Email: ')
+    passwd = input('Password: ')
+    try:
+        await self.login(email, passwd)
+    except RequireMFAException:
+        await self.multi_factor_authenticate(email, passwd, input('Two Factor Code: '))
+    if save_session:
+        self.save_session(self.session_file)
+
   async def login(
     self, 
     email, 

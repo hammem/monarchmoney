@@ -3,6 +3,7 @@ include
 lib
 .env
 .DS_Store
+.mm
 .vscode
 *.pyc
 __pycache__
