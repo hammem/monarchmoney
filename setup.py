@@ -11,7 +11,7 @@ setup(
     name="monarchmoney",
     version="1.0",
     description="Monarch Money API for Python",
-    long_description=open("README.md").read(),
+    long_description=open("README.md", "r").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/hammem/monarchmoney",
     author="hammem",
