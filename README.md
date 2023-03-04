@@ -22,7 +22,21 @@ and then install it:
 
 # Instantiate & Login
 
-Before you can access any of your data, you'll need to create an instance and login:
+There are two ways to use this library: interactive and non-interactive.
+
+## Interactive
+
+If you're using this library in something like iPython or Jupyter, you can run an interactive-login which supports multi-factor authentication:
+
+```python
+mm = MonarchMoney()
+await mm.interactive_login()
+```
+This will prompt you for the email, password and, if needed, the multi-factor token.
+
+## Non-interactive
+
+For a non-interactive session, you'll need to create an instance and login:
 
 ```python
 mm = MonarchMoney()
