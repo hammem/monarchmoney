@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import pickle
 from typing import Any, Dict, Optional
@@ -177,6 +178,74 @@ class MonarchMoney(object):
       graphql_query=query,
     )
 
+  async def get_account_holdings(self, account_id: int) -> Dict[str, Any]:
+    """
+    Get the holdings information for a brokerage or similar type of account.
+    """
+    query = gql("""
+      query Web_GetHoldings($input: PortfolioInput) {
+        portfolio(input: $input) {
+          aggregateHoldings {
+            edges {
+              node {
+                id
+                quantity
+                basis
+                totalValue
+                securityPriceChangeDollars
+                securityPriceChangePercent
+                lastSyncedAt
+                holdings {
+                  id
+                  type
+                  typeDisplay
+                  name
+                  ticker
+                  closingPrice
+                  isManual
+                  closingPriceUpdatedAt
+                  __typename
+                }
+                security {
+                  id
+                  name
+                  type
+                  ticker
+                  typeDisplay
+                  currentPrice
+                  currentPriceUpdatedAt
+                  closingPrice
+                  closingPriceUpdatedAt
+                  oneDayChangePercent
+                  oneDayChangeDollars
+                  __typename
+                }
+                __typename
+              }
+              __typename
+            }
+            __typename
+          }
+          __typename
+        }
+      }
+    """)
+
+    variables = { 
+        "input": {
+          "accountIds": [str(account_id)],
+          "endDate": datetime.today().strftime("%Y-%m-%d"),
+          "includeHiddenHoldings": True,
+          "startDate": datetime.today().strftime("%Y-%m-%d"),
+        },
+    }
+
+    return await self.gql_call(
+      operation="Web_GetHoldings",
+      graphql_query=query,
+      variables=variables,
+    )
+  
   async def get_subscription_details(self) -> Dict[str, Any]:
     """
     The type of subscription for the Monarch Money account.
