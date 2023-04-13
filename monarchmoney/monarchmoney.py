@@ -62,27 +62,33 @@ class MonarchMoney(object):
     save_session: bool=True
   ) -> None:
     """Performs an interactive login for iPython and similar environments."""
+    email = input('Email: ')
+    passwd = input('Password: ')
+    try:
+        await self.login(email, passwd, use_saved_session, save_session)
+    except RequireMFAException:
+        await self.multi_factor_authenticate(email, passwd, input('Two Factor Code: '))
+        if save_session:
+          self.save_session(self._session_file)
+
+  async def login(
+    self, 
+    email: Optional[str]=None, 
+    password: Optional[str]=None,
+    use_saved_session: bool=True, 
+    save_session: bool=True
+  ) -> None:
+    """Logs into a Monarch Money account."""
     if use_saved_session and os.path.exists(self._session_file):
       print(f"Using saved session found at {self._session_file}")
       self.load_session(self._session_file)
       return
-
-    email = input('Email: ')
-    passwd = input('Password: ')
-    try:
-        await self.login(email, passwd)
-    except RequireMFAException:
-        await self.multi_factor_authenticate(email, passwd, input('Two Factor Code: '))
+    
+    if email is None or password is None:
+      raise LoginFailedException("Email and password are required to login when not using a saved session.")
+    await self._login_user(email, password)
     if save_session:
         self.save_session(self._session_file)
-
-  async def login(
-    self, 
-    email, 
-    password
-  ) -> None:
-    """Logs into a Monarch Money account."""
-    await self._login_user(email, password)
 
   async def multi_factor_authenticate(
     self, 
