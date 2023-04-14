@@ -1,9 +1,11 @@
 bin
+build
 include
 lib
 .env
 .DS_Store
 .mm
+.monarchmoney.egg-info
 .vscode
 *.pyc
 __pycache__
