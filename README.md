@@ -10,16 +10,9 @@ Clone this repository from Git
 
 `git clone https://github.com/hammem/monarchmoney.git`
 
-## From Tarball
+## Via `pip`
 
-Download it from GitHub
-
-`curl -OJL https://github.com/hammem/monarchmoney/tarball/master`
-
-and then install it:
-
-`python setup.py install`
-
+`pip install monarchmoney`
 # Instantiate & Login
 
 There are two ways to use this library: interactive and non-interactive.
@@ -53,7 +46,8 @@ mm.multi_factor_authenticate(email, password, multi_factor_code)
 
 As of writing this README, the following methods are supported:
 
-- `get_accounts` - all the accounts linked to Monarch Money 
+- `get_accounts` - all the accounts linked to Monarch Money
+- `get_account_holdings` - all of the securities in a brokerage or similar type of account 
 - `get_subscription_details` - the Monarch Money account's status (e.g. paid or trial)
 - `get_transactions` - transaction data, defaults to returning the last 100 transactions; can also be searched by date range
 - `get_transaction_categories` all of the categories configured in the account
