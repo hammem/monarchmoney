@@ -1,3 +1,4 @@
+import calendar
 from datetime import datetime
 import os
 import pickle
@@ -18,13 +19,13 @@ SESSION_FILE = '.mm/mm_session.pickle'
 
 class MonarchMoneyEndpoints(object):
   BASE_URL = 'https://api.monarchmoney.com/'
-  
+
   @classmethod
   def getLoginEndpoint(cls) -> str:
     return cls.BASE_URL + '/auth/login/'
-  
+
   @classmethod
-  def getGraphQL(cls) -> str: 
+  def getGraphQL(cls) -> str:
     return cls.BASE_URL + '/graphql'
 
 
@@ -57,8 +58,8 @@ class MonarchMoney(object):
     self._timeout = timeout_secs
 
   async def interactive_login(
-    self, 
-    use_saved_session: bool=True, 
+    self,
+    use_saved_session: bool=True,
     save_session: bool=True
   ) -> None:
     """Performs an interactive login for iPython and similar environments."""
@@ -72,10 +73,10 @@ class MonarchMoney(object):
           self.save_session(self._session_file)
 
   async def login(
-    self, 
-    email: Optional[str]=None, 
+    self,
+    email: Optional[str]=None,
     password: Optional[str]=None,
-    use_saved_session: bool=True, 
+    use_saved_session: bool=True,
     save_session: bool=True
   ) -> None:
     """Logs into a Monarch Money account."""
@@ -83,7 +84,7 @@ class MonarchMoney(object):
       print(f"Using saved session found at {self._session_file}")
       self.load_session(self._session_file)
       return
-    
+
     if email is None or password is None:
       raise LoginFailedException("Email and password are required to login when not using a saved session.")
     await self._login_user(email, password)
@@ -91,14 +92,14 @@ class MonarchMoney(object):
         self.save_session(self._session_file)
 
   async def multi_factor_authenticate(
-    self, 
-    email: str, 
-    password: str, 
+    self,
+    email: str,
+    password: str,
     code: str
   ) -> None:
     """Performs multi-factor authentication to access a Monarch Money account."""
     await self._multi_factor_authenticate(email, password, code)
-    
+
   async def get_accounts(self) -> Dict[str, Any]:
     """
     Gets the list of accounts configured in the Monarch Money account.
@@ -180,7 +181,7 @@ class MonarchMoney(object):
       }
     """)
     return await self.gql_call(
-      operation="GetAccounts", 
+      operation="GetAccounts",
       graphql_query=query,
     )
 
@@ -237,7 +238,7 @@ class MonarchMoney(object):
       }
     """)
 
-    variables = { 
+    variables = {
         "input": {
           "accountIds": [str(account_id)],
           "endDate": datetime.today().strftime("%Y-%m-%d"),
@@ -251,7 +252,7 @@ class MonarchMoney(object):
       graphql_query=query,
       variables=variables,
     )
-  
+
   async def get_subscription_details(self) -> Dict[str, Any]:
     """
     The type of subscription for the Monarch Money account.
@@ -274,7 +275,7 @@ class MonarchMoney(object):
     )
 
   async def get_transactions(
-      self, 
+      self,
       limit: int=1000,
       start_date: Optional[str]=None,
       end_date: Optional[str]=None,
@@ -355,8 +356,8 @@ class MonarchMoney(object):
       raise Exception("You must specify both a startDate and endDate, not just one of them.")
 
     return await self.gql_call(
-      operation="GetTransactionsList", 
-      graphql_query=query, 
+      operation="GetTransactionsList",
+      graphql_query=query,
       variables=variables
     )
 
@@ -418,11 +419,167 @@ class MonarchMoney(object):
       operation="GetHouseholdTransactionTags",
       graphql_query=query
     )
-  
+
+  async def get_cashflow(self,
+      start_date: Optional[str]=None,
+      end_date: Optional[str]=None
+    ) -> Dict[str, Any]:
+    """
+    Gets all the categories configured in the account.
+    """
+    query = gql("""
+      query Web_GetCashFlowPage($filters: TransactionFilterInput) {
+        byCategory: aggregates(filters: $filters, groupBy: ["category"]) {
+          groupBy {
+            category {
+              id
+              name
+              icon
+              group {
+                id
+                type
+                __typename
+              }
+              __typename
+            }
+            __typename
+          }
+          summary {
+            sum
+            __typename
+          }
+          __typename
+        }
+        byCategoryGroup: aggregates(filters: $filters, groupBy: ["categoryGroup"]) {
+          groupBy {
+            categoryGroup {
+              id
+              name
+              type
+              __typename
+            }
+            __typename
+          }
+          summary {
+            sum
+            __typename
+          }
+          __typename
+        }
+        byMerchant: aggregates(filters: $filters, groupBy: ["merchant"]) {
+          groupBy {
+            merchant {
+              id
+              name
+              logoUrl
+              __typename
+            }
+            __typename
+          }
+          summary {
+            sumIncome
+            sumExpense
+            __typename
+          }
+          __typename
+        }
+        summary: aggregates(filters: $filters, fillEmptyValues: true) {
+          summary {
+            sumIncome
+            sumExpense
+            savings
+            savingsRate
+            __typename
+          }
+          __typename
+        }
+      }
+    """)
+
+    variables = {
+      "limit": 25,
+      "orderBy": "date",
+      "filters": {
+        "search": "",
+        "categories": [],
+        "accounts": [],
+        "tags": [],
+      }
+    }
+
+    if start_date and end_date:
+      variables["filters"]["startDate"] = start_date
+      variables["filters"]["endDate"] = end_date
+    elif bool(start_date) != bool(end_date):
+      raise Exception("You must specify both a startDate and endDate, not just one of them.")
+    else:
+      current_year = datetime.now().year
+      current_month = datetime.now().month
+      last_date = calendar.monthrange(current_year, current_month)[1]
+      variables["filters"]["startDate"] = datetime(current_year, current_month, 1).strftime("%Y-%m-%d")
+      variables["filters"]["endDate"] = datetime(datetime.now().year, datetime.now().month, last_date).strftime("%Y-%m-%d")
+
+    return await self.gql_call(
+        operation="Web_GetCashFlowPage",
+        variables=variables,
+        graphql_query=query
+    )
+
+  async def get_cashflow_summary(self,
+      start_date: Optional[str]=None,
+      end_date: Optional[str]=None
+    ) -> Dict[str, Any]:
+    """
+    Gets all the categories configured in the account.
+    """
+    query = gql("""
+      query Web_GetCashFlowPage($filters: TransactionFilterInput) {
+        summary: aggregates(filters: $filters, fillEmptyValues: true) {
+          summary {
+            sumIncome
+            sumExpense
+            savings
+            savingsRate
+            __typename
+          }
+          __typename
+        }
+      }
+    """)
+
+    variables = {
+      "limit": 25,
+      "orderBy": "date",
+      "filters": {
+        "search": "",
+        "categories": [],
+        "accounts": [],
+        "tags": [],
+      }
+    }
+
+    if start_date and end_date:
+      variables["filters"]["startDate"] = start_date
+      variables["filters"]["endDate"] = end_date
+    elif bool(start_date) != bool(end_date):
+      raise Exception("You must specify both a startDate and endDate, not just one of them.")
+    else:
+      current_year = datetime.now().year
+      current_month = datetime.now().month
+      last_date = calendar.monthrange(current_year, current_month)[1]
+      variables["filters"]["startDate"] = datetime(current_year, current_month, 1).strftime("%Y-%m-%d")
+      variables["filters"]["endDate"] = datetime(datetime.now().year, datetime.now().month, last_date).strftime("%Y-%m-%d")
+
+    return await self.gql_call(
+        operation="Web_GetCashFlowPage",
+        variables=variables,
+        graphql_query=query
+    )
+
   async def gql_call(
-    self, 
-    operation: str, 
-    graphql_query: DocumentNode, 
+    self,
+    operation: str,
+    graphql_query: DocumentNode,
     variables: Dict[str, Any] = {},
   ) -> Dict[str, Any]:
     """
@@ -430,7 +587,7 @@ class MonarchMoney(object):
     """
     return await self._get_graphql_client().execute_async(
       document=graphql_query,
-      operation_name=operation, 
+      operation_name=operation,
       variable_values=variables
     )
 
@@ -440,11 +597,11 @@ class MonarchMoney(object):
     """
     session_data = {
         "token": self._token,
-        "cookies": self._cookies, 
+        "cookies": self._cookies,
     }
     with open(filename, 'wb') as fh:
-      pickle.dump(session_data, fh) 
-      
+      pickle.dump(session_data, fh)
+
   def load_session(self, filename: str) -> None:
     """
     Loads pre-existing cookies and auth token from a Python pickle file.
@@ -456,12 +613,12 @@ class MonarchMoney(object):
       self._headers["Authorization"] = f"Token {self._token}"
 
   async def _login_user(
-    self, 
-    email: str, 
+    self,
+    email: str,
     password: str
   ) -> None:
     """
-    Performs the initial login to a Monarch Money account. 
+    Performs the initial login to a Monarch Money account.
     """
     data = {
         "password": password,
@@ -472,23 +629,23 @@ class MonarchMoney(object):
 
     async with ClientSession(headers=self._headers) as session:
       async with session.post(
-        MonarchMoneyEndpoints.getLoginEndpoint(), 
+        MonarchMoneyEndpoints.getLoginEndpoint(),
         data=data
       ) as resp:
         if resp.status == 403:
           raise RequireMFAException("Multi-Factor Auth Required")
         elif resp.status != 200:
           raise LoginFailedException(f"HTTP Code {resp.status}: {resp.reason}")
-        
+
         response = await resp.json()
         self._cookies = resp.cookies
         self._token = response["token"]
         self._headers["Authorization"] = f"Token {self._token}"
 
   async def _multi_factor_authenticate(
-    self, 
-    email: str, 
-    password: str, 
+    self,
+    email: str,
+    password: str,
     code: str
   ) -> None:
       """
@@ -504,14 +661,14 @@ class MonarchMoney(object):
 
       async with ClientSession(headers=self._headers) as session:
         async with session.post(
-          MonarchMoneyEndpoints.getLoginEndpoint(), 
+          MonarchMoneyEndpoints.getLoginEndpoint(),
           data=data
         ) as resp:
           if resp.status != 200:
             response = await resp.json()
             error_message = response["error_code"] if response is not None else "Unknown error"
-            raise LoginFailedException(error_message) 
-        
+            raise LoginFailedException(error_message)
+
           response = await resp.json()
           self._cookies = resp.cookies
           self._token = response["token"]
@@ -530,7 +687,7 @@ class MonarchMoney(object):
       timeout=self._timeout,
     )
     return Client(
-        transport=transport, 
+        transport=transport,
         fetch_schema_from_transport=False,
         execute_timeout=self._timeout,
     )
