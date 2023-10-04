@@ -420,7 +420,9 @@ class MonarchMoney(object):
       graphql_query=query
     )
 
-  async def get_cashflow(self,
+  async def get_cashflow(
+      self,
+      limit: int=1000,
       start_date: Optional[str]=None,
       end_date: Optional[str]=None
     ) -> Dict[str, Any]:
@@ -497,7 +499,7 @@ class MonarchMoney(object):
     """)
 
     variables = {
-      "limit": 25,
+      "limit": limit,
       "orderBy": "date",
       "filters": {
         "search": "",
@@ -525,7 +527,9 @@ class MonarchMoney(object):
         graphql_query=query
     )
 
-  async def get_cashflow_summary(self,
+  async def get_cashflow_summary(
+      self,
+      limit: int=1000,
       start_date: Optional[str]=None,
       end_date: Optional[str]=None
     ) -> Dict[str, Any]:
@@ -548,7 +552,7 @@ class MonarchMoney(object):
     """)
 
     variables = {
-      "limit": 25,
+      "limit": limit,
       "orderBy": "date",
       "filters": {
         "search": "",
