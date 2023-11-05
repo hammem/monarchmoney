@@ -13,4 +13,4 @@ uninstall:
 	pip uninstall monarchmoney
 
 clean:
-	rm -fR build dist monarchmoney.egg-info monarchmoney/__pycache__
+	rm -fR build dist monarchmoney.egg-info monarchmoney/__pycache__ *.json
