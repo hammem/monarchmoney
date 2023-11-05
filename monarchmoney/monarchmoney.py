@@ -332,6 +332,11 @@ class MonarchMoney(object):
           transactionsCount
           __typename
         }
+        account {
+          id
+          displayName
+          __typename
+        }
         tags {
           id
           name

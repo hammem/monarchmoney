@@ -37,6 +37,11 @@ def main() -> None:
             print(f'{c.get("group").get("type")} - {c.get("group").get("name")} - {c.get("name")}')
             expense_category_groups[c.get("group").get("name")] = 0
 
+    # Transactions
+    transactions = asyncio.run(mm.get_transactions(limit=10))
+    with open("transactions.json", "w") as outfile:
+        json.dump(transactions, outfile)
+
     # Cashflow
     cashflow = asyncio.run(mm.get_cashflow(start_date="2023-10-01", end_date="2023-10-31"))
     with open("cashflow.json", "w") as outfile:
