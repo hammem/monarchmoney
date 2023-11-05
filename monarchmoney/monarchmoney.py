@@ -38,14 +38,14 @@ class LoginFailedException(Exception):
 
 class MonarchMoney(object):
 
-  def __init__(self, session_file: str=SESSION_FILE) -> None:
+  def __init__(self, session_file: str=SESSION_FILE, timeout: int=10) -> None:
     self._cookies = None
     self._headers = {
       'Client-Platform': 'web',
     }
     self._session_file = session_file
     self._token = None
-    self._timeout = 10
+    self._timeout = timeout
 
   @property
   def timeout(self) -> int:
