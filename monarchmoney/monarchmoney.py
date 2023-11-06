@@ -2,7 +2,7 @@ import calendar
 from datetime import datetime
 import os
 import pickle
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 from aiohttp import ClientSession
 from aiohttp.client import DEFAULT_TIMEOUT
@@ -280,84 +280,116 @@ class MonarchMoney(object):
 
     async def get_transactions(
         self,
+        offset: Optional[int] = 0,
         limit: int = 1000,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
+        search: str = "",
+        categories: List[str] = [],
+        accounts: List[str] = [],
+        tags: List[str] = [],
+        has_attachments: bool = False,
+        has_notes: bool = False,
+        hide_from_reports: bool = False,
+        is_split: bool = False,
+        is_recurring: bool = False,
     ) -> Dict[str, Any]:
         """
         Gets transaction data from the account.
 
+        :param offset: the number of transactions to skip (offset) before retrieving results.
         :param limit: the maximum number of transactions to download, defaults to 1000.
         :param start_date: the earliest date to get transactions from, in "yyyy-mm-dd" format.
         :param end_date: the latest date to get transactions from, in "yyyy-mm-dd" format.
+        :param search: a string to filter transactions. use empty string for all results.
+        :param categories: a list of category ids to filter.
+        :param accounts: a list of account ids to filter.
+        :param tags: a list of tag ids to filter.
+        :param has_attachments: a bool to filter for whether the transactions have attachments.
+        :param has_notes: a bool to filter for whether the transactions have notes.
+        :param hide_from_reports: a bool to filter for whether the transactions are hidden from reports.
+        :param is_split: a bool to filter for whether the transactions are split.
+        :param is_recurring: a bool to filter for whether the transactions are recurring.
         """
+
         query = gql(
             """
-      query GetTransactionsList($offset: Int, $limit: Int, $filters: TransactionFilterInput, $orderBy: TransactionOrdering) {
-        allTransactions(filters: $filters) {
-          totalCount
-          results(offset: $offset, limit: $limit, orderBy: $orderBy) {
+          query GetTransactionsList($offset: Int, $limit: Int, $filters: TransactionFilterInput, $orderBy: TransactionOrdering) {
+            allTransactions(filters: $filters) {
+              totalCount
+              results(offset: $offset, limit: $limit, orderBy: $orderBy) {
+                id
+                ...TransactionOverviewFields
+                __typename
+              }
+              __typename
+            }
+            transactionRules {
+              id
+              __typename
+            }
+          }
+    
+          fragment TransactionOverviewFields on Transaction {
             id
-            ...TransactionOverviewFields
+            amount
+            pending
+            date
+            hideFromReports
+            plaidName
+            notes
+            isRecurring
+            reviewStatus
+            needsReview
+            attachments {
+              id
+              __typename
+            }
+            isSplitTransaction
+            category {
+              id
+              name
+              icon
+              __typename
+            }
+            merchant {
+              name
+              id
+              transactionsCount
+              __typename
+            }
+            account {
+              id
+              displayName
+              __typename
+            }
+            tags {
+              id
+              name
+              color
+              order
+              __typename
+            }
             __typename
           }
-          __typename
-        }
-        transactionRules {
-          id
-          __typename
-        }
-      }
-
-      fragment TransactionOverviewFields on Transaction {
-        id
-        amount
-        pending
-        date
-        hideFromReports
-        plaidName
-        notes
-        isRecurring
-        reviewStatus
-        needsReview
-        attachments {
-          id
-          __typename
-        }
-        isSplitTransaction
-        category {
-          id
-          name
-          icon
-          __typename
-        }
-        merchant {
-          name
-          id
-          transactionsCount
-          __typename
-        }
-        account {
-          id
-          displayName
-          __typename
-        }
-        tags {
-          id
-          name
-          color
-          order
-          __typename
-        }
-        __typename
-      }
-    """
+        """
         )
 
         variables = {
+            "offset": offset,
             "limit": limit,
             "orderBy": "date",
-            "filters": {"search": "", "categories": [], "accounts": [], "tags": []},
+            "filters": {
+                "search": search,
+                "categories": categories,
+                "accounts": accounts,
+                "tags": tags,
+                "hasAttachments": has_attachments,
+                "hasNotes": has_notes,
+                "hideFromReports": hide_from_reports,
+                "isRecurring": is_recurring,
+                "isSplit": is_split,
+            },
         }
 
         if start_date and end_date:
