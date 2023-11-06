@@ -9,7 +9,7 @@ install_requires = [
 
 setup(
     name="monarchmoney",
-    version="0.1.2",
+    version="0.1.3",
     description="Monarch Money API for Python",
     long_description=open("README.md", "r").read(),
     long_description_content_type="text/markdown",
