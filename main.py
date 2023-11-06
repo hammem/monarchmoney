@@ -4,7 +4,8 @@ import json
 
 from monarchmoney import MonarchMoney
 
-_SESSION_FILE_ = '.mm/mm_session.pickle'
+_SESSION_FILE_ = ".mm/mm_session.pickle"
+
 
 def main() -> None:
     # Use session file
@@ -28,13 +29,17 @@ def main() -> None:
     income_categories = dict()
     for c in categories.get("categories"):
         if c.get("group").get("type") == "income":
-            print(f'{c.get("group").get("type")} - {c.get("group").get("name")} - {c.get("name")}')
+            print(
+                f'{c.get("group").get("type")} - {c.get("group").get("name")} - {c.get("name")}'
+            )
             income_categories[c.get("name")] = 0
 
     expense_category_groups = dict()
     for c in categories.get("categories"):
         if c.get("group").get("type") == "expense":
-            print(f'{c.get("group").get("type")} - {c.get("group").get("name")} - {c.get("name")}')
+            print(
+                f'{c.get("group").get("type")} - {c.get("group").get("name")} - {c.get("name")}'
+            )
             expense_category_groups[c.get("group").get("name")] = 0
 
     # Transactions
@@ -43,7 +48,9 @@ def main() -> None:
         json.dump(transactions, outfile)
 
     # Cashflow
-    cashflow = asyncio.run(mm.get_cashflow(start_date="2023-10-01", end_date="2023-10-31"))
+    cashflow = asyncio.run(
+        mm.get_cashflow(start_date="2023-10-01", end_date="2023-10-31")
+    )
     with open("cashflow.json", "w") as outfile:
         json.dump(cashflow, outfile)
 
@@ -57,15 +64,20 @@ def main() -> None:
 
     for c in cashflow.get("byCategory"):
         if c.get("groupBy").get("category").get("group").get("type") == "income":
-            income_categories[c.get("groupBy").get("category").get("name")] += c.get("summary").get("sum")
+            income_categories[c.get("groupBy").get("category").get("name")] += c.get(
+                "summary"
+            ).get("sum")
 
     print()
     for c in cashflow.get("byCategoryGroup"):
         if c.get("groupBy").get("categoryGroup").get("type") == "expense":
-            expense_category_groups[c.get("groupBy").get("categoryGroup").get("name")] += c.get("summary").get("sum")
+            expense_category_groups[
+                c.get("groupBy").get("categoryGroup").get("name")
+            ] += c.get("summary").get("sum")
 
     print(income_categories)
     print()
     print(expense_category_groups)
+
 
 main()
