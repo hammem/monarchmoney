@@ -1,4 +1,4 @@
-name: mintapi build
+name: monarchmoney build
 
 on: [push, pull_request]
 
