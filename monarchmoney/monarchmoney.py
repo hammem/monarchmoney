@@ -284,7 +284,7 @@ class MonarchMoney(object):
     """
     Gets transaction data from the account.
 
-    :param offset: The number of transactions to skip (offset) before retrieving results.
+    :param offset: the number of transactions to skip (offset) before retrieving results.
     :param limit: the maximum number of transactions to download, defaults to 1000.
     :param start_date: the earliest date to get transactions from, in "yyyy-mm-dd" format.
     :param end_date: the latest date to get transactions from, in "yyyy-mm-dd" format.
