@@ -314,6 +314,11 @@ class MonarchMoney(object):
         isRecurring
         reviewStatus
         needsReview
+        account {
+          id
+          displayName
+          __typename
+        }
         attachments {
           id
           __typename
