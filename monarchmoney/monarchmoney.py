@@ -280,8 +280,8 @@ class MonarchMoney(object):
 
     async def get_transactions(
         self,
-        offset: Optional[int] = 0,
         limit: int = 1000,
+        offset: Optional[int] = 0,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         search: str = "",
@@ -297,8 +297,8 @@ class MonarchMoney(object):
         """
         Gets transaction data from the account.
 
-        :param offset: the number of transactions to skip (offset) before retrieving results.
         :param limit: the maximum number of transactions to download, defaults to 1000.
+        :param offset: the number of transactions to skip (offset) before retrieving results.
         :param start_date: the earliest date to get transactions from, in "yyyy-mm-dd" format.
         :param end_date: the latest date to get transactions from, in "yyyy-mm-dd" format.
         :param search: a string to filter transactions. use empty string for all results.
