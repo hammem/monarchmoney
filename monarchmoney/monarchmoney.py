@@ -290,7 +290,7 @@ class MonarchMoney(object):
         tags: List[str] = [],
         has_attachments: bool = False,
         has_notes: bool = False,
-        hide_from_reports: bool = False,
+        hidden_from_reports: bool = False,
         is_split: bool = False,
         is_recurring: bool = False,
     ) -> Dict[str, Any]:
@@ -307,7 +307,7 @@ class MonarchMoney(object):
         :param tags: a list of tag ids to filter.
         :param has_attachments: a bool to filter for whether the transactions have attachments.
         :param has_notes: a bool to filter for whether the transactions have notes.
-        :param hide_from_reports: a bool to filter for whether the transactions are hidden from reports.
+        :param hidden_from_reports: a bool to filter for whether the transactions are hidden from reports.
         :param is_split: a bool to filter for whether the transactions are split.
         :param is_recurring: a bool to filter for whether the transactions are recurring.
         """
@@ -386,7 +386,7 @@ class MonarchMoney(object):
                 "tags": tags,
                 "hasAttachments": has_attachments,
                 "hasNotes": has_notes,
-                "hideFromReports": hide_from_reports,
+                "hideFromReports": hidden_from_reports,
                 "isRecurring": is_recurring,
                 "isSplit": is_split,
             },
