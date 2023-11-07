@@ -285,9 +285,9 @@ class MonarchMoney(object):
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         search: str = "",
-        categories: List[str] = [],
-        accounts: List[str] = [],
-        tags: List[str] = [],
+        category_ids: List[str] = [],
+        account_ids: List[str] = [],
+        tag_ids: List[str] = [],
         has_attachments: bool = False,
         has_notes: bool = False,
         hidden_from_reports: bool = False,
@@ -302,9 +302,9 @@ class MonarchMoney(object):
         :param start_date: the earliest date to get transactions from, in "yyyy-mm-dd" format.
         :param end_date: the latest date to get transactions from, in "yyyy-mm-dd" format.
         :param search: a string to filter transactions. use empty string for all results.
-        :param categories: a list of category ids to filter.
-        :param accounts: a list of account ids to filter.
-        :param tags: a list of tag ids to filter.
+        :param category_ids: a list of category ids to filter.
+        :param account_ids: a list of account ids to filter.
+        :param tag_ids: a list of tag ids to filter.
         :param has_attachments: a bool to filter for whether the transactions have attachments.
         :param has_notes: a bool to filter for whether the transactions have notes.
         :param hidden_from_reports: a bool to filter for whether the transactions are hidden from reports.
@@ -381,9 +381,9 @@ class MonarchMoney(object):
             "orderBy": "date",
             "filters": {
                 "search": search,
-                "categories": categories,
-                "accounts": accounts,
-                "tags": tags,
+                "categories": category_ids,
+                "accounts": account_ids,
+                "tags": tag_ids,
                 "hasAttachments": has_attachments,
                 "hasNotes": has_notes,
                 "hideFromReports": hidden_from_reports,
