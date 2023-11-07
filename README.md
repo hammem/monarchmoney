@@ -55,3 +55,10 @@ As of writing this README, the following methods are supported:
 - `get_cashflow` - cashflow data (by category, category group, merchant and a summary)
 - `get_cashflow_summary` - cashflow summary (income, expense, savings, savings rate)
 
+# FAQ
+
+**How do I use this API if I login to Monarch via Google?**
+
+If you currently use Google or 'Continue with Google' to access your Monarch account, you'll need to set a password to leverage this API.  You can set a password on your Monarch account by going to your [security settings](https://app.monarchmoney.com/settings/security).  
+
+Don't forget to use a password unique to your Monarch account and to enable multi-factor authentication!
