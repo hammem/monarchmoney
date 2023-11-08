@@ -404,6 +404,59 @@ class MonarchMoney(object):
             operation="GetTransactionsList", graphql_query=query, variables=variables
         )
 
+    async def create_transaction(
+        self,
+        date: str,
+        account_id: str,
+        amount: float,
+        merchant_name: str,
+        category_id: str,
+        notes: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Creates a transaction with the given parameters
+        """
+        query = gql(
+            """
+      mutation Common_CreateTransactionMutation($input: CreateTransactionMutationInput!) {
+        createTransaction(input: $input) {
+          errors {
+            ...PayloadErrorFields
+            __typename
+          }
+          __typename
+        }
+      }
+
+      fragment PayloadErrorFields on PayloadError {
+        fieldErrors {
+          field
+          messages
+          __typename
+        }
+        message
+        code
+        __typename
+      }
+    """
+        )
+
+        variables = {
+            "input": {
+                "date": date,
+                "accountId": account_id,
+                "amount": round(amount, 2),
+                "merchantName": merchant_name,
+                "categoryId": category_id,
+                "notes": notes
+            }
+        }
+
+        return await self.gql_call(
+            operation="Common_CreateTransactionMutation", graphql_query=query, variables=variables
+        )
+
+
     async def get_transaction_categories(self) -> Dict[str, Any]:
         """
         Gets all the categories configured in the account.
