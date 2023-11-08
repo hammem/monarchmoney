@@ -40,7 +40,10 @@ class LoginFailedException(Exception):
 
 class MonarchMoney(object):
     def __init__(
-        self, session_file: str = SESSION_FILE, timeout: int = 10, token: Optional[str] = None
+        self,
+        session_file: str = SESSION_FILE,
+        timeout: int = 10,
+        token: Optional[str] = None,
     ) -> None:
         self._headers = {
             "Client-Platform": "web",
