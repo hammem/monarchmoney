@@ -61,6 +61,13 @@ class MonarchMoney(object):
         """Sets the default timeout on GraphQL API calls, in seconds."""
         self._timeout = timeout_secs
 
+    @property
+    def token(self) -> str:
+        return self._token
+
+    def set_token(self, token: str) -> None:
+        self._token = token
+
     async def interactive_login(
         self, use_saved_session: bool = True, save_session: bool = True
     ) -> None:
@@ -670,7 +677,7 @@ class MonarchMoney(object):
         """
         with open(filename, "rb") as fh:
             data = pickle.load(fh)
-            self._token = data["token"]
+            self.set_token(data["token"])
             self._headers["Authorization"] = f"Token {self._token}"
 
     async def _login_user(self, email: str, password: str) -> None:
@@ -696,7 +703,7 @@ class MonarchMoney(object):
                     )
 
                 response = await resp.json()
-                self._token = response["token"]
+                self.set_token(response["token"])
                 self._headers["Authorization"] = f"Token {self._token}"
 
     async def _multi_factor_authenticate(
@@ -727,7 +734,7 @@ class MonarchMoney(object):
                     raise LoginFailedException(error_message)
 
                 response = await resp.json()
-                self._token = response["token"]
+                self.set_token(response["token"])
                 self._headers["Authorization"] = f"Token {self._token}"
 
     def _get_graphql_client(self) -> Client:
