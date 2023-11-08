@@ -2,6 +2,7 @@ import calendar
 from datetime import datetime
 import os
 import pickle
+import oathtool
 from typing import Any, Dict, Optional, List
 
 from aiohttp import ClientSession
@@ -92,6 +93,7 @@ class MonarchMoney(object):
         password: Optional[str] = None,
         use_saved_session: bool = True,
         save_session: bool = True,
+        mfa_secret_key: Optional[str] = None,
     ) -> None:
         """Logs into a Monarch Money account."""
         if use_saved_session and os.path.exists(self._session_file):
@@ -103,7 +105,7 @@ class MonarchMoney(object):
             raise LoginFailedException(
                 "Email and password are required to login when not using a saved session."
             )
-        await self._login_user(email, password)
+        await self._login_user(email, password, mfa_secret_key)
         if save_session:
             self.save_session(self._session_file)
 
@@ -683,7 +685,9 @@ class MonarchMoney(object):
             self.set_token(data["token"])
             self._headers["Authorization"] = f"Token {self._token}"
 
-    async def _login_user(self, email: str, password: str) -> None:
+    async def _login_user(
+        self, email: str, password: str, mfa_secret_key: Optional[str]
+    ) -> None:
         """
         Performs the initial login to a Monarch Money account.
         """
@@ -693,6 +697,9 @@ class MonarchMoney(object):
             "trusted_device": False,
             "username": email,
         }
+
+        if mfa_secret_key:
+            data["totp"] = oathtool.generate_otp(mfa_secret_key)
 
         async with ClientSession(headers=self._headers) as session:
             async with session.post(
