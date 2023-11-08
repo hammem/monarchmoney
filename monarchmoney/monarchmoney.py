@@ -14,7 +14,8 @@ from graphql import DocumentNode
 AUTH_HEADER_KEY = "authorization"
 CSRF_KEY = "csrftoken"
 ERRORS_KEY = "error_code"
-SESSION_FILE = ".mm/mm_session.pickle"
+SESSION_DIR = ".mm"
+SESSION_FILE = f"{SESSION_DIR}/mm_session.pickle"
 
 
 class MonarchMoneyEndpoints(object):
@@ -657,6 +658,9 @@ class MonarchMoney(object):
         Saves the auth token needed to access a Monarch Money account.
         """
         session_data = {"token": self._token}
+        if not os.path.exists(SESSION_DIR):
+            os.makedirs(SESSION_DIR)
+
         with open(filename, "wb") as fh:
             pickle.dump(session_data, fh)
 
