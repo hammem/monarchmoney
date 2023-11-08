@@ -38,13 +38,17 @@ class LoginFailedException(Exception):
 
 
 class MonarchMoney(object):
-    def __init__(self, session_file: str = SESSION_FILE, timeout: int = 10) -> None:
-        self._cookies = None
+    def __init__(
+        self, session_file: str = SESSION_FILE, timeout: int = 10, token: str = None
+    ) -> None:
         self._headers = {
             "Client-Platform": "web",
         }
+        if token:
+            self._headers["Authorization"] = f"Token {token}"
+
         self._session_file = session_file
-        self._token = None
+        self._token = token
         self._timeout = timeout
 
     @property
@@ -650,22 +654,18 @@ class MonarchMoney(object):
 
     def save_session(self, filename: str) -> None:
         """
-        Saves the cookies and auth token needed to access a Monarch Money account.
+        Saves the auth token needed to access a Monarch Money account.
         """
-        session_data = {
-            "token": self._token,
-            "cookies": self._cookies,
-        }
+        session_data = {"token": self._token}
         with open(filename, "wb") as fh:
             pickle.dump(session_data, fh)
 
     def load_session(self, filename: str) -> None:
         """
-        Loads pre-existing cookies and auth token from a Python pickle file.
+        Loads pre-existing auth token from a Python pickle file.
         """
         with open(filename, "rb") as fh:
             data = pickle.load(fh)
-            self._cookies = data["cookies"]
             self._token = data["token"]
             self._headers["Authorization"] = f"Token {self._token}"
 
@@ -692,7 +692,6 @@ class MonarchMoney(object):
                     )
 
                 response = await resp.json()
-                self._cookies = resp.cookies
                 self._token = response["token"]
                 self._headers["Authorization"] = f"Token {self._token}"
 
@@ -724,7 +723,6 @@ class MonarchMoney(object):
                     raise LoginFailedException(error_message)
 
                 response = await resp.json()
-                self._cookies = resp.cookies
                 self._token = response["token"]
                 self._headers["Authorization"] = f"Token {self._token}"
 
@@ -732,11 +730,12 @@ class MonarchMoney(object):
         """
         Creates a correctly configured GraphQL client for connecting to Monarch Money.
         """
-        if self._cookies is None or self._headers is None:
-            raise LoginFailedException("Make sure you call login() first!")
+        if self._headers is None:
+            raise LoginFailedException(
+                "Make sure you call login() first or provide a session token!"
+            )
         transport = AIOHTTPTransport(
             url=MonarchMoneyEndpoints.getGraphQL(),
-            cookies=self._cookies,
             headers=self._headers,
             timeout=self._timeout,
         )
