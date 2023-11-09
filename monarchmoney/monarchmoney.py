@@ -411,34 +411,37 @@ class MonarchMoney(object):
         amount: float,
         merchant_name: str,
         category_id: str,
-        notes: str = ""
+        notes: str = "",
     ) -> Dict[str, Any]:
         """
         Creates a transaction with the given parameters
         """
         query = gql(
             """
-      mutation Common_CreateTransactionMutation($input: CreateTransactionMutationInput!) {
-        createTransaction(input: $input) {
-          errors {
-            ...PayloadErrorFields
+          mutation Common_CreateTransactionMutation($input: CreateTransactionMutationInput!) {
+            createTransaction(input: $input) {
+              errors {
+                ...PayloadErrorFields
+                __typename
+              }
+              transaction {
+                id
+              }
+              __typename
+            }
+          }
+
+          fragment PayloadErrorFields on PayloadError {
+            fieldErrors {
+              field
+              messages
+              __typename
+            }
+            message
+            code
             __typename
           }
-          __typename
-        }
-      }
-
-      fragment PayloadErrorFields on PayloadError {
-        fieldErrors {
-          field
-          messages
-          __typename
-        }
-        message
-        code
-        __typename
-      }
-    """
+        """
         )
 
         variables = {
@@ -453,7 +456,9 @@ class MonarchMoney(object):
         }
 
         return await self.gql_call(
-            operation="Common_CreateTransactionMutation", graphql_query=query, variables=variables
+            operation="Common_CreateTransactionMutation",
+            graphql_query=query,
+            variables=variables,
         )
 
 
