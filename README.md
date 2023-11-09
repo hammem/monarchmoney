@@ -55,6 +55,12 @@ As of writing this README, the following methods are supported:
 - `get_cashflow` - cashflow data (by category, category group, merchant and a summary)
 - `get_cashflow_summary` - cashflow summary (income, expense, savings, savings rate)
 
+# Contributing
+
+Any and all contributions -- code, documentation, feature requests, feedback -- are welcome!
+
+If you plan to submit up a pull request, you can expect a timely review.  There aren't any strict requirements around the environment you need to configure aside from using [Black](https://github.com/psf/black) to auto-format the code.  An action is configured in this repo to run against all PRs and merges and will block them from being committed.
+
 # FAQ
 
 **How do I use this API if I login to Monarch via Google?**
