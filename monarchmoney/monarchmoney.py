@@ -637,14 +637,23 @@ class MonarchMoney(object):
 
     async def update_transaction(
         self,
-        transaction_id: int,
-        **kwargs
+        transaction_id: str,
+        category_id: Optional[str] = None,
+        merchant_id: Optional[str] = None,
+        goal_id: Optional[str] = None,
+        amount: Optional[float] = None,
+        date: Optional[str] = None,
+        hide_from_reports: Optional[bool] = None,
+        needs_review: Optional[bool] = None,
+        notes: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Updates a single existing transaction as identified by the transaction_id
-        Key/Values in kwargs are appended to variables in gql_call
+        Explicitly defining parameters that worked in testing.
+        date in "%Y-%m-%d" or 2023-10-30
         """
-        query = gql("""
+        query = gql(
+            """
         mutation Web_TransactionDrawerUpdateTransaction($input: UpdateTransactionMutationInput!) {
             updateTransaction(input: $input) {
             transaction {
@@ -696,21 +705,37 @@ class MonarchMoney(object):
             code
             __typename
         }
-        """)
-        
+        """
+        )
+
         variables = {
-        "input": {
-            "id": transaction_id,        
+            "input": {
+                "id": transaction_id,
+            }
         }
-        }
-        variables['input'].update(kwargs)    
+        if category_id:
+            variables["input"].update({"category": category_id})
+        if merchant_id:
+            variables["input"].update({"merchant": merchant_id})
+        if goal_id:
+            variables["input"].update({"goalId": goal_id})
+        if date:
+            variables["input"].update({"date": date})
+        if amount:
+            variables["input"].update({"amount": amount})
+        if hide_from_reports is not None:
+            variables["input"].update({"hideFromReports": hide_from_reports})
+        if needs_review is not None:
+            variables["input"].update({"needsReview": needs_review})
+        if notes:
+            variables["input"].update({"notes": notes})
 
         return await self.gql_call(
             operation="Web_TransactionDrawerUpdateTransaction",
             variables=variables,
-            graphql_query=query
+            graphql_query=query,
         )
-        
+
     async def gql_call(
         self,
         operation: str,
