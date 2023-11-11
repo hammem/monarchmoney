@@ -639,7 +639,7 @@ class MonarchMoney(object):
         self,
         transaction_id: str,
         category_id: Optional[str] = None,
-        merchant_id: Optional[str] = None,
+        merchant_name: Optional[str] = None,
         goal_id: Optional[str] = None,
         amount: Optional[float] = None,
         date: Optional[str] = None,
@@ -651,6 +651,17 @@ class MonarchMoney(object):
         Updates a single existing transaction as identified by the transaction_id
         Explicitly defining parameters that worked in testing.
         date in "%Y-%m-%d" or 2023-10-30
+        mm.update_transaction(
+            transaction_id="160820461792094418",
+            category_id="160185840107743863",
+            merchant_id="Amazon",
+            goal_id="160826408575920275",
+            amount=123.45,            
+            date="2023-11-09",
+            hide_from_reports=False,
+            needs_review=False,
+            notes=f'Updated On: {datetime.now().strftime("%m/%d/%Y %H:%M:%S")}',
+        )
         """
         query = gql(
             """
@@ -715,8 +726,8 @@ class MonarchMoney(object):
         }
         if category_id:
             variables["input"].update({"category": category_id})
-        if merchant_id:
-            variables["input"].update({"merchant": merchant_id})
+        if merchant_name:
+            variables["input"].update({"name": merchant_name})
         if goal_id:
             variables["input"].update({"goalId": goal_id})
         if date:
