@@ -636,12 +636,11 @@ class MonarchMoney(object):
         )
 
     async def update_transaction(
-		self,
-		transaction_id: int,
-      	**kwargs
+        self,
+        transaction_id: int,
+        **kwargs
     ) -> Dict[str, Any]:
-        a=1    
-    	"""
+        """
         Updates a single existing transaction as identified by the transaction_id
         Key/Values in kwargs are appended to variables in gql_call
         """
