@@ -635,6 +635,83 @@ class MonarchMoney(object):
             operation="Web_GetCashFlowPage", variables=variables, graphql_query=query
         )
 
+    async def update_transaction(
+		self,
+		transaction_id: int,
+      	**kwargs
+    ) -> Dict[str, Any]:
+        a=1    
+    	"""
+        Updates a single existing transaction as identified by the transaction_id
+        Key/Values in kwargs are appended to variables in gql_call
+        """
+        query = gql("""
+        mutation Web_TransactionDrawerUpdateTransaction($input: UpdateTransactionMutationInput!) {
+            updateTransaction(input: $input) {
+            transaction {
+                id
+                amount
+                pending
+                date
+                hideFromReports
+                needsReview
+                reviewedAt
+                reviewedByUser {
+                id
+                name
+                __typename
+                }
+                plaidName
+                notes
+                isRecurring
+                category {
+                id
+                __typename
+                }
+                goal {
+                id
+                __typename
+                }
+                merchant {
+                id
+                name
+                __typename
+                }
+                __typename
+            }
+            errors {
+                ...PayloadErrorFields
+                __typename
+            }
+            __typename
+            }
+        }
+
+        fragment PayloadErrorFields on PayloadError {
+            fieldErrors {
+            field
+            messages
+            __typename
+            }
+            message
+            code
+            __typename
+        }
+        """)
+        
+        variables = {
+        "input": {
+            "id": transaction_id,        
+        }
+        }
+        variables['input'].update(kwargs)    
+
+        return await self.gql_call(
+            operation="Web_TransactionDrawerUpdateTransaction",
+            variables=variables,
+            graphql_query=query
+        )
+        
     async def gql_call(
         self,
         operation: str,
