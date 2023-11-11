@@ -656,7 +656,7 @@ class MonarchMoney(object):
             category_id="160185840107743863",
             merchant_id="Amazon",
             goal_id="160826408575920275",
-            amount=123.45,            
+            amount=123.45,
             date="2023-11-09",
             hide_from_reports=False,
             needs_review=False,
@@ -724,7 +724,7 @@ class MonarchMoney(object):
                 "id": transaction_id,
             }
         }
-        
+
         # Using 'is not None' to allow writing of empty strings
         if category_id is not None:
             variables["input"].update({"category": category_id})
