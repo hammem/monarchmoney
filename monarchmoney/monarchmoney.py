@@ -724,21 +724,23 @@ class MonarchMoney(object):
                 "id": transaction_id,
             }
         }
-        if category_id:
+        
+        # Using 'is not None' to allow writing of empty strings
+        if category_id is not None:
             variables["input"].update({"category": category_id})
-        if merchant_name:
+        if merchant_name is not None:
             variables["input"].update({"name": merchant_name})
-        if goal_id:
+        if goal_id is not None:
             variables["input"].update({"goalId": goal_id})
-        if date:
+        if date is not None:
             variables["input"].update({"date": date})
-        if amount:
+        if amount is not None:
             variables["input"].update({"amount": amount})
         if hide_from_reports is not None:
             variables["input"].update({"hideFromReports": hide_from_reports})
         if needs_review is not None:
             variables["input"].update({"needsReview": needs_review})
-        if notes:
+        if notes is not None:
             variables["input"].update({"notes": notes})
 
         return await self.gql_call(
