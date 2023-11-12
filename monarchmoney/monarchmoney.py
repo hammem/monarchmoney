@@ -104,81 +104,81 @@ class MonarchMoney(object):
         """
         query = gql(
             """
-      query GetAccounts {
-        accounts {
-          ...AccountFields
-          __typename
-        }
-        householdPreferences {
-          id
-          accountGroupOrder
-          __typename
-        }
-      }
+          query GetAccounts {
+            accounts {
+              ...AccountFields
+              __typename
+            }
+            householdPreferences {
+              id
+              accountGroupOrder
+              __typename
+            }
+          }
 
-      fragment AccountFields on Account {
-        id
-        displayName
-        syncDisabled
-        deactivatedAt
-        isHidden
-        isAsset
-        mask
-        createdAt
-        updatedAt
-        displayLastUpdatedAt
-        currentBalance
-        displayBalance
-        includeInNetWorth
-        hideFromList
-        hideTransactionsFromReports
-        includeBalanceInNetWorth
-        includeInGoalBalance
-        dataProvider
-        dataProviderAccountId
-        isManual
-        transactionsCount
-        holdingsCount
-        manualInvestmentsTrackingMethod
-        order
-        icon
-        logoUrl
-        type {
-          name
-          display
-          __typename
-        }
-        subtype {
-          name
-          display
-          __typename
-        }
-        credential {
-          id
-          updateRequired
-          disconnectedFromDataProviderAt
-          dataProvider
-          institution {
+          fragment AccountFields on Account {
             id
-            plaidInstitutionId
-            name
-            status
-            logo
+            displayName
+            syncDisabled
+            deactivatedAt
+            isHidden
+            isAsset
+            mask
+            createdAt
+            updatedAt
+            displayLastUpdatedAt
+            currentBalance
+            displayBalance
+            includeInNetWorth
+            hideFromList
+            hideTransactionsFromReports
+            includeBalanceInNetWorth
+            includeInGoalBalance
+            dataProvider
+            dataProviderAccountId
+            isManual
+            transactionsCount
+            holdingsCount
+            manualInvestmentsTrackingMethod
+            order
+            icon
+            logoUrl
+            type {
+              name
+              display
+              __typename
+            }
+            subtype {
+              name
+              display
+              __typename
+            }
+            credential {
+              id
+              updateRequired
+              disconnectedFromDataProviderAt
+              dataProvider
+              institution {
+                id
+                plaidInstitutionId
+                name
+                status
+                logo
+                __typename
+              }
+              __typename
+            }
+            institution {
+              id
+              name
+              logo
+              primaryColor
+              url
+              __typename
+            }
             __typename
           }
-          __typename
-        }
-        institution {
-          id
-          name
-          logo
-          primaryColor
-          url
-          __typename
-        }
-        __typename
-      }
-    """
+        """
         )
         return await self.gql_call(
             operation="GetAccounts",
@@ -191,53 +191,53 @@ class MonarchMoney(object):
         """
         query = gql(
             """
-      query Web_GetHoldings($input: PortfolioInput) {
-        portfolio(input: $input) {
-          aggregateHoldings {
-            edges {
-              node {
-                id
-                quantity
-                basis
-                totalValue
-                securityPriceChangeDollars
-                securityPriceChangePercent
-                lastSyncedAt
-                holdings {
-                  id
-                  type
-                  typeDisplay
-                  name
-                  ticker
-                  closingPrice
-                  isManual
-                  closingPriceUpdatedAt
-                  __typename
-                }
-                security {
-                  id
-                  name
-                  type
-                  ticker
-                  typeDisplay
-                  currentPrice
-                  currentPriceUpdatedAt
-                  closingPrice
-                  closingPriceUpdatedAt
-                  oneDayChangePercent
-                  oneDayChangeDollars
+          query Web_GetHoldings($input: PortfolioInput) {
+            portfolio(input: $input) {
+              aggregateHoldings {
+                edges {
+                  node {
+                    id
+                    quantity
+                    basis
+                    totalValue
+                    securityPriceChangeDollars
+                    securityPriceChangePercent
+                    lastSyncedAt
+                    holdings {
+                      id
+                      type
+                      typeDisplay
+                      name
+                      ticker
+                      closingPrice
+                      isManual
+                      closingPriceUpdatedAt
+                      __typename
+                    }
+                    security {
+                      id
+                      name
+                      type
+                      ticker
+                      typeDisplay
+                      currentPrice
+                      currentPriceUpdatedAt
+                      closingPrice
+                      closingPriceUpdatedAt
+                      oneDayChangePercent
+                      oneDayChangeDollars
+                      __typename
+                    }
+                    __typename
+                  }
                   __typename
                 }
                 __typename
               }
               __typename
             }
-            __typename
           }
-          __typename
-        }
-      }
-    """
+        """
         )
 
         variables = {
@@ -261,17 +261,17 @@ class MonarchMoney(object):
         """
         query = gql(
             """
-      query GetSubscriptionDetails {
-        subscription {
-          id
-          paymentSource
-          referralCode
-          isOnFreeTrial
-          hasPremiumEntitlement
-          __typename
-        }
-      }
-    """
+          query GetSubscriptionDetails {
+            subscription {
+              id
+              paymentSource
+              referralCode
+              isOnFreeTrial
+              hasPremiumEntitlement
+              __typename
+            }
+          }
+        """
         )
         return await self.gql_call(
             operation="GetSubscriptionDetails",
@@ -404,36 +404,93 @@ class MonarchMoney(object):
             operation="GetTransactionsList", graphql_query=query, variables=variables
         )
 
+    async def create_transaction(
+        self,
+        date: str,
+        account_id: str,
+        amount: float,
+        merchant_name: str,
+        category_id: str,
+        notes: str = "",
+    ) -> Dict[str, Any]:
+        """
+        Creates a transaction with the given parameters
+        """
+        query = gql(
+            """
+          mutation Common_CreateTransactionMutation($input: CreateTransactionMutationInput!) {
+            createTransaction(input: $input) {
+              errors {
+                ...PayloadErrorFields
+                __typename
+              }
+              transaction {
+                id
+              }
+              __typename
+            }
+          }
+
+          fragment PayloadErrorFields on PayloadError {
+            fieldErrors {
+              field
+              messages
+              __typename
+            }
+            message
+            code
+            __typename
+          }
+        """
+        )
+
+        variables = {
+            "input": {
+                "date": date,
+                "accountId": account_id,
+                "amount": round(amount, 2),
+                "merchantName": merchant_name,
+                "categoryId": category_id,
+                "notes": notes,
+            }
+        }
+
+        return await self.gql_call(
+            operation="Common_CreateTransactionMutation",
+            graphql_query=query,
+            variables=variables,
+        )
+
     async def get_transaction_categories(self) -> Dict[str, Any]:
         """
         Gets all the categories configured in the account.
         """
         query = gql(
             """
-      query GetCategories {
-        categories {
-          ...CategoryFields
-          __typename
-        }
-      }
+          query GetCategories {
+            categories {
+              ...CategoryFields
+              __typename
+            }
+          }
 
-      fragment CategoryFields on Category {
-        id
-        order
-        name
-        icon
-        systemCategory
-        isSystemCategory
-        isDisabled
-        group {
-          id
-          name
-          type
-          __typename
-        }
-        __typename
-      }
-    """
+          fragment CategoryFields on Category {
+            id
+            order
+            name
+            icon
+            systemCategory
+            isSystemCategory
+            isDisabled
+            group {
+              id
+              name
+              type
+              __typename
+            }
+            __typename
+          }
+        """
         )
         return await self.gql_call(operation="GetCategories", graphql_query=query)
 
@@ -443,21 +500,21 @@ class MonarchMoney(object):
         """
         query = gql(
             """
-      query GetHouseholdTransactionTags($search: String, $limit: Int, $bulkParams: BulkTransactionDataParams) {
-        householdTransactionTags(
-          search: $search
-          limit: $limit
-          bulkParams: $bulkParams
-        ) {
-          id
-          name
-          color
-          order
-          transactionCount
-          __typename
-        }
-      }
-    """
+          query GetHouseholdTransactionTags($search: String, $limit: Int, $bulkParams: BulkTransactionDataParams) {
+            householdTransactionTags(
+              search: $search
+              limit: $limit
+              bulkParams: $bulkParams
+            ) {
+              id
+              name
+              color
+              order
+              transactionCount
+              __typename
+            }
+          }
+        """
         )
         return await self.gql_call(
             operation="GetHouseholdTransactionTags", graphql_query=query
@@ -474,73 +531,73 @@ class MonarchMoney(object):
         """
         query = gql(
             """
-      query Web_GetCashFlowPage($filters: TransactionFilterInput) {
-        byCategory: aggregates(filters: $filters, groupBy: ["category"]) {
-          groupBy {
-            category {
-              id
-              name
-              icon
-              group {
-                id
-                type
+          query Web_GetCashFlowPage($filters: TransactionFilterInput) {
+            byCategory: aggregates(filters: $filters, groupBy: ["category"]) {
+              groupBy {
+                category {
+                  id
+                  name
+                  icon
+                  group {
+                    id
+                    type
+                    __typename
+                  }
+                  __typename
+                }
+                __typename
+              }
+              summary {
+                sum
                 __typename
               }
               __typename
             }
-            __typename
-          }
-          summary {
-            sum
-            __typename
-          }
-          __typename
-        }
-        byCategoryGroup: aggregates(filters: $filters, groupBy: ["categoryGroup"]) {
-          groupBy {
-            categoryGroup {
-              id
-              name
-              type
+            byCategoryGroup: aggregates(filters: $filters, groupBy: ["categoryGroup"]) {
+              groupBy {
+                categoryGroup {
+                  id
+                  name
+                  type
+                  __typename
+                }
+                __typename
+              }
+              summary {
+                sum
+                __typename
+              }
               __typename
             }
-            __typename
-          }
-          summary {
-            sum
-            __typename
-          }
-          __typename
-        }
-        byMerchant: aggregates(filters: $filters, groupBy: ["merchant"]) {
-          groupBy {
-            merchant {
-              id
-              name
-              logoUrl
+            byMerchant: aggregates(filters: $filters, groupBy: ["merchant"]) {
+              groupBy {
+                merchant {
+                  id
+                  name
+                  logoUrl
+                  __typename
+                }
+                __typename
+              }
+              summary {
+                sumIncome
+                sumExpense
+                __typename
+              }
               __typename
             }
-            __typename
+            summary: aggregates(filters: $filters, fillEmptyValues: true) {
+              summary {
+                sumIncome
+                sumExpense
+                savings
+                savingsRate
+                __typename
+              }
+              __typename
+            }
           }
-          summary {
-            sumIncome
-            sumExpense
-            __typename
-          }
-          __typename
-        }
-        summary: aggregates(filters: $filters, fillEmptyValues: true) {
-          summary {
-            sumIncome
-            sumExpense
-            savings
-            savingsRate
-            __typename
-          }
-          __typename
-        }
-      }
-    """
+        """
         )
 
         variables = {
@@ -587,19 +644,19 @@ class MonarchMoney(object):
         """
         query = gql(
             """
-      query Web_GetCashFlowPage($filters: TransactionFilterInput) {
-        summary: aggregates(filters: $filters, fillEmptyValues: true) {
-          summary {
-            sumIncome
-            sumExpense
-            savings
-            savingsRate
-            __typename
+          query Web_GetCashFlowPage($filters: TransactionFilterInput) {
+            summary: aggregates(filters: $filters, fillEmptyValues: true) {
+              summary {
+                sumIncome
+                sumExpense
+                savings
+                savingsRate
+                __typename
+              }
+              __typename
+            }
           }
-          __typename
-        }
-      }
-    """
+        """
         )
 
         variables = {
