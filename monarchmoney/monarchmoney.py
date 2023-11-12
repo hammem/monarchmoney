@@ -2,6 +2,7 @@ import calendar
 from datetime import datetime
 import os
 import pickle
+import oathtool
 from typing import Any, Dict, Optional, List
 
 from aiohttp import ClientSession
@@ -14,11 +15,12 @@ from graphql import DocumentNode
 AUTH_HEADER_KEY = "authorization"
 CSRF_KEY = "csrftoken"
 ERRORS_KEY = "error_code"
-SESSION_FILE = ".mm/mm_session.pickle"
+SESSION_DIR = ".mm"
+SESSION_FILE = f"{SESSION_DIR}/mm_session.pickle"
 
 
 class MonarchMoneyEndpoints(object):
-    BASE_URL = "https://api.monarchmoney.com/"
+    BASE_URL = "https://api.monarchmoney.com"
 
     @classmethod
     def getLoginEndpoint(cls) -> str:
@@ -38,13 +40,20 @@ class LoginFailedException(Exception):
 
 
 class MonarchMoney(object):
-    def __init__(self, session_file: str = SESSION_FILE, timeout: int = 10) -> None:
-        self._cookies = None
+    def __init__(
+        self,
+        session_file: str = SESSION_FILE,
+        timeout: int = 10,
+        token: Optional[str] = None,
+    ) -> None:
         self._headers = {
             "Client-Platform": "web",
         }
+        if token:
+            self._headers["Authorization"] = f"Token {token}"
+
         self._session_file = session_file
-        self._token = None
+        self._token = token
         self._timeout = timeout
 
     @property
@@ -55,6 +64,13 @@ class MonarchMoney(object):
     def set_timeout(self, timeout_secs: int) -> None:
         """Sets the default timeout on GraphQL API calls, in seconds."""
         self._timeout = timeout_secs
+
+    @property
+    def token(self) -> str:
+        return self._token
+
+    def set_token(self, token: str) -> None:
+        self._token = token
 
     async def interactive_login(
         self, use_saved_session: bool = True, save_session: bool = True
@@ -77,6 +93,7 @@ class MonarchMoney(object):
         password: Optional[str] = None,
         use_saved_session: bool = True,
         save_session: bool = True,
+        mfa_secret_key: Optional[str] = None,
     ) -> None:
         """Logs into a Monarch Money account."""
         if use_saved_session and os.path.exists(self._session_file):
@@ -88,7 +105,7 @@ class MonarchMoney(object):
             raise LoginFailedException(
                 "Email and password are required to login when not using a saved session."
             )
-        await self._login_user(email, password)
+        await self._login_user(email, password, mfa_secret_key)
         if save_session:
             self.save_session(self._session_file)
 
@@ -707,26 +724,27 @@ class MonarchMoney(object):
 
     def save_session(self, filename: str) -> None:
         """
-        Saves the cookies and auth token needed to access a Monarch Money account.
+        Saves the auth token needed to access a Monarch Money account.
         """
-        session_data = {
-            "token": self._token,
-            "cookies": self._cookies,
-        }
+        session_data = {"token": self._token}
+        if not os.path.exists(SESSION_DIR):
+            os.makedirs(SESSION_DIR)
+
         with open(filename, "wb") as fh:
             pickle.dump(session_data, fh)
 
     def load_session(self, filename: str) -> None:
         """
-        Loads pre-existing cookies and auth token from a Python pickle file.
+        Loads pre-existing auth token from a Python pickle file.
         """
         with open(filename, "rb") as fh:
             data = pickle.load(fh)
-            self._cookies = data["cookies"]
-            self._token = data["token"]
+            self.set_token(data["token"])
             self._headers["Authorization"] = f"Token {self._token}"
 
-    async def _login_user(self, email: str, password: str) -> None:
+    async def _login_user(
+        self, email: str, password: str, mfa_secret_key: Optional[str]
+    ) -> None:
         """
         Performs the initial login to a Monarch Money account.
         """
@@ -736,6 +754,9 @@ class MonarchMoney(object):
             "trusted_device": False,
             "username": email,
         }
+
+        if mfa_secret_key:
+            data["totp"] = oathtool.generate_otp(mfa_secret_key)
 
         async with ClientSession(headers=self._headers) as session:
             async with session.post(
@@ -749,8 +770,7 @@ class MonarchMoney(object):
                     )
 
                 response = await resp.json()
-                self._cookies = resp.cookies
-                self._token = response["token"]
+                self.set_token(response["token"])
                 self._headers["Authorization"] = f"Token {self._token}"
 
     async def _multi_factor_authenticate(
@@ -781,19 +801,19 @@ class MonarchMoney(object):
                     raise LoginFailedException(error_message)
 
                 response = await resp.json()
-                self._cookies = resp.cookies
-                self._token = response["token"]
+                self.set_token(response["token"])
                 self._headers["Authorization"] = f"Token {self._token}"
 
     def _get_graphql_client(self) -> Client:
         """
         Creates a correctly configured GraphQL client for connecting to Monarch Money.
         """
-        if self._cookies is None or self._headers is None:
-            raise LoginFailedException("Make sure you call login() first!")
+        if self._headers is None:
+            raise LoginFailedException(
+                "Make sure you call login() first or provide a session token!"
+            )
         transport = AIOHTTPTransport(
             url=MonarchMoneyEndpoints.getGraphQL(),
-            cookies=self._cookies,
             headers=self._headers,
             timeout=self._timeout,
         )
