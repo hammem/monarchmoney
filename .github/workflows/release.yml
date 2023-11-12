@@ -34,7 +34,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install aiohttp gql[all] oathtool setuptools
+        pip install build setuptools wheel
     - name: Build package
       run: | 
         python setup.py check
