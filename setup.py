@@ -6,7 +6,7 @@ install_requires = ["aiohttp>=3.8.4", "gql>=3.4", "oathtool>=2.3.1"]
 
 setup(
     name="monarchmoney",
-    version="0.1.3",
+    version="0.1.4",
     description="Monarch Money API for Python",
     long_description=open("README.md", "r").read(),
     long_description_content_type="text/markdown",
