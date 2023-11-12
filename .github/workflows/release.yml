@@ -30,11 +30,13 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
-        python-version: '3.x'
+        python-version: '3.11' # FIXME: Enables aiohttp support
+        cache: 'pip'
+        cache-dependency-path: '**/requirements.txt'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install aiohttp gql[all] oathtool setuptools
+        pip install -r requirements.txt
     - name: Build package
       run: | 
         python setup.py check
