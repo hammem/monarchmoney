@@ -649,19 +649,57 @@ class MonarchMoney(object):
     ) -> Dict[str, Any]:
         """
         Updates a single existing transaction as identified by the transaction_id
-        Explicitly defining parameters that worked in testing.
-        date in "%Y-%m-%d" or 2023-10-30
-        mm.update_transaction(
+        The only required attribute is transaction_id. Calling this function with
+        only the transaction_id will have no effect on the existing transaction data
+        but will not cause an error.
+
+        Comments on parameters:
+        - transaction_id: Must match an existing transaction_id returned from Monarch
+        - category_id: This parameter is only needed when the user wants to change the
+            current category. When provided, it must match an existing category_id returned
+            from Monarch. An empty string is equivalent to the parameter not being passed.
+        - merchant_name: This parameter is only needed when the user wants to change
+            the existing merchant name. Empty strings are ignored by the Monarch API
+            when passed since a non-empty merchant name is required for all transactions
+        - goal_id: This parameter is only needed when the user wants to change
+            the existing goal.  When provided, it must match an existing goal_id returned
+            from Monarch.  An empty string can be passed to clear out existing goal associations.
+        - amount:  This parameter is only needed when the user wants to update
+            the existing transaction amount. Empty strings are explicitly ignored by this code
+            to avoid errors in the API.
+        - date:  This parameter is only needed when the user wants to update
+            the existing transaction date. Empty strings are explicitly ignored by this code
+            to avoid errors in the API.  Required format is "2023-10-30"
+        - hide_from_reports: This parameter is only needed when the user wants to update the
+            existing transaction's hide-from-reports value.  If passed, the parameter is cast to
+            Booleans to avoid API issues.
+        - needs_review: This parameter is only needed when the user wants to update the
+            existing transaction's needs-review value.  If passed, the parameter is cast to
+            Booleans to avoid API issues.
+        - notes: This parameter is only needed when the user wants to change
+            the existing note.  An empty string can be passed to clear out existing notes.
+
+        Examples:
+        - To update a note: mm.update_transaction(
             transaction_id="160820461792094418",
-            category_id="160185840107743863",
-            merchant_name="Amazon",
-            goal_id="160826408575920275",
-            amount=123.45,
-            date="2023-11-09",
-            hide_from_reports=False,
-            needs_review=False,
-            notes=f'Updated On: {datetime.now().strftime("%m/%d/%Y %H:%M:%S")}',
-        )
+            notes="my note")
+
+        - To clear a note: mm.update_transaction(
+            transaction_id="160820461792094418",
+            notes="")
+
+        - To update all items:
+            mm.update_transaction(
+                transaction_id="160820461792094418",
+                category_id="160185840107743863",
+                merchant_name="Amazon",
+                goal_id="160826408575920275",
+                amount=123.45,
+                date="2023-11-09",
+                hide_from_reports=False,
+                needs_review="ThisWillBeCastToTrue",
+                notes=f'Updated On: {datetime.now().strftime("%m/%d/%Y %H:%M:%S")}',
+            )
         """
         query = gql(
             """
@@ -725,28 +763,33 @@ class MonarchMoney(object):
             }
         }
 
-        # Special handling as these items can never be null
+        # Within Monarch, these values cannot be empty. Monarch will simply ignore updates
+        # to category and merchant name that are empty strings or None.
+        # As such, no need to avoid adding to variables
+        variables["input"].update({"category": category_id})
+        variables["input"].update({"name": merchant_name})
+
+        # Monarch will not accept nulls for amount and date.
+        # Don't update values if an empty string is passed or if parameter is None
         if amount:
             variables["input"].update({"amount": amount})
         if date:
             variables["input"].update({"date": date})
 
-        # Handling of Booleans parameters
-        # 'None' should not change the value in the transaction therefore it should not be included in the variables dict
+        # Don't update values if the parameter is not passed or explicitly set to None.
+        # Passed values must be cast to bool to avoid API errors
         if hide_from_reports is not None:
-            # Casting the passed value as bool.  Therefore, empty strings cast to False and any other value casts to True.
             variables["input"].update({"hideFromReports": bool(hide_from_reports)})
         if needs_review is not None:
             variables["input"].update({"needsReview": bool(needs_review)})
 
-        # Ensure that notes is explicitly included to avoid errant erasing of existing notes
+        # We want an empty string to clear the goal and notes parameters but the values should not
+        # be cleared if the parameter isn't passed
+        # Don't update values if the parameter is not passed or explicitly set to None.
+        if goal_id is not None:
+            variables["input"].update({"goalId": goal_id})
         if notes is not None:
             variables["input"].update({"notes": notes})
-
-        # Remaining items
-        variables["input"].update({"category": category_id})
-        variables["input"].update({"name": merchant_name})
-        variables["input"].update({"goalId": goal_id})
 
         return await self.gql_call(
             operation="Web_TransactionDrawerUpdateTransaction",
