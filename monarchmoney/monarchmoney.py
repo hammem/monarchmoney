@@ -654,7 +654,7 @@ class MonarchMoney(object):
         mm.update_transaction(
             transaction_id="160820461792094418",
             category_id="160185840107743863",
-            merchant_id="Amazon",
+            merchant_name="Amazon",
             goal_id="160826408575920275",
             amount=123.45,
             date="2023-11-09",
@@ -725,23 +725,25 @@ class MonarchMoney(object):
             }
         }
 
-        # Using 'is not None' to allow writing of empty strings
-        if category_id is not None:
-            variables["input"].update({"category": category_id})
-        if merchant_name is not None:
-            variables["input"].update({"name": merchant_name})
-        if goal_id is not None:
-            variables["input"].update({"goalId": goal_id})
-        if date is not None:
-            variables["input"].update({"date": date})
-        if amount is not None:
+        # Special handling as these items can never be null
+        if amount:
             variables["input"].update({"amount": amount})
+        if date:
+            variables["input"].update({"date": date})
+
+        # Handling of Booleans parameters
+        # 'None' should not change the value in the transaction therefore it should not be included in the variables dict        
         if hide_from_reports is not None:
-            variables["input"].update({"hideFromReports": hide_from_reports})
+            # Casting the passed value as bool.  Therefore, empty strings cast to False and any other value casts to True.
+            variables["input"].update({"hideFromReports": bool(hide_from_reports)})
         if needs_review is not None:
-            variables["input"].update({"needsReview": needs_review})
-        if notes is not None:
-            variables["input"].update({"notes": notes})
+            variables["input"].update({"needsReview": bool(needs_review)})
+
+        # Remaining items
+        variables["input"].update({"category": category_id})
+        variables["input"].update({"name": merchant_name})
+        variables["input"].update({"goalId": goal_id})
+        variables["input"].update({"notes": notes})
 
         return await self.gql_call(
             operation="Web_TransactionDrawerUpdateTransaction",
