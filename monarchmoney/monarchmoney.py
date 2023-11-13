@@ -725,24 +725,24 @@ class MonarchMoney(object):
             }
         }
 
-         # Special handling as these items can never be null
+        # Special handling as these items can never be null
         if amount:
             variables["input"].update({"amount": amount})
         if date:
             variables["input"].update({"date": date})
 
         # Handling of Booleans parameters
-        # 'None' should not change the value in the transaction therefore it should not be included in the variables dict        
+        # 'None' should not change the value in the transaction therefore it should not be included in the variables dict
         if hide_from_reports is not None:
             # Casting the passed value as bool.  Therefore, empty strings cast to False and any other value casts to True.
             variables["input"].update({"hideFromReports": bool(hide_from_reports)})
         if needs_review is not None:
             variables["input"].update({"needsReview": bool(needs_review)})
-        
+
         # Ensure that notes is explicitly included to avoid errant erasing of existing notes
         if notes is not None:
             variables["input"].update({"notes": notes})
-        
+
         # Remaining items
         variables["input"].update({"category": category_id})
         variables["input"].update({"name": merchant_name})
