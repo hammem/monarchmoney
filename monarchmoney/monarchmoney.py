@@ -725,7 +725,7 @@ class MonarchMoney(object):
             }
         }
 
-        # Special handling as these items can never be null
+         # Special handling as these items can never be null
         if amount:
             variables["input"].update({"amount": amount})
         if date:
@@ -738,12 +738,15 @@ class MonarchMoney(object):
             variables["input"].update({"hideFromReports": bool(hide_from_reports)})
         if needs_review is not None:
             variables["input"].update({"needsReview": bool(needs_review)})
-
+        
+        # Ensure that notes is explicitly included to avoid errant erasing of existing notes
+        if notes is not None:
+            variables["input"].update({"notes": notes})
+        
         # Remaining items
         variables["input"].update({"category": category_id})
         variables["input"].update({"name": merchant_name})
         variables["input"].update({"goalId": goal_id})
-        variables["input"].update({"notes": notes})
 
         return await self.gql_call(
             operation="Web_TransactionDrawerUpdateTransaction",
