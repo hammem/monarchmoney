@@ -357,12 +357,13 @@ class MonarchMoney(object):
             notes
             isRecurring
             reviewStatus
-            needsReview
             attachments {
               id
               __typename
             }
             isSplitTransaction
+            createdAt
+            updatedAt
             category {
               id
               name
@@ -401,13 +402,23 @@ class MonarchMoney(object):
                 "categories": category_ids,
                 "accounts": account_ids,
                 "tags": tag_ids,
-                "hasAttachments": has_attachments,
-                "hasNotes": has_notes,
-                "hideFromReports": hidden_from_reports,
-                "isRecurring": is_recurring,
-                "isSplit": is_split,
             },
         }
+
+        if has_attachments:
+            variables["filters"]["hasAttachments"] = has_attachments
+
+        if has_notes:
+            variables["filters"]["hasNotes"] = has_notes
+
+        if hidden_from_reports:
+            variables["filters"]["hideFromReports"] = hidden_from_reports
+
+        if is_recurring:
+            variables["filters"]["isRecurring"] = is_recurring
+
+        if is_split:
+            variables["filters"]["isSplit"] = is_split
 
         if start_date and end_date:
             variables["filters"]["startDate"] = start_date
