@@ -357,6 +357,7 @@ class MonarchMoney(object):
             notes
             isRecurring
             reviewStatus
+            needsReview
             attachments {
               id
               __typename
