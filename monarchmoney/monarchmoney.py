@@ -427,7 +427,7 @@ class MonarchMoney(object):
             variables["filters"]["isSplit"] = is_split
 
         if imported_from_mint is not None:
-            variables["filters"]["importedFromMint"] = is_split
+            variables["filters"]["importedFromMint"] = imported_from_mint
 
         if synced_from_institution is not None:
             variables["filters"]["syncedFromInstitution"] = synced_from_institution
