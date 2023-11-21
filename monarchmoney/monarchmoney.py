@@ -305,11 +305,11 @@ class MonarchMoney(object):
         category_ids: List[str] = [],
         account_ids: List[str] = [],
         tag_ids: List[str] = [],
-        has_attachments: bool = False,
-        has_notes: bool = False,
-        hidden_from_reports: bool = False,
-        is_split: bool = False,
-        is_recurring: bool = False,
+        has_attachments: bool = None,
+        has_notes: bool = None,
+        hidden_from_reports: bool = None,
+        is_split: bool = None,
+        is_recurring: bool = None,
     ) -> Dict[str, Any]:
         """
         Gets transaction data from the account.
@@ -401,13 +401,19 @@ class MonarchMoney(object):
                 "categories": category_ids,
                 "accounts": account_ids,
                 "tags": tag_ids,
-                "hasAttachments": has_attachments,
-                "hasNotes": has_notes,
-                "hideFromReports": hidden_from_reports,
-                "isRecurring": is_recurring,
-                "isSplit": is_split,
             },
         }
+
+        if has_attachments is not None:
+            variables["filters"]["hasAttachments"] = has_attachments
+        if has_notes is not None:
+            variables["filters"]["hasNotes"] = has_notes
+        if hidden_from_reports is not None:
+            variables["filters"]["hideFromReports"] = hidden_from_reports
+        if is_recurring is not None:
+            variables["filters"]["isRecurring"] = is_recurring
+        if is_split is not None:
+            variables["filters"]["isSplit"] = is_split
 
         if start_date and end_date:
             variables["filters"]["startDate"] = start_date
