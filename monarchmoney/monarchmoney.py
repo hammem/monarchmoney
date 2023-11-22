@@ -305,11 +305,13 @@ class MonarchMoney(object):
         category_ids: List[str] = [],
         account_ids: List[str] = [],
         tag_ids: List[str] = [],
-        has_attachments: bool = False,
-        has_notes: bool = False,
-        hidden_from_reports: bool = False,
-        is_split: bool = False,
-        is_recurring: bool = False,
+        has_attachments: Optional[bool] = None,
+        has_notes: Optional[bool] = None,
+        hidden_from_reports: Optional[bool] = None,
+        is_split: Optional[bool] = None,
+        is_recurring: Optional[bool] = None,
+        imported_from_mint: Optional[bool] = None,
+        synced_from_institution: Optional[bool] = None,
     ) -> Dict[str, Any]:
         """
         Gets transaction data from the account.
@@ -327,6 +329,8 @@ class MonarchMoney(object):
         :param hidden_from_reports: a bool to filter for whether the transactions are hidden from reports.
         :param is_split: a bool to filter for whether the transactions are split.
         :param is_recurring: a bool to filter for whether the transactions are recurring.
+        :param imported_from_mint: a bool to filter for whether the transactions were imported from mint.
+        :param synced_from_institution: a bool to filter for whether the transactions were synced from an institution.
         """
 
         query = gql(
@@ -363,6 +367,8 @@ class MonarchMoney(object):
               __typename
             }
             isSplitTransaction
+            createdAt
+            updatedAt
             category {
               id
               name
@@ -401,13 +407,30 @@ class MonarchMoney(object):
                 "categories": category_ids,
                 "accounts": account_ids,
                 "tags": tag_ids,
-                "hasAttachments": has_attachments,
-                "hasNotes": has_notes,
-                "hideFromReports": hidden_from_reports,
-                "isRecurring": is_recurring,
-                "isSplit": is_split,
             },
         }
+
+        # If bool filters are not defined (i.e. None), then it should not apply the filter
+        if has_attachments is not None:
+            variables["filters"]["hasAttachments"] = has_attachments
+
+        if has_notes is not None:
+            variables["filters"]["hasNotes"] = has_notes
+
+        if hidden_from_reports is not None:
+            variables["filters"]["hideFromReports"] = hidden_from_reports
+
+        if is_recurring is not None:
+            variables["filters"]["isRecurring"] = is_recurring
+
+        if is_split is not None:
+            variables["filters"]["isSplit"] = is_split
+
+        if imported_from_mint is not None:
+            variables["filters"]["importedFromMint"] = imported_from_mint
+
+        if synced_from_institution is not None:
+            variables["filters"]["syncedFromInstitution"] = synced_from_institution
 
         if start_date and end_date:
             variables["filters"]["startDate"] = start_date
