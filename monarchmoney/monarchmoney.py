@@ -3,10 +3,12 @@ from datetime import datetime
 import os
 import pickle
 import oathtool
+import time
 from typing import Any, Dict, Optional, List
 
 from aiohttp import ClientSession
 from aiohttp.client import DEFAULT_TIMEOUT
+import asyncio
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
 from graphql import DocumentNode
@@ -39,6 +41,10 @@ class LoginFailedException(Exception):
     pass
 
 
+class RequestFailedException(Exception):
+    pass
+
+
 class MonarchMoney(object):
     def __init__(
         self,
@@ -66,7 +72,7 @@ class MonarchMoney(object):
         self._timeout = timeout_secs
 
     @property
-    def token(self) -> str:
+    def token(self) -> Optional[str]:
         return self._token
 
     def set_token(self, token: str) -> None:
@@ -201,6 +207,108 @@ class MonarchMoney(object):
             operation="GetAccounts",
             graphql_query=query,
         )
+
+    async def request_accounts_refresh(self, account_ids: List[str]) -> bool:
+        """
+        Requests Monarch to refresh account balances and transactions with
+        source institutions.  Returns True if request was successfully started.
+
+        Otherwise, throws a `RequestFailedException`.
+        """
+        query = gql(
+            """
+          mutation Common_ForceRefreshAccountsMutation($input: ForceRefreshAccountsInput!) {
+            forceRefreshAccounts(input: $input) {
+              success
+              errors {
+                ...PayloadErrorFields
+                __typename
+              }
+              __typename
+            }
+          }
+
+          fragment PayloadErrorFields on PayloadError {
+            fieldErrors {
+              field
+              messages
+              __typename
+            }
+            message
+            code
+            __typename
+          }
+          """
+        )
+
+        variables = {
+            "input": {
+                "accountIds": account_ids,
+            },
+        }
+
+        response = await self.gql_call(
+            operation="Common_ForceRefreshAccountsMutation",
+            graphql_query=query,
+            variables=variables,
+        )
+
+        if not response["forceRefreshAccounts"]["success"]:
+            raise RequestFailedException(response["forceRefreshAccounts"]["errors"])
+
+        return True
+
+    async def is_accounts_refresh_complete(self) -> bool:
+        """
+        Checks on the status of a prior request to refresh account balances.
+
+        Returns:
+          - True if refresh request is completed.
+          - False if refresh request still in progress.
+
+        Otherwise, throws a `RequestFailedException`.
+        """
+        query = gql(
+            """
+          query ForceRefreshAccountsQuery {
+            accounts {
+              id
+              hasSyncInProgress
+              __typename
+            }
+          }
+          """
+        )
+
+        response = await self.gql_call(
+            operation="ForceRefreshAccountsQuery",
+            graphql_query=query,
+            variables={},
+        )
+
+        if "accounts" not in response:
+            raise RequestFailedException("Unable to request status of refresh")
+
+        return all([not x["hasSyncInProgress"] for x in response["accounts"]])
+
+    async def request_accounts_refresh_and_wait(
+        self, account_ids: List[str], timeout: int = 300, delay: int = 10
+    ) -> bool:
+        """
+        Convenience method for forcing an accounts refresh on Monarch, as well
+        as waiting for the refresh to complete.
+
+        :param account_ids: The list of accounts IDs to refresh
+        :param timeout: The number of seconds to wait for the refresh to complete
+        :param delay: The number of seconds to wait for each check on the refresh request
+        """
+        await self.request_accounts_refresh(account_ids)
+        start = time.time()
+        refreshed = False
+        while not refreshed and (time.time() <= (start + timeout)):
+            await asyncio.sleep(delay)
+            refreshed = await self.is_accounts_refresh_complete()
+        return refreshed
 
     async def get_account_holdings(self, account_id: int) -> Dict[str, Any]:
         """
