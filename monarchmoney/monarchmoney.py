@@ -292,16 +292,25 @@ class MonarchMoney(object):
         return all([not x["hasSyncInProgress"] for x in response["accounts"]])
 
     async def request_accounts_refresh_and_wait(
-        self, account_ids: List[str], timeout: int = 300, delay: int = 10
+        self,
+        account_ids: Optional[List[str]] = None,
+        timeout: int = 300,
+        delay: int = 10,
     ) -> bool:
         """
         Convenience method for forcing an accounts refresh on Monarch, as well
         as waiting for the refresh to complete.
 
-        :param account_ids: The list of accounts IDs to refresh
+        Returns True if all accounts are refreshed within the timeout specified, False otherwise.
+
+        :param account_ids: The list of accounts IDs to refresh.
+          If set to None, all account IDs will be implicitly fetched.
         :param timeout: The number of seconds to wait for the refresh to complete
         :param delay: The number of seconds to wait for each check on the refresh request
         """
+        if account_ids is None:
+            account_data = await self.get_accounts()
+            account_ids = [x["id"] for x in account_data["accounts"]]
         await self.request_accounts_refresh(account_ids)
         start = time.time()
         refreshed = False
@@ -762,7 +771,7 @@ class MonarchMoney(object):
         if start_date and end_date:
             variables["filters"]["startDate"] = start_date
             variables["filters"]["endDate"] = end_date
-        elif bool(start_date) != bool(end_date):
+        elif (start_date is None) ^ (end_date is None):
             raise Exception(
                 "You must specify both a startDate and endDate, not just one of them."
             )
