@@ -14,10 +14,10 @@ from graphql import DocumentNode
 
 AUTH_HEADER_KEY = "authorization"
 CSRF_KEY = "csrftoken"
+DEFAULT_RECORD_LIMIT = 100
 ERRORS_KEY = "error_code"
 SESSION_DIR = ".mm"
 SESSION_FILE = f"{SESSION_DIR}/mm_session.pickle"
-DEFAULT_RECORD_LIMIT = 100
 
 
 class MonarchMoneyEndpoints(object):
