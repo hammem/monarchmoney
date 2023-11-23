@@ -14,6 +14,7 @@ from graphql import DocumentNode
 
 AUTH_HEADER_KEY = "authorization"
 CSRF_KEY = "csrftoken"
+DEFAULT_RECORD_LIMIT = 100
 ERRORS_KEY = "error_code"
 SESSION_DIR = ".mm"
 SESSION_FILE = f"{SESSION_DIR}/mm_session.pickle"
@@ -297,7 +298,7 @@ class MonarchMoney(object):
 
     async def get_transactions(
         self,
-        limit: int = 1000,
+        limit: int = DEFAULT_RECORD_LIMIT,
         offset: Optional[int] = 0,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
@@ -316,7 +317,7 @@ class MonarchMoney(object):
         """
         Gets transaction data from the account.
 
-        :param limit: the maximum number of transactions to download, defaults to 1000.
+        :param limit: the maximum number of transactions to download, defaults to DEFAULT_RECORD_LIMIT.
         :param offset: the number of transactions to skip (offset) before retrieving results.
         :param start_date: the earliest date to get transactions from, in "yyyy-mm-dd" format.
         :param end_date: the latest date to get transactions from, in "yyyy-mm-dd" format.
@@ -562,7 +563,7 @@ class MonarchMoney(object):
 
     async def get_cashflow(
         self,
-        limit: int = 1000,
+        limit: int = DEFAULT_RECORD_LIMIT,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> Dict[str, Any]:
@@ -675,7 +676,7 @@ class MonarchMoney(object):
 
     async def get_cashflow_summary(
         self,
-        limit: int = 1000,
+        limit: int = DEFAULT_RECORD_LIMIT,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> Dict[str, Any]:
