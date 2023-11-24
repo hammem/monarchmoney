@@ -44,7 +44,7 @@ mm.multi_factor_authenticate(email, password, multi_factor_code)
 
 Alternatively, you can provide the MFA Secret Key. The MFA Secret Key is found when setting up the MFA in Monarch Money by going to Settings -> Security -> Enable MFA -> and copy the "Two-factor text code". Then provide it in the login() method:
 ```python
-await nm.login(
+await mm.login(
         email=email,
         password=password,
         save_session=False,
