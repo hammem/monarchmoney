@@ -3,10 +3,12 @@ from datetime import datetime
 import os
 import pickle
 import oathtool
+import time
 from typing import Any, Dict, Optional, List
 
 from aiohttp import ClientSession
 from aiohttp.client import DEFAULT_TIMEOUT
+import asyncio
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
 from graphql import DocumentNode
@@ -14,6 +16,7 @@ from graphql import DocumentNode
 
 AUTH_HEADER_KEY = "authorization"
 CSRF_KEY = "csrftoken"
+DEFAULT_RECORD_LIMIT = 100
 ERRORS_KEY = "error_code"
 SESSION_DIR = ".mm"
 SESSION_FILE = f"{SESSION_DIR}/mm_session.pickle"
@@ -36,6 +39,10 @@ class RequireMFAException(Exception):
 
 
 class LoginFailedException(Exception):
+    pass
+
+
+class RequestFailedException(Exception):
     pass
 
 
@@ -66,7 +73,7 @@ class MonarchMoney(object):
         self._timeout = timeout_secs
 
     @property
-    def token(self) -> str:
+    def token(self) -> Optional[str]:
         return self._token
 
     def set_token(self, token: str) -> None:
@@ -202,6 +209,117 @@ class MonarchMoney(object):
             graphql_query=query,
         )
 
+    async def request_accounts_refresh(self, account_ids: List[str]) -> bool:
+        """
+        Requests Monarch to refresh account balances and transactions with
+        source institutions.  Returns True if request was successfully started.
+
+        Otherwise, throws a `RequestFailedException`.
+        """
+        query = gql(
+            """
+          mutation Common_ForceRefreshAccountsMutation($input: ForceRefreshAccountsInput!) {
+            forceRefreshAccounts(input: $input) {
+              success
+              errors {
+                ...PayloadErrorFields
+                __typename
+              }
+              __typename
+            }
+          }
+
+          fragment PayloadErrorFields on PayloadError {
+            fieldErrors {
+              field
+              messages
+              __typename
+            }
+            message
+            code
+            __typename
+          }
+          """
+        )
+
+        variables = {
+            "input": {
+                "accountIds": account_ids,
+            },
+        }
+
+        response = await self.gql_call(
+            operation="Common_ForceRefreshAccountsMutation",
+            graphql_query=query,
+            variables=variables,
+        )
+
+        if not response["forceRefreshAccounts"]["success"]:
+            raise RequestFailedException(response["forceRefreshAccounts"]["errors"])
+
+        return True
+
+    async def is_accounts_refresh_complete(self) -> bool:
+        """
+        Checks on the status of a prior request to refresh account balances.
+
+        Returns:
+          - True if refresh request is completed.
+          - False if refresh request still in progress.
+
+        Otherwise, throws a `RequestFailedException`.
+        """
+        query = gql(
+            """
+          query ForceRefreshAccountsQuery {
+            accounts {
+              id
+              hasSyncInProgress
+              __typename
+            }
+          }
+          """
+        )
+
+        response = await self.gql_call(
+            operation="ForceRefreshAccountsQuery",
+            graphql_query=query,
+            variables={},
+        )
+
+        if "accounts" not in response:
+            raise RequestFailedException("Unable to request status of refresh")
+
+        return all([not x["hasSyncInProgress"] for x in response["accounts"]])
+
+    async def request_accounts_refresh_and_wait(
+        self,
+        account_ids: Optional[List[str]] = None,
+        timeout: int = 300,
+        delay: int = 10,
+    ) -> bool:
+        """
+        Convenience method for forcing an accounts refresh on Monarch, as well
+        as waiting for the refresh to complete.
+
+        Returns True if all accounts are refreshed within the timeout specified, False otherwise.
+
+        :param account_ids: The list of accounts IDs to refresh.
+          If set to None, all account IDs will be implicitly fetched.
+        :param timeout: The number of seconds to wait for the refresh to complete
+        :param delay: The number of seconds to wait for each check on the refresh request
+        """
+        if account_ids is None:
+            account_data = await self.get_accounts()
+            account_ids = [x["id"] for x in account_data["accounts"]]
+        await self.request_accounts_refresh(account_ids)
+        start = time.time()
+        refreshed = False
+        while not refreshed and (time.time() <= (start + timeout)):
+            await asyncio.sleep(delay)
+            refreshed = await self.is_accounts_refresh_complete()
+        return refreshed
+
     async def get_account_holdings(self, account_id: int) -> Dict[str, Any]:
         """
         Get the holdings information for a brokerage or similar type of account.
@@ -297,7 +415,7 @@ class MonarchMoney(object):
 
     async def get_transactions(
         self,
-        limit: int = 1000,
+        limit: int = DEFAULT_RECORD_LIMIT,
         offset: Optional[int] = 0,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
@@ -305,16 +423,18 @@ class MonarchMoney(object):
         category_ids: List[str] = [],
         account_ids: List[str] = [],
         tag_ids: List[str] = [],
-        has_attachments: bool = False,
-        has_notes: bool = False,
-        hidden_from_reports: bool = False,
-        is_split: bool = False,
-        is_recurring: bool = False,
+        has_attachments: Optional[bool] = None,
+        has_notes: Optional[bool] = None,
+        hidden_from_reports: Optional[bool] = None,
+        is_split: Optional[bool] = None,
+        is_recurring: Optional[bool] = None,
+        imported_from_mint: Optional[bool] = None,
+        synced_from_institution: Optional[bool] = None,
     ) -> Dict[str, Any]:
         """
         Gets transaction data from the account.
 
-        :param limit: the maximum number of transactions to download, defaults to 1000.
+        :param limit: the maximum number of transactions to download, defaults to DEFAULT_RECORD_LIMIT.
         :param offset: the number of transactions to skip (offset) before retrieving results.
         :param start_date: the earliest date to get transactions from, in "yyyy-mm-dd" format.
         :param end_date: the latest date to get transactions from, in "yyyy-mm-dd" format.
@@ -327,6 +447,8 @@ class MonarchMoney(object):
         :param hidden_from_reports: a bool to filter for whether the transactions are hidden from reports.
         :param is_split: a bool to filter for whether the transactions are split.
         :param is_recurring: a bool to filter for whether the transactions are recurring.
+        :param imported_from_mint: a bool to filter for whether the transactions were imported from mint.
+        :param synced_from_institution: a bool to filter for whether the transactions were synced from an institution.
         """
 
         query = gql(
@@ -363,6 +485,8 @@ class MonarchMoney(object):
               __typename
             }
             isSplitTransaction
+            createdAt
+            updatedAt
             category {
               id
               name
@@ -401,13 +525,30 @@ class MonarchMoney(object):
                 "categories": category_ids,
                 "accounts": account_ids,
                 "tags": tag_ids,
-                "hasAttachments": has_attachments,
-                "hasNotes": has_notes,
-                "hideFromReports": hidden_from_reports,
-                "isRecurring": is_recurring,
-                "isSplit": is_split,
             },
         }
+
+        # If bool filters are not defined (i.e. None), then it should not apply the filter
+        if has_attachments is not None:
+            variables["filters"]["hasAttachments"] = has_attachments
+
+        if has_notes is not None:
+            variables["filters"]["hasNotes"] = has_notes
+
+        if hidden_from_reports is not None:
+            variables["filters"]["hideFromReports"] = hidden_from_reports
+
+        if is_recurring is not None:
+            variables["filters"]["isRecurring"] = is_recurring
+
+        if is_split is not None:
+            variables["filters"]["isSplit"] = is_split
+
+        if imported_from_mint is not None:
+            variables["filters"]["importedFromMint"] = imported_from_mint
+
+        if synced_from_institution is not None:
+            variables["filters"]["syncedFromInstitution"] = synced_from_institution
 
         if start_date and end_date:
             variables["filters"]["startDate"] = start_date
@@ -564,7 +705,7 @@ class MonarchMoney(object):
 
     async def get_cashflow(
         self,
-        limit: int = 1000,
+        limit: int = DEFAULT_RECORD_LIMIT,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> Dict[str, Any]:
@@ -656,7 +797,7 @@ class MonarchMoney(object):
         if start_date and end_date:
             variables["filters"]["startDate"] = start_date
             variables["filters"]["endDate"] = end_date
-        elif bool(start_date) != bool(end_date):
+        elif (start_date is None) ^ (end_date is None):
             raise Exception(
                 "You must specify both a startDate and endDate, not just one of them."
             )
@@ -677,7 +818,7 @@ class MonarchMoney(object):
 
     async def get_cashflow_summary(
         self,
-        limit: int = 1000,
+        limit: int = DEFAULT_RECORD_LIMIT,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> Dict[str, Any]:
