@@ -511,6 +511,29 @@ class MonarchMoney(object):
         )
         return await self.gql_call(operation="GetCategories", graphql_query=query)
 
+    async def get_transaction_category_groups(self) -> Dict[str, Any]:
+        """
+        Gets all the category groups configured in the account.
+        """
+        query = gql(
+            """
+          query ManageGetCategoryGroups {
+              categoryGroups {
+                  id
+                  name
+                  order
+                  type
+                  updatedAt
+                  createdAt
+                  __typename
+              }
+          }
+        """
+        )
+        return await self.gql_call(
+            operation="ManageGetCategoryGroups", graphql_query=query
+        )
+
     async def get_transaction_tags(self) -> Dict[str, Any]:
         """
         Gets all the tags configured in the account.
