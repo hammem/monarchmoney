@@ -499,6 +499,8 @@ class MonarchMoney(object):
             systemCategory
             isSystemCategory
             isDisabled
+            updatedAt
+            createdAt
             group {
               id
               name
