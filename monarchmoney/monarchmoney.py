@@ -482,6 +482,11 @@ class MonarchMoney(object):
             needsReview
             attachments {
               id
+              extension
+              filename
+              originalAssetUrl
+              publicId
+              sizeBytes
               __typename
             }
             isSplitTransaction
