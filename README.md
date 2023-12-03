@@ -60,6 +60,7 @@ As of writing this README, the following methods are supported:
 
 - `get_accounts` - all the accounts linked to Monarch Money
 - `get_account_holdings` - all of the securities in a brokerage or similar type of account
+- `get_budgets` — all the budgets and the corresponding actual amounts
 - `get_subscription_details` - the Monarch Money account's status (e.g. paid or trial)
 - `get_transactions` - transaction data, defaults to returning the last 100 transactions; can also be searched by date range
 - `get_transaction_categories` all of the categories configured in the account
