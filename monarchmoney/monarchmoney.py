@@ -398,12 +398,20 @@ class MonarchMoney(object):
         use_v2_goals: Optional[bool] = True,
     ) -> Dict[str, Any]:
         """
-        Get your budgets and correspond actual amounts from the account.
+        Get your budgets and corresponding actual amounts from the account.
 
-        :param start_date: the earliest date to get budget data from, in "yyyy-mm-dd" format (default: last month)
-        :param end_date: the latest date to get budget data from, in "yyyy-mm-dd" format (default: next month)
-        :param use_legacy_goals: Set True to return monthly budget set aside for goals (think no longer used)
-        :param use_v2_goals: Set True to return monthly budget set aside for version 2 goals
+        When no date arguments given:
+            | `start_date` will default to last month based on todays date
+            | `end_date` will default to next month based on todays date
+
+        :param start_date:
+            the earliest date to get budget data, in "yyyy-mm-dd" format (default: last month)
+        :param end_date:
+            the latest date to get budget data, in "yyyy-mm-dd" format (default: next month)
+        :param use_legacy_goals:
+            Set True to return a list of monthly budget set aside for goals (default: no list)
+        :param use_v2_goals:
+            Set True to return a list of monthly budget set aside for version 2 goals (default list)
         """
         query = gql(
             """
