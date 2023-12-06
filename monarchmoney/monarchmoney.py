@@ -880,7 +880,7 @@ class MonarchMoney(object):
             operation="Web_GetCashFlowPage", variables=variables, graphql_query=query
         )
 
-    async def update_budget_amount(
+    async def set_budget_amount(
         self,
         category_id: str,
         amount: float,
@@ -894,7 +894,8 @@ class MonarchMoney(object):
         :param category_id:
             The ID of the category to set the budget for
         :param amount:
-            The amount to set the budget to. Can be negative (to indicate over-budget)
+            The amount to set the budget to. Can be negative (to indicate over-budget). A zero
+            value will "unset" or "clear" the budget for the given category.
         :param timeframe:
             The timeframe of the budget. As of writing, it is believed that `month` is the
             only valid value for this parameter.
