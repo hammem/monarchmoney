@@ -209,6 +209,40 @@ class MonarchMoney(object):
             graphql_query=query,
         )
 
+    async def get_account_type_options(self) -> Dict[str, Any]:
+        """
+        Retrieves a list of available account types and their subtypes.
+        """
+        query = gql(
+            """
+            query GetAccountTypeOptions {
+                accountTypeOptions {
+                    type {
+                        name
+                        display
+                        group
+                        possibleSubtypes {
+                            display
+                            name
+                            __typename
+                        }
+                        __typename
+                    }
+                    subtype {
+                        name
+                        display
+                        __typename
+                    }
+                    __typename
+                }
+            }
+        """
+        )
+        return await self.gql_call(
+            operation="GetAccountTypeOptions",
+            graphql_query=query,
+        )
+
     async def request_accounts_refresh(self, account_ids: List[str]) -> bool:
         """
         Requests Monarch to refresh account balances and transactions with
