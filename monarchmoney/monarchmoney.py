@@ -209,6 +209,40 @@ class MonarchMoney(object):
             graphql_query=query,
         )
 
+    async def get_account_type_options(self) -> Dict[str, Any]:
+        """
+        Retrieves a list of available account types and their subtypes.
+        """
+        query = gql(
+            """
+            query GetAccountTypeOptions {
+                accountTypeOptions {
+                    type {
+                        name
+                        display
+                        group
+                        possibleSubtypes {
+                            display
+                            name
+                            __typename
+                        }
+                        __typename
+                    }
+                    subtype {
+                        name
+                        display
+                        __typename
+                    }
+                    __typename
+                }
+            }
+        """
+        )
+        return await self.gql_call(
+            operation="GetAccountTypeOptions",
+            graphql_query=query,
+        )
+
     async def request_accounts_refresh(self, account_ids: List[str]) -> bool:
         """
         Requests Monarch to refresh account balances and transactions with
@@ -482,6 +516,11 @@ class MonarchMoney(object):
             needsReview
             attachments {
               id
+              extension
+              filename
+              originalAssetUrl
+              publicId
+              sizeBytes
               __typename
             }
             isSplitTransaction
@@ -640,6 +679,8 @@ class MonarchMoney(object):
             systemCategory
             isSystemCategory
             isDisabled
+            updatedAt
+            createdAt
             group {
               id
               name
@@ -651,6 +692,29 @@ class MonarchMoney(object):
         """
         )
         return await self.gql_call(operation="GetCategories", graphql_query=query)
+
+    async def get_transaction_category_groups(self) -> Dict[str, Any]:
+        """
+        Gets all the category groups configured in the account.
+        """
+        query = gql(
+            """
+          query ManageGetCategoryGroups {
+              categoryGroups {
+                  id
+                  name
+                  order
+                  type
+                  updatedAt
+                  createdAt
+                  __typename
+              }
+          }
+        """
+        )
+        return await self.gql_call(
+            operation="ManageGetCategoryGroups", graphql_query=query
+        )
 
     async def get_transaction_tags(self) -> Dict[str, Any]:
         """
