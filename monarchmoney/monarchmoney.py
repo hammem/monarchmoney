@@ -880,6 +880,68 @@ class MonarchMoney(object):
             operation="Web_GetCashFlowPage", variables=variables, graphql_query=query
         )
 
+    async def update_budget_amount(
+        self,
+        category_id: str,
+        amount: float,
+        timeframe: str = "month",  # I believe this is the only valid value right now
+        start_date: Optional[str] = None,
+        apply_to_future: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Updates the budget amount for the given category.
+
+        :param category_id:
+            The ID of the category to set the budget for
+        :param amount:
+            The amount to set the budget to. Can be negative (to indicate over-budget)
+        :param timeframe:
+            The timeframe of the budget. As of writing, it is believed that `month` is the
+            only valid value for this parameter.
+        :param start_date:
+            The beginning of the given timeframe (ex: 2023-12-01). If not specified, then the
+            beginning of today's month will be used.
+        :param apply_to_future:
+            Whether to apply the new budget amount to all proceeding timeframes
+        """
+        query = gql(
+            """
+          mutation Common_UpdateBudgetItem($input: UpdateOrCreateBudgetItemMutationInput!) {
+            updateOrCreateBudgetItem(input: $input) {
+              budgetItem {
+                id
+                budgetAmount
+                __typename
+              }
+              __typename
+            }
+          }
+        """
+        )
+
+        variables = {
+            "input": {
+                "startDate": start_date,
+                "timeframe": timeframe,
+                "categoryId": category_id,
+                "amount": amount,
+                "applyToFuture": apply_to_future,
+            }
+        }
+
+        if start_date is None:
+            current_year = datetime.now().year
+            current_month = datetime.now().month
+            variables["input"]["startDate"] = datetime(
+                current_year, current_month, 1
+            ).strftime("%Y-%m-%d")
+
+        return await self.gql_call(
+            operation="Common_UpdateBudgetItem",
+            variables=variables,
+            graphql_query=query,
+        )
+
     async def gql_call(
         self,
         operation: str,
