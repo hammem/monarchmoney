@@ -609,6 +609,7 @@ class MonarchMoney(object):
         merchant_name: str,
         category_id: str,
         notes: str = "",
+        update_balance: bool = True
     ) -> Dict[str, Any]:
         """
         Creates a transaction with the given parameters
@@ -649,6 +650,7 @@ class MonarchMoney(object):
                 "merchantName": merchant_name,
                 "categoryId": category_id,
                 "notes": notes,
+                "shouldUpdateBalance": update_balance
             }
         }
 
