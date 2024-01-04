@@ -861,6 +861,55 @@ class MonarchMoney(object):
             variables=variables,
         )
 
+    async def delete_transaction(self, transaction_id: str) -> bool:
+        """
+        Deletes the given transaction.
+
+        :param transaction_id: the ID of the transaction targeted for deletion.
+        """
+        query = gql(
+            """
+          mutation Common_DeleteTransactionMutation($input: DeleteTransactionMutationInput!) {
+            deleteTransaction(input: $input) {
+              deleted
+              errors {
+                ...PayloadErrorFields
+                __typename
+              }
+              __typename
+            }
+          }
+  
+          fragment PayloadErrorFields on PayloadError {
+            fieldErrors {
+              field
+              messages
+              __typename
+            }
+            message
+            code
+            __typename
+          }
+        """
+        )
+
+        variables = {
+            "input": {
+                "transactionId": transaction_id,
+            },
+        }
+
+        response = await self.gql_call(
+            operation="Common_DeleteTransactionMutation",
+            graphql_query=query,
+            variables=variables,
+        )
+
+        if not response["deleteTransaction"]["deleted"]:
+            raise RequestFailedException(response["deleteTransaction"]["errors"])
+
+        return True
+
     async def get_transaction_categories(self) -> Dict[str, Any]:
         """
         Gets all the categories configured in the account.
@@ -1117,6 +1166,242 @@ class MonarchMoney(object):
             operation="Web_GetCashFlowPage", variables=variables, graphql_query=query
         )
 
+    async def update_transaction(
+        self,
+        transaction_id: str,
+        category_id: Optional[str] = None,
+        merchant_name: Optional[str] = None,
+        goal_id: Optional[str] = None,
+        amount: Optional[float] = None,
+        date: Optional[str] = None,
+        hide_from_reports: Optional[bool] = None,
+        needs_review: Optional[bool] = None,
+        notes: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Updates a single existing transaction as identified by the transaction_id
+        The only required attribute is transaction_id. Calling this function with
+        only the transaction_id will have no effect on the existing transaction data
+        but will not cause an error.
+
+        Comments on parameters:
+        - transaction_id: Must match an existing transaction_id returned from Monarch
+        - category_id: This parameter is only needed when the user wants to change the
+            current category. When provided, it must match an existing category_id returned
+            from Monarch. An empty string is equivalent to the parameter not being passed.
+        - merchant_name: This parameter is only needed when the user wants to change
+            the existing merchant name. Empty strings are ignored by the Monarch API
+            when passed since a non-empty merchant name is required for all transactions
+        - goal_id: This parameter is only needed when the user wants to change
+            the existing goal.  When provided, it must match an existing goal_id returned
+            from Monarch.  An empty string can be passed to clear out existing goal associations.
+        - amount:  This parameter is only needed when the user wants to update
+            the existing transaction amount. Empty strings are explicitly ignored by this code
+            to avoid errors in the API.
+        - date:  This parameter is only needed when the user wants to update
+            the existing transaction date. Empty strings are explicitly ignored by this code
+            to avoid errors in the API.  Required format is "2023-10-30"
+        - hide_from_reports: This parameter is only needed when the user wants to update the
+            existing transaction's hide-from-reports value.  If passed, the parameter is cast to
+            Booleans to avoid API issues.
+        - needs_review: This parameter is only needed when the user wants to update the
+            existing transaction's needs-review value.  If passed, the parameter is cast to
+            Booleans to avoid API issues.
+        - notes: This parameter is only needed when the user wants to change
+            the existing note.  An empty string can be passed to clear out existing notes.
+
+        Examples:
+        - To update a note: mm.update_transaction(
+            transaction_id="160820461792094418",
+            notes="my note")
+
+        - To clear a note: mm.update_transaction(
+            transaction_id="160820461792094418",
+            notes="")
+
+        - To update all items:
+            mm.update_transaction(
+                transaction_id="160820461792094418",
+                category_id="160185840107743863",
+                merchant_name="Amazon",
+                goal_id="160826408575920275",
+                amount=123.45,
+                date="2023-11-09",
+                hide_from_reports=False,
+                needs_review="ThisWillBeCastToTrue",
+                notes=f'Updated On: {datetime.now().strftime("%m/%d/%Y %H:%M:%S")}',
+            )
+        """
+        query = gql(
+            """
+        mutation Web_TransactionDrawerUpdateTransaction($input: UpdateTransactionMutationInput!) {
+            updateTransaction(input: $input) {
+            transaction {
+                id
+                amount
+                pending
+                date
+                hideFromReports
+                needsReview
+                reviewedAt
+                reviewedByUser {
+                id
+                name
+                __typename
+                }
+                plaidName
+                notes
+                isRecurring
+                category {
+                id
+                __typename
+                }
+                goal {
+                id
+                __typename
+                }
+                merchant {
+                id
+                name
+                __typename
+                }
+                __typename
+            }
+            errors {
+                ...PayloadErrorFields
+                __typename
+            }
+            __typename
+            }
+        }
+
+        fragment PayloadErrorFields on PayloadError {
+            fieldErrors {
+            field
+            messages
+            __typename
+            }
+            message
+            code
+            __typename
+        }
+        """
+        )
+
+        variables = {
+            "input": {
+                "id": transaction_id,
+            }
+        }
+
+        # Within Monarch, these values cannot be empty. Monarch will simply ignore updates
+        # to category and merchant name that are empty strings or None.
+        # As such, no need to avoid adding to variables
+        variables["input"].update({"category": category_id})
+        variables["input"].update({"name": merchant_name})
+
+        # Monarch will not accept nulls for amount and date.
+        # Don't update values if an empty string is passed or if parameter is None
+        if amount:
+            variables["input"].update({"amount": amount})
+        if date:
+            variables["input"].update({"date": date})
+
+        # Don't update values if the parameter is not passed or explicitly set to None.
+        # Passed values must be cast to bool to avoid API errors
+        if hide_from_reports is not None:
+            variables["input"].update({"hideFromReports": bool(hide_from_reports)})
+        if needs_review is not None:
+            variables["input"].update({"needsReview": bool(needs_review)})
+
+        # We want an empty string to clear the goal and notes parameters but the values should not
+        # be cleared if the parameter isn't passed
+        # Don't update values if the parameter is not passed or explicitly set to None.
+        if goal_id is not None:
+            variables["input"].update({"goalId": goal_id})
+        if notes is not None:
+            variables["input"].update({"notes": notes})
+
+        return await self.gql_call(
+            operation="Web_TransactionDrawerUpdateTransaction",
+            variables=variables,
+            graphql_query=query,
+        )
+
+    async def set_budget_amount(
+        self,
+        amount: float,
+        category_id: Optional[str] = None,
+        category_group_id: Optional[str] = None,
+        timeframe: str = "month",  # I believe this is the only valid value right now
+        start_date: Optional[str] = None,
+        apply_to_future: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Updates the budget amount for the given category.
+
+        :param category_id:
+            The ID of the category to set the budget for (cannot be provided w/ category_group_id)
+        :param category_group_id:
+            The ID of the category group to set the budget for (cannot be provided w/ category_id)
+        :param amount:
+            The amount to set the budget to. Can be negative (to indicate over-budget). A zero
+            value will "unset" or "clear" the budget for the given category.
+        :param timeframe:
+            The timeframe of the budget. As of writing, it is believed that `month` is the
+            only valid value for this parameter.
+        :param start_date:
+            The beginning of the given timeframe (ex: 2023-12-01). If not specified, then the
+            beginning of today's month will be used.
+        :param apply_to_future:
+            Whether to apply the new budget amount to all proceeding timeframes
+        """
+
+        # Will be true if neither of the parameters are set, or both are
+        if (category_id is None) is (category_group_id is None):
+            raise Exception(
+                "You must specify either a category_id OR category_group_id; not both"
+            )
+
+        query = gql(
+            """
+          mutation Common_UpdateBudgetItem($input: UpdateOrCreateBudgetItemMutationInput!) {
+            updateOrCreateBudgetItem(input: $input) {
+              budgetItem {
+                id
+                budgetAmount
+                __typename
+              }
+              __typename
+            }
+          }
+        """
+        )
+
+        variables = {
+            "input": {
+                "startDate": start_date,
+                "timeframe": timeframe,
+                "categoryId": category_id,
+                "categoryGroupId": category_group_id,
+                "amount": amount,
+                "applyToFuture": apply_to_future,
+            }
+        }
+
+        if start_date is None:
+            current_year = datetime.now().year
+            current_month = datetime.now().month
+            variables["input"]["startDate"] = datetime(
+                current_year, current_month, 1
+            ).strftime("%Y-%m-%d")
+
+        return await self.gql_call(
+            operation="Common_UpdateBudgetItem",
+            variables=variables,
+            graphql_query=query,
+        )
+    
     async def gql_call(
         self,
         operation: str,
