@@ -1401,7 +1401,7 @@ class MonarchMoney(object):
             variables=variables,
             graphql_query=query,
         )
-    
+
     async def gql_call(
         self,
         operation: str,
