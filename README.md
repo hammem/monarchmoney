@@ -58,14 +58,24 @@ await mm.login(
 
 As of writing this README, the following methods are supported:
 
-- `get_accounts` - all the accounts linked to Monarch Money
-- `get_account_holdings` - all of the securities in a brokerage or similar type of account
-- `get_subscription_details` - the Monarch Money account's status (e.g. paid or trial)
-- `get_transactions` - transaction data, defaults to returning the last 100 transactions; can also be searched by date range
-- `get_transaction_categories` all of the categories configured in the account
-- `get_transaction_tags` - all of the tags configured in the account
-- `get_cashflow` - cashflow data (by category, category group, merchant and a summary)
-- `get_cashflow_summary` - cashflow summary (income, expense, savings, savings rate)
+## Non-Mutating Methods
+
+- `get_accounts` - gets all the accounts linked to Monarch Money
+- `get_account_holdings` - gets all of the securities in a brokerage or similar type of account
+- `get_subscription_details` - gets the Monarch Money account's status (e.g. paid or trial)
+- `get_transactions` - gets transaction data, defaults to returning the last 100 transactions; can also be searched by date range
+- `get_transaction_categories` - gets all of the categories configured in the account
+- `get_transaction_tags` - gets all of the tags configured in the account
+- `get_cashflow` - gets cashflow data (by category, category group, merchant and a summary)
+- `get_cashflow_summary` - gets cashflow summary (income, expense, savings, savings rate)
+- `is_accounts_refresh_complete` - gets the status of a running account refresh
+
+## Mutating Methods
+
+- `request_accounts_refresh` - requests a syncronization / refresh of all accounts linked to Monarch Money. This is a **non-blocking call**. If the user wants to check on the status afterwards, they must call `is_accounts_refresh_complete`.
+- `request_accounts_refresh_and_waid` - requests a syncronization / refresh of all accounts linked to Monarch Money. This is a **blocking call** and will not return until the refresh is complete or no longer running.
+- `create_transaction` - creates a transaction with the given attributes
+- `set_budget_amount` - sets a budget's value to the given amount (date allowed, will only apply to month specified by default). A zero amount value will "unset" or "clear" the budget for the given category.
 
 # Contributing
 
