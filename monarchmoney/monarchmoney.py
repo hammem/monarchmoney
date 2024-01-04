@@ -994,6 +994,285 @@ class MonarchMoney(object):
             operation="GetHouseholdTransactionTags", graphql_query=query
         )
 
+    async def get_transaction_details(
+        self, transaction_id: str, redirect_posted: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Returns detailed information about a transaction.
+
+        :param transaction_id: the transaction to fetch.
+        :param redirect_posted: whether to redirect posted transactions. Defaults to True.
+        """
+        query = gql(
+            """
+          query GetTransactionDrawer($id: UUID!, $redirectPosted: Boolean) {
+            getTransaction(id: $id, redirectPosted: $redirectPosted) {
+              id
+              amount
+              pending
+              isRecurring
+              date
+              originalDate
+              hideFromReports
+              needsReview
+              reviewedAt
+              reviewedByUser {
+                id
+                name
+                __typename
+              }
+              plaidName
+              notes
+              hasSplitTransactions
+              isSplitTransaction
+              isManual
+              splitTransactions {
+                id
+                ...TransactionDrawerSplitMessageFields
+                __typename
+              }
+              originalTransaction {
+                id
+                ...OriginalTransactionFields
+                __typename
+              }
+              attachments {
+                id
+                publicId
+                extension
+                sizeBytes
+                filename
+                originalAssetUrl
+                __typename
+              }
+              account {
+                id
+                ...TransactionDrawerAccountSectionFields
+                __typename
+              }
+              category {
+                id
+                __typename
+              }
+              goal {
+                id
+                __typename
+              }
+              merchant {
+                id
+                name
+                transactionCount
+                logoUrl
+                recurringTransactionStream {
+                  id
+                  __typename
+                }
+                __typename
+              }
+              tags {
+                id
+                name
+                color
+                order
+                __typename
+              }
+              needsReviewByUser {
+                id
+                __typename
+              }
+              __typename
+            }
+            myHousehold {
+              users {
+                id
+                name
+                __typename
+              }
+              __typename
+            }
+          }
+
+          fragment TransactionDrawerSplitMessageFields on Transaction {
+            id
+            amount
+            merchant {
+              id
+              name
+              __typename
+            }
+            category {
+              id
+              icon
+              name
+              __typename
+            }
+            __typename
+          }
+
+          fragment OriginalTransactionFields on Transaction {
+            id
+            date
+            amount
+            merchant {
+              id
+              name
+              __typename
+            }
+            __typename
+          }
+
+          fragment TransactionDrawerAccountSectionFields on Account {
+            id
+            displayName
+            icon
+            logoUrl
+            id
+            mask
+            subtype {
+              display
+              __typename
+            }
+            __typename
+          }
+        """
+        )
+
+        variables = {
+            "id": transaction_id,
+            "redirectPosted": redirect_posted,
+        }
+
+        return await self.gql_call(
+            operation="GetTransactionDrawer", variables=variables, graphql_query=query
+        )
+
+    async def get_transaction_splits(self, transaction_id: str) -> Dict[str, Any]:
+        """
+        Returns the transaction split information for a transaction.
+
+        :param transaction_id: the transaction to query.
+        """
+        query = gql(
+            """
+          query TransactionSplitQuery($id: UUID!) {
+            getTransaction(id: $id) {
+              id
+              amount
+              category {
+                id
+                name
+                icon
+                __typename
+              }
+              merchant {
+                id
+                name
+                __typename
+              }
+              splitTransactions {
+                id
+                merchant {
+                  id
+                  name
+                  __typename
+                }
+                category {
+                  id
+                  icon
+                  name
+                  __typename
+                }
+                amount
+                notes
+                __typename
+              }
+              __typename
+            }
+          }
+        """
+        )
+
+        variables = {"id": transaction_id}
+
+        return await self.gql_call(
+            operation="TransactionSplitQuery", variables=variables, graphql_query=query
+        )
+
+    async def update_transaction_splits(
+        self, transaction_id: str, split_data: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Creates, modifies, or deletes the splits for a given transaction.
+
+        Returns the split information for the update transaction.
+
+        :param transaction_id: the original transaction to modify.
+        :param split_data: the splits to create, modify, or delete.
+          If empty list or None is given, all splits will be deleted.
+          If split_data is given, all existing splits for transaction_id will be replaced with the new splits.
+          split_data takes the shape: [{"merchantName": "...", "amount": -12.34, "categoryId": "231"}, split2, split3, ...]
+          sum([split.amount for split in split_data]) must equal transaction_id.amount.
+        """
+        query = gql(
+            """
+          mutation Common_SplitTransactionMutation($input: UpdateTransactionSplitMutationInput!) {
+            updateTransactionSplit(input: $input) {
+              errors {
+                ...PayloadErrorFields
+                __typename
+              }
+              transaction {
+                id
+                hasSplitTransactions
+                splitTransactions {
+                  id
+                  merchant {
+                    id
+                    name
+                    __typename
+                  }
+                  category {
+                    id
+                    icon
+                    name
+                    __typename
+                  }
+                  amount
+                  notes
+                  __typename
+                }
+                __typename
+              }
+              __typename
+            }
+          }
+
+          fragment PayloadErrorFields on PayloadError {
+            fieldErrors {
+              field
+              messages
+              __typename
+            }
+            message
+            code
+            __typename
+          }
+        """
+        )
+
+        if split_data is None:
+            split_data = []
+
+        variables = {
+            "input": {"transactionId": transaction_id, "splitData": split_data}
+        }
+
+        return await self.gql_call(
+            operation="Common_SplitTransactionMutation",
+            variables=variables,
+            graphql_query=query,
+        )
+
     async def get_cashflow(
         self,
         limit: int = DEFAULT_RECORD_LIMIT,
