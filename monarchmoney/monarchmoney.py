@@ -390,6 +390,243 @@ class MonarchMoney(object):
             variables=variables,
         )
 
+    async def get_budgets(
+        self,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        use_legacy_goals: Optional[bool] = False,
+        use_v2_goals: Optional[bool] = True,
+    ) -> Dict[str, Any]:
+        """
+        Get your budgets and corresponding actual amounts from the account.
+
+        When no date arguments given:
+            | `start_date` will default to last month based on todays date
+            | `end_date` will default to next month based on todays date
+
+        :param start_date:
+            the earliest date to get budget data, in "yyyy-mm-dd" format (default: last month)
+        :param end_date:
+            the latest date to get budget data, in "yyyy-mm-dd" format (default: next month)
+        :param use_legacy_goals:
+            Set True to return a list of monthly budget set aside for goals (default: no list)
+        :param use_v2_goals:
+            Set True to return a list of monthly budget set aside for version 2 goals (default list)
+        """
+        query = gql(
+            """
+          query GetJointPlanningData($startDate: Date!, $endDate: Date!, $useLegacyGoals: Boolean!, $useV2Goals: Boolean!) {
+            budgetData(startMonth: $startDate, endMonth: $endDate) {
+              monthlyAmountsByCategory {
+                category {
+                  id
+                  __typename
+                }
+                monthlyAmounts {
+                  month
+                  plannedCashFlowAmount
+                  plannedSetAsideAmount
+                  actualAmount
+                  remainingAmount
+                  previousMonthRolloverAmount
+                  rolloverType
+                  __typename
+                }
+                __typename
+              }
+              monthlyAmountsByCategoryGroup {
+                categoryGroup {
+                  id
+                  __typename
+                }
+                monthlyAmounts {
+                  month
+                  plannedCashFlowAmount
+                  actualAmount
+                  remainingAmount
+                  previousMonthRolloverAmount
+                  rolloverType
+                  __typename
+                }
+                __typename
+              }
+              monthlyAmountsForFlexExpense {
+                budgetVariability
+                monthlyAmounts {
+                  month
+                  plannedCashFlowAmount
+                  actualAmount
+                  remainingAmount
+                  previousMonthRolloverAmount
+                  rolloverType
+                  __typename
+                }
+                __typename
+              }
+              totalsByMonth {
+                month
+                totalIncome {
+                  plannedAmount
+                  actualAmount
+                  remainingAmount
+                  previousMonthRolloverAmount
+                  __typename
+                }
+                totalExpenses {
+                  plannedAmount
+                  actualAmount
+                  remainingAmount
+                  previousMonthRolloverAmount
+                  __typename
+                }
+                totalFixedExpenses {
+                  plannedAmount
+                  actualAmount
+                  remainingAmount
+                  previousMonthRolloverAmount
+                  __typename
+                }
+                totalNonMonthlyExpenses {
+                  plannedAmount
+                  actualAmount
+                  remainingAmount
+                  previousMonthRolloverAmount
+                  __typename
+                }
+                totalFlexibleExpenses {
+                  plannedAmount
+                  actualAmount
+                  remainingAmount
+                  previousMonthRolloverAmount
+                  __typename
+                }
+                __typename
+              }
+              __typename
+            }
+            categoryGroups {
+              id
+              name
+              order
+              groupLevelBudgetingEnabled
+              budgetVariability
+              rolloverPeriod {
+                id
+                startMonth
+                endMonth
+                __typename
+              }
+              categories {
+                id
+                name
+                icon
+                order
+                budgetVariability
+                rolloverPeriod {
+                  id
+                  startMonth
+                  endMonth
+                  __typename
+                }
+                __typename
+              }
+              type
+              __typename
+            }
+            goals @include(if: $useLegacyGoals) {
+              id
+              name
+              icon
+              completedAt
+              targetDate
+              __typename
+            }
+            goalMonthlyContributions(startDate: $startDate, endDate: $endDate) @include(if: $useLegacyGoals) {
+              mount: monthlyContribution
+              startDate
+              goalId
+              __typename
+            }
+            goalPlannedContributions(startDate: $startDate, endDate: $endDate) @include(if: $useLegacyGoals) {
+              id
+              amount
+              startDate
+              goal {
+                id
+                __typename
+              }
+              __typename
+            }
+            goalsV2 @include(if: $useV2Goals) {
+              id
+              name
+              archivedAt
+              completedAt
+              priority
+              imageStorageProvider
+              imageStorageProviderId
+              plannedContributions(startMonth: $startDate, endMonth: $endDate) {
+                id
+                month
+                amount
+                __typename
+              }
+              monthlyContributionSummaries(startMonth: $startDate, endMonth: $endDate) {
+                month
+                sum
+                __typename
+              }
+              __typename
+            }
+            budgetSystem
+          }
+        """
+        )
+
+        variables = {
+            "startDate": start_date,
+            "endDate": end_date,
+            "useLegacyGoals": use_legacy_goals,
+            "useV2Goals": use_v2_goals,
+        }
+
+        if not start_date and not end_date:
+            # Default start_date to last month and end_date to next month
+            today = datetime.today()
+
+            # Get the first day of last month
+            last_month = today.month - 1
+            last_month_year = today.year
+            first_day_of_last_month = 1
+            if last_month < 1:
+                last_month_year -= 1
+                last_month = 12
+            variables["startDate"] = datetime(
+                last_month_year, last_month, first_day_of_last_month
+            ).strftime("%Y-%m-%d")
+
+            # Get the last day of next month
+            next_month = today.month + 1
+            next_month_year = today.year
+            if next_month > 12:
+                next_month_year += 1
+                next_month = 1
+            last_day_of_next_month = calendar.monthrange(next_month_year, next_month)[1]
+            variables["endDate"] = datetime(
+                next_month_year, next_month, last_day_of_next_month
+            ).strftime("%Y-%m-%d")
+
+        elif bool(start_date) != bool(end_date):
+            raise Exception(
+                "You must specify both a startDate and endDate, not just one of them."
+            )
+
+        return await self.gql_call(
+            operation="GetJointPlanningData",
+            graphql_query=query,
+            variables=variables,
+        )
+
     async def get_subscription_details(self) -> Dict[str, Any]:
         """
         The type of subscription for the Monarch Money account.
