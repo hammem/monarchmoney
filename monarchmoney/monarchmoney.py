@@ -624,6 +624,55 @@ class MonarchMoney(object):
             variables=variables,
         )
 
+    async def delete_transaction(self, transaction_id: str) -> bool:
+        """
+        Deletes the given transaction.
+
+        :param transaction_id: the ID of the transaction targeted for deletion.
+        """
+        query = gql(
+            """
+          mutation Common_DeleteTransactionMutation($input: DeleteTransactionMutationInput!) {
+            deleteTransaction(input: $input) {
+              deleted
+              errors {
+                ...PayloadErrorFields
+                __typename
+              }
+              __typename
+            }
+          }
+  
+          fragment PayloadErrorFields on PayloadError {
+            fieldErrors {
+              field
+              messages
+              __typename
+            }
+            message
+            code
+            __typename
+          }
+        """
+        )
+
+        variables = {
+            "input": {
+                "transactionId": transaction_id,
+            },
+        }
+
+        response = await self.gql_call(
+            operation="Common_DeleteTransactionMutation",
+            graphql_query=query,
+            variables=variables,
+        )
+
+        if not response["deleteTransaction"]["deleted"]:
+            raise RequestFailedException(response["deleteTransaction"]["errors"])
+
+        return True
+
     async def get_transaction_categories(self) -> Dict[str, Any]:
         """
         Gets all the categories configured in the account.
