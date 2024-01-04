@@ -624,6 +624,55 @@ class MonarchMoney(object):
             variables=variables,
         )
 
+    async def delete_transaction(self, transaction_id: str) -> bool:
+        """
+        Deletes the given transaction.
+
+        :param transaction_id: the ID of the transaction targeted for deletion.
+        """
+        query = gql(
+            """
+          mutation Common_DeleteTransactionMutation($input: DeleteTransactionMutationInput!) {
+            deleteTransaction(input: $input) {
+              deleted
+              errors {
+                ...PayloadErrorFields
+                __typename
+              }
+              __typename
+            }
+          }
+  
+          fragment PayloadErrorFields on PayloadError {
+            fieldErrors {
+              field
+              messages
+              __typename
+            }
+            message
+            code
+            __typename
+          }
+        """
+        )
+
+        variables = {
+            "input": {
+                "transactionId": transaction_id,
+            },
+        }
+
+        response = await self.gql_call(
+            operation="Common_DeleteTransactionMutation",
+            graphql_query=query,
+            variables=variables,
+        )
+
+        if not response["deleteTransaction"]["deleted"]:
+            raise RequestFailedException(response["deleteTransaction"]["errors"])
+
+        return True
+
     async def get_transaction_categories(self) -> Dict[str, Any]:
         """
         Gets all the categories configured in the account.
@@ -1042,6 +1091,80 @@ class MonarchMoney(object):
             graphql_query=query,
         )
 
+    async def set_budget_amount(
+        self,
+        amount: float,
+        category_id: Optional[str] = None,
+        category_group_id: Optional[str] = None,
+        timeframe: str = "month",  # I believe this is the only valid value right now
+        start_date: Optional[str] = None,
+        apply_to_future: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Updates the budget amount for the given category.
+
+        :param category_id:
+            The ID of the category to set the budget for (cannot be provided w/ category_group_id)
+        :param category_group_id:
+            The ID of the category group to set the budget for (cannot be provided w/ category_id)
+        :param amount:
+            The amount to set the budget to. Can be negative (to indicate over-budget). A zero
+            value will "unset" or "clear" the budget for the given category.
+        :param timeframe:
+            The timeframe of the budget. As of writing, it is believed that `month` is the
+            only valid value for this parameter.
+        :param start_date:
+            The beginning of the given timeframe (ex: 2023-12-01). If not specified, then the
+            beginning of today's month will be used.
+        :param apply_to_future:
+            Whether to apply the new budget amount to all proceeding timeframes
+        """
+
+        # Will be true if neither of the parameters are set, or both are
+        if (category_id is None) is (category_group_id is None):
+            raise Exception(
+                "You must specify either a category_id OR category_group_id; not both"
+            )
+
+        query = gql(
+            """
+          mutation Common_UpdateBudgetItem($input: UpdateOrCreateBudgetItemMutationInput!) {
+            updateOrCreateBudgetItem(input: $input) {
+              budgetItem {
+                id
+                budgetAmount
+                __typename
+              }
+              __typename
+            }
+          }
+        """
+        )
+
+        variables = {
+            "input": {
+                "startDate": start_date,
+                "timeframe": timeframe,
+                "categoryId": category_id,
+                "categoryGroupId": category_group_id,
+                "amount": amount,
+                "applyToFuture": apply_to_future,
+            }
+        }
+
+        if start_date is None:
+            current_year = datetime.now().year
+            current_month = datetime.now().month
+            variables["input"]["startDate"] = datetime(
+                current_year, current_month, 1
+            ).strftime("%Y-%m-%d")
+
+        return await self.gql_call(
+            operation="Common_UpdateBudgetItem",
+            variables=variables,
+            graphql_query=query,
+        )
+    
     async def gql_call(
         self,
         operation: str,
