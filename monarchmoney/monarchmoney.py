@@ -945,6 +945,57 @@ class MonarchMoney(object):
         )
         return await self.gql_call(operation="GetCategories", graphql_query=query)
 
+    async def delete_transaction_category(self, category_id: str) -> bool:
+        query = gql(
+            """
+          mutation Web_DeleteCategory($id: UUID!, $moveToCategoryId: UUID) {
+            deleteCategory(id: $id, moveToCategoryId: $moveToCategoryId) {
+              errors {
+                ...PayloadErrorFields
+                __typename
+              }
+              deleted
+              __typename
+            }
+          }
+
+          fragment PayloadErrorFields on PayloadError {
+            fieldErrors {
+              field
+              messages
+              __typename
+            }
+            message
+            code
+            __typename
+          }
+        """
+        )
+
+        variables = {
+            "id": category_id,
+        }
+
+        response = await self.gql_call(
+            operation="Web_DeleteCategory", graphql_query=query, variables=variables
+        )
+
+        if not response["deleteCategory"]["deleted"]:
+            raise RequestFailedException(response["deleteCategory"]["errors"])
+
+        return True
+
+    async def delete_transaction_categories(
+        self, category_ids: List[str]
+    ) -> List[bool]:
+        """
+        Deletes a list of transaction categories.
+        """
+        return await asyncio.gather(
+            *[self.delete_transaction_category(id) for id in category_ids],
+            return_exceptions=True,
+        )
+
     async def get_transaction_category_groups(self) -> Dict[str, Any]:
         """
         Gets all the category groups configured in the account.
