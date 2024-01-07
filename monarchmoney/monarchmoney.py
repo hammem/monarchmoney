@@ -650,6 +650,42 @@ class MonarchMoney(object):
             graphql_query=query,
         )
 
+    async def get_transaction_page_summary(self) -> Dict[str, Any]:
+        """
+        Gets transaction page summary from the account.
+        """
+
+        query = gql(
+            """
+            query GetTransactionsPage($filters: TransactionFilterInput) {
+              aggregates(filters: $filters) {
+                summary {
+                  ...TransactionsSummaryFields
+                  __typename
+                }
+                __typename
+              }
+            }
+
+            fragment TransactionsSummaryFields on TransactionsSummary {
+              avg
+              count
+              max
+              maxExpense
+              sum
+              sumIncome
+              sumExpense
+              first
+              last
+              __typename
+            }
+        """
+        )
+        return await self.gql_call(
+            operation="GetTransactionsPage",
+            graphql_query=query,
+        )
+
     async def get_transactions(
         self,
         limit: int = DEFAULT_RECORD_LIMIT,
