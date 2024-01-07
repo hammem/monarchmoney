@@ -650,9 +650,9 @@ class MonarchMoney(object):
             graphql_query=query,
         )
 
-    async def get_transaction_page_summary(self) -> Dict[str, Any]:
+    async def get_transactions_summary(self) -> Dict[str, Any]:
         """
-        Gets transaction page summary from the account.
+        Gets transactions summary from the account.
         """
 
         query = gql(

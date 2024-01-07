@@ -11,7 +11,7 @@ def main() -> None:
     # Use session file
     mm = MonarchMoney(session_file=_SESSION_FILE_)
     asyncio.run(mm.interactive_login())
-
+    
     # Subscription details
     subs = asyncio.run(mm.get_subscription_details())
     print(subs)
@@ -25,6 +25,11 @@ def main() -> None:
     budgets = asyncio.run(mm.get_budgets())
     with open("budgets.json", "w") as outfile:
         json.dump(budgets, outfile)
+
+    # Transactions summary
+    transactions_summary = asyncio.run(mm.get_transactions_summary())
+    with open("transactions_summary.json", "w") as outfile:
+        json.dump(transactions_summary, outfile)
 
     # # Transaction categories
     categories = asyncio.run(mm.get_transaction_categories())
