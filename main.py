@@ -11,7 +11,7 @@ def main() -> None:
     # Use session file
     mm = MonarchMoney(session_file=_SESSION_FILE_)
     asyncio.run(mm.interactive_login())
-    
+
     # Subscription details
     subs = asyncio.run(mm.get_subscription_details())
     print(subs)
