@@ -22,6 +22,8 @@ There are two ways to use this library: interactive and non-interactive.
 If you're using this library in something like iPython or Jupyter, you can run an interactive-login which supports multi-factor authentication:
 
 ```python
+from monarchmoney import MonarchMoney
+
 mm = MonarchMoney()
 await mm.interactive_login()
 ```
@@ -32,18 +34,29 @@ This will prompt you for the email, password and, if needed, the multi-factor to
 For a non-interactive session, you'll need to create an instance and login:
 
 ```python
+from monarchmoney import MonarchMoney
+
 mm = MonarchMoney()
-mm.login(email, password)
+await mm.login(email, password)
 ```
 
 This may throw a `RequireMFAException`.  If it does, you'll need to get a multi-factor token and call the following method:
 
 ```python
-mm.multi_factor_authenticate(email, password, multi_factor_code)
+from monarchmoney import MonarchMoney, RequireMFAException
+
+mm = MonarchMoney()
+try:
+        await mm.login(email, password)
+except RequireMFAException:
+        await mm.multi_factor_authenticate(email, password, multi_factor_code)
 ```
 
 Alternatively, you can provide the MFA Secret Key. The MFA Secret Key is found when setting up the MFA in Monarch Money by going to Settings -> Security -> Enable MFA -> and copy the "Two-factor text code". Then provide it in the login() method:
 ```python
+from monarchmoney import MonarchMoney, RequireMFAException
+
+mm = MonarchMoney()
 await mm.login(
         email=email,
         password=password,
