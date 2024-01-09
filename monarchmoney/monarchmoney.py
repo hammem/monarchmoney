@@ -1869,7 +1869,9 @@ class MonarchMoney(object):
             graphql_query=query,
         )
 
-    async def upload_account_balance_history(self, account_id: str, csv_content: str, filename: str = 'upload.csv') -> None:
+    async def upload_account_balance_history(
+        self, account_id: str, csv_content: str, filename: str = "upload.csv"
+    ) -> None:
         """
         Uploads the account balance history csv for the given account.
 
@@ -1878,15 +1880,16 @@ class MonarchMoney(object):
         :param filename: Optional filename to use for uploading the balance history.
         """
         form = FormData()
-        form.add_field('files', csv_content, filename=filename, content_type='text/csv')
-        form.add_field('account_files_mapping', json.dumps({filename: account_id}))
+        form.add_field("files", csv_content, filename=filename, content_type="text/csv")
+        form.add_field("account_files_mapping", json.dumps({filename: account_id}))
 
         async with ClientSession(headers=self._headers) as session:
-            resp = await session.post(MonarchMoneyEndpoints.getAccountBalanceHistoryUploadEndpoint(), data=form)
+            resp = await session.post(
+                MonarchMoneyEndpoints.getAccountBalanceHistoryUploadEndpoint(),
+                data=form,
+            )
             if resp.status != 200:
-                raise RequestFailedException(
-                    f"HTTP Code {resp.status}: {resp.reason}"
-                )
+                raise RequestFailedException(f"HTTP Code {resp.status}: {resp.reason}")
 
     async def gql_call(
         self,
