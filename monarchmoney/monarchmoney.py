@@ -1,10 +1,10 @@
 import calendar
 from datetime import datetime
+import json
 import os
 import pickle
 import oathtool
 import time
-import json
 from typing import Any, Dict, Optional, List
 
 from aiohttp import ClientSession, FormData
@@ -1870,15 +1870,18 @@ class MonarchMoney(object):
         )
 
     async def upload_account_balance_history(
-        self, account_id: str, csv_content: str, filename: str = "upload.csv"
+        self, account_id: str, csv_content: str
     ) -> None:
         """
-        Uploads the account balance history csv for the given account.
+        Uploads the account balance history csv for a given account.
 
         :param account_id: The account ID to upload the balance history.
         :param csv_content: CSV representation of the account history.
-        :param filename: Optional filename to use for uploading the balance history.
         """
+        if not account_id or not csv_content:
+            raise RequestFailedException("account_id and csv_content cannot be empty")
+
+        filename = "upload.csv"
         form = FormData()
         form.add_field("files", csv_content, filename=filename, content_type="text/csv")
         form.add_field("account_files_mapping", json.dumps({filename: account_id}))
