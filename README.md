@@ -62,11 +62,13 @@ As of writing this README, the following methods are supported:
 
 - `get_accounts` - gets all the accounts linked to Monarch Money
 - `get_account_holdings` - gets all of the securities in a brokerage or similar type of account
+- `get_account_type_options` - all account types and their subtypes available in Monarch Money- 
 - `get_budgets` — all the budgets and the corresponding actual amounts
 - `get_subscription_details` - gets the Monarch Money account's status (e.g. paid or trial)
 - `get_transactions_summary` - gets the transaction summary data from the transactions page
 - `get_transactions` - gets transaction data, defaults to returning the last 100 transactions; can also be searched by date range
 - `get_transaction_categories` - gets all of the categories configured in the account
+- `get_transaction_category_groups` all category groups configured in the account- 
 - `get_transaction_details` - gets detailed transaction data for a single transaction
 - `get_transaction_splits` - gets transaction splits for a single transaction
 - `get_transaction_tags` - gets all of the tags configured in the account
@@ -77,12 +79,15 @@ As of writing this README, the following methods are supported:
 ## Mutating Methods
 
 - `delete_transaction_category` - deletes a category for transactions
-- `request_accounts_refresh` - requests a syncronization / refresh of all accounts linked to Monarch Money. This is a **non-blocking call**. If the user wants to check on the status afterwards, they must call `is_accounts_refresh_complete`.
-- `request_accounts_refresh_and_wait` - requests a syncronization / refresh of all accounts linked to Monarch Money. This is a **blocking call** and will not return until the refresh is complete or no longer running.
+- `delete_transaction_categories` - deletes a list of transaction categories for transactions
+- `request_accounts_refresh` - requests a synchronization / refresh of all accounts linked to Monarch Money. This is a **non-blocking call**. If the user wants to check on the status afterwards, they must call `is_accounts_refresh_complete`.
+- `request_accounts_refresh_and_wait` - requests a synchronization / refresh of all accounts linked to Monarch Money. This is a **blocking call** and will not return until the refresh is complete or no longer running.
 - `create_transaction` - creates a transaction with the given attributes
-- `update_transaction` - modifes one or more attributes for an existing transaction
-- `update_transaction_splits` - modifes how a transaction is split (or not)
+- `update_transaction` - modifies one or more attributes for an existing transaction
+- `delete_transaction` - deletes a given transaction by the provided transaction id
+- `update_transaction_splits` - modifies how a transaction is split (or not)
 - `set_budget_amount` - sets a budget's value to the given amount (date allowed, will only apply to month specified by default). A zero amount value will "unset" or "clear" the budget for the given category.
+- `create_manual_account` - creates a new manual account
 
 # Contributing
 

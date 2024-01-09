@@ -209,6 +209,100 @@ class MonarchMoney(object):
             graphql_query=query,
         )
 
+    async def get_account_type_options(self) -> Dict[str, Any]:
+        """
+        Retrieves a list of available account types and their subtypes.
+        """
+        query = gql(
+            """
+            query GetAccountTypeOptions {
+                accountTypeOptions {
+                    type {
+                        name
+                        display
+                        group
+                        possibleSubtypes {
+                            display
+                            name
+                            __typename
+                        }
+                        __typename
+                    }
+                    subtype {
+                        name
+                        display
+                        __typename
+                    }
+                    __typename
+                }
+            }
+        """
+        )
+        return await self.gql_call(
+            operation="GetAccountTypeOptions",
+            graphql_query=query,
+        )
+
+    async def create_manual_account(
+        self,
+        account_type: str,
+        account_sub_type: str,
+        is_in_net_worth: bool,
+        account_name: str,
+        account_balance: float = 0,
+    ) -> Dict[str, Any]:
+        """
+        Creates a new manual account
+
+        :param account_type: The string of account group type (i.e. loan, other_liability, other_asset, etc)
+        :param account_sub_type: The string sub type of the account (i.e. auto, commercial, mortgage, line_of_credit, etc)
+        :param is_in_net_worth: A boolean if the account should be considered in the net worth calculation
+        :param account_name: The string of the account name
+        :param display_balance: a float of the amount of the account balance when the account is created
+        """
+        query = gql(
+            """
+            mutation Web_CreateManualAccount($input: CreateManualAccountMutationInput!) {
+                createManualAccount(input: $input) {
+                    account {
+                        id
+                        __typename
+                    }
+                    errors {
+                        ...PayloadErrorFields
+                        __typename
+                    }
+                __typename
+               }
+            }
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
+            }
+            """
+        )
+        variables = {
+            "input": {
+                "type": account_type,
+                "subtype": account_sub_type,
+                "includeInNetWorth": is_in_net_worth,
+                "name": account_name,
+                "displayBalance": account_balance,
+            },
+        }
+
+        return await self.gql_call(
+            operation="Common_CreateTransactionMutation",
+            graphql_query=query,
+            variables=variables,
+        )
+
     async def request_accounts_refresh(self, account_ids: List[str]) -> bool:
         """
         Requests Monarch to refresh account balances and transactions with
@@ -848,6 +942,7 @@ class MonarchMoney(object):
         merchant_name: str,
         category_id: str,
         notes: str = "",
+        update_balance: bool = False,
     ) -> Dict[str, Any]:
         """
         Creates a transaction with the given parameters
@@ -888,6 +983,7 @@ class MonarchMoney(object):
                 "merchantName": merchant_name,
                 "categoryId": category_id,
                 "notes": notes,
+                "shouldUpdateBalance": update_balance,
             }
         }
 
