@@ -1875,8 +1875,8 @@ class MonarchMoney(object):
         """
         Uploads the account balance history csv for a given account.
 
-        :param account_id: The account ID to upload the balance history.
-        :param csv_content: CSV representation of the account history.
+        :param account_id: The account ID to apply the history to.
+        :param csv_content: CSV representation of the balance history.
         """
         if not account_id or not csv_content:
             raise RequestFailedException("account_id and csv_content cannot be empty")
