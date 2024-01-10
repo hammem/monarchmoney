@@ -35,7 +35,7 @@ class MonarchMoneyEndpoints(object):
         return cls.BASE_URL + "/graphql"
 
     @classmethod
-    def getAccountBalanceHistoryUploadEndpoint(cls):
+    def getAccountBalanceHistoryUploadEndpoint(cls) -> str:
         return cls.BASE_URL + "/account-balance-history/upload/"
 
 
