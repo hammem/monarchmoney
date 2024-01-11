@@ -9,6 +9,7 @@ from .monarchmoney import (
     MonarchMoneyEndpoints,
     MonarchMoney,
     RequireMFAException,
+    RequestFailedException,
 )
 
 __version__ = "0.1.8"

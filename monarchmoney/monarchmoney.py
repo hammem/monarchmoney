@@ -1,12 +1,13 @@
 import calendar
 from datetime import datetime
+import json
 import os
 import pickle
 import oathtool
 import time
 from typing import Any, Dict, Optional, List
 
-from aiohttp import ClientSession
+from aiohttp import ClientSession, FormData
 from aiohttp.client import DEFAULT_TIMEOUT
 import asyncio
 from gql import gql, Client
@@ -32,6 +33,10 @@ class MonarchMoneyEndpoints(object):
     @classmethod
     def getGraphQL(cls) -> str:
         return cls.BASE_URL + "/graphql"
+
+    @classmethod
+    def getAccountBalanceHistoryUploadEndpoint(cls) -> str:
+        return cls.BASE_URL + "/account-balance-history/upload/"
 
 
 class RequireMFAException(Exception):
@@ -1863,6 +1868,31 @@ class MonarchMoney(object):
             variables=variables,
             graphql_query=query,
         )
+
+    async def upload_account_balance_history(
+        self, account_id: str, csv_content: str
+    ) -> None:
+        """
+        Uploads the account balance history csv for a given account.
+
+        :param account_id: The account ID to apply the history to.
+        :param csv_content: CSV representation of the balance history.
+        """
+        if not account_id or not csv_content:
+            raise RequestFailedException("account_id and csv_content cannot be empty")
+
+        filename = "upload.csv"
+        form = FormData()
+        form.add_field("files", csv_content, filename=filename, content_type="text/csv")
+        form.add_field("account_files_mapping", json.dumps({filename: account_id}))
+
+        async with ClientSession(headers=self._headers) as session:
+            resp = await session.post(
+                MonarchMoneyEndpoints.getAccountBalanceHistoryUploadEndpoint(),
+                data=form,
+            )
+            if resp.status != 200:
+                raise RequestFailedException(f"HTTP Code {resp.status}: {resp.reason}")
 
     async def gql_call(
         self,

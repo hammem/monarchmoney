@@ -101,6 +101,7 @@ As of writing this README, the following methods are supported:
 - `update_transaction_splits` - modifies how a transaction is split (or not)
 - `set_budget_amount` - sets a budget's value to the given amount (date allowed, will only apply to month specified by default). A zero amount value will "unset" or "clear" the budget for the given category.
 - `create_manual_account` - creates a new manual account
+- `upload_account_balance_history` - uploads account history csv file for a given account
 
 # Contributing
 
