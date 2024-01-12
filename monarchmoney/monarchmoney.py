@@ -491,7 +491,7 @@ class MonarchMoney(object):
 
     async def get_institutions(self) -> Dict[str, Any]:
         """
-        Gets insitution data from the account.
+        Gets institution data from the account.
         """
 
         query = gql(
