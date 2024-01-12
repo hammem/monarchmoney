@@ -76,6 +76,7 @@ As of writing this README, the following methods are supported:
 - `get_accounts` - gets all the accounts linked to Monarch Money
 - `get_account_holdings` - gets all of the securities in a brokerage or similar type of account
 - `get_account_type_options` - all account types and their subtypes available in Monarch Money- 
+- `get_institutions` -- gets institutions linked to Monarch Money
 - `get_budgets` — all the budgets and the corresponding actual amounts
 - `get_subscription_details` - gets the Monarch Money account's status (e.g. paid or trial)
 - `get_transactions_summary` - gets the transaction summary data from the transactions page

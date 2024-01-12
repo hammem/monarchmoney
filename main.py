@@ -21,6 +21,11 @@ def main() -> None:
     with open("data.json", "w") as outfile:
         json.dump(accounts, outfile)
 
+    # Institutions
+    institutions = asyncio.run(mm.get_institutions())
+    with open("institutions.json", "w") as outfile:
+        json.dump(institutions, outfile)
+
     # Budgets
     budgets = asyncio.run(mm.get_budgets())
     with open("budgets.json", "w") as outfile:

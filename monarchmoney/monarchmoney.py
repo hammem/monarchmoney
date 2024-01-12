@@ -489,6 +489,93 @@ class MonarchMoney(object):
             variables=variables,
         )
 
+    async def get_institutions(self) -> Dict[str, Any]:
+        """
+        Gets institution data from the account.
+        """
+
+        query = gql(
+            """
+            query Web_GetInstitutionSettings {
+              credentials {
+                id
+                ...CredentialSettingsCardFields
+                __typename
+              }
+              accounts(filters: {includeDeleted: true}) {
+                id
+                displayName
+                subtype {
+                  display
+                  __typename
+                }
+                mask
+                credential {
+                  id
+                  __typename
+                }
+                deletedAt
+                __typename
+              }
+              subscription {
+                isOnFreeTrial
+                hasPremiumEntitlement
+                __typename
+              }
+            }
+
+            fragment CredentialSettingsCardFields on Credential {
+              id
+              updateRequired
+              disconnectedFromDataProviderAt
+              ...InstitutionInfoFields
+              institution {
+                id
+                name
+                logo
+                url
+                __typename
+              }
+              __typename
+            }
+
+            fragment InstitutionInfoFields on Credential {
+              id
+              displayLastUpdatedAt
+              dataProvider
+              updateRequired
+              disconnectedFromDataProviderAt
+              ...InstitutionLogoWithStatusFields
+              institution {
+                id
+                name
+                hasIssuesReported
+                hasIssuesReportedMessage
+                __typename
+              }
+              __typename
+            }
+
+            fragment InstitutionLogoWithStatusFields on Credential {
+              dataProvider
+              updateRequired
+              institution {
+                hasIssuesReported
+                logo
+                status
+                balanceStatus
+                transactionsStatus
+                __typename
+              }
+              __typename
+            }
+        """
+        )
+        return await self.gql_call(
+            operation="Web_GetInstitutionSettings",
+            graphql_query=query,
+        )
+
     async def get_budgets(
         self,
         start_date: Optional[str] = None,
