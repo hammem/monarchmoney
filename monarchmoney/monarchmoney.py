@@ -711,9 +711,16 @@ class MonarchMoney(object):
             variables=variables,
         )
 
-        balance_history = account_details["snapshots"]
+        # Parse JSON
+        account_name = account_details["account"]["displayName"]
+        account_balance_history = account_details["snapshots"]
 
-        return balance_history
+        # Append account identification data to account balance history
+        for i in account_balance_history:
+            i.update(dict(accountId=str(account_id)))
+            i.update(dict(accountName=account_name))
+
+        return account_balance_history
 
     async def get_institutions(self) -> Dict[str, Any]:
         """
