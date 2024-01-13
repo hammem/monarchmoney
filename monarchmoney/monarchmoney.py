@@ -489,6 +489,232 @@ class MonarchMoney(object):
             variables=variables,
         )
 
+    async def get_account_history(self, account_id: int) -> Dict[str, Any]:
+        """
+        Gets historical account snapshot data for the requested account
+
+        Args:
+          account_id: Monarch account ID as an integer
+
+        Returns:
+          json object with all historical snapshots of requested account's balances
+        """
+
+        query = gql(
+            """
+            query AccountDetails_getAccount($id: UUID!, $filters: TransactionFilterInput) {
+              account(id: $id) {
+                id
+                ...AccountFields
+                ...EditAccountFormFields
+                isLiability
+                credential {
+                  id
+                  hasSyncInProgress
+                  canBeForceRefreshed
+                  disconnectedFromDataProviderAt
+                  dataProvider
+                  institution {
+                    id
+                    plaidInstitutionId
+                    url
+                    ...InstitutionStatusFields
+                    __typename
+                  }
+                  __typename
+                }
+                institution {
+                  id
+                  plaidInstitutionId
+                  url
+                  ...InstitutionStatusFields
+                  __typename
+                }
+                __typename
+              }
+              transactions: allTransactions(filters: $filters) {
+                totalCount
+                results(limit: 20) {
+                  id
+                  ...TransactionsListFields
+                  __typename
+                }
+                __typename
+              }
+              snapshots: snapshotsForAccount(accountId: $id) {
+                date
+                signedBalance
+                __typename
+              }
+            }
+
+            fragment AccountFields on Account {
+              id
+              displayName
+              syncDisabled
+              deactivatedAt
+              isHidden
+              isAsset
+              mask
+              createdAt
+              updatedAt
+              displayLastUpdatedAt
+              currentBalance
+              displayBalance
+              includeInNetWorth
+              hideFromList
+              hideTransactionsFromReports
+              includeBalanceInNetWorth
+              includeInGoalBalance
+              dataProvider
+              dataProviderAccountId
+              isManual
+              transactionsCount
+              holdingsCount
+              manualInvestmentsTrackingMethod
+              order
+              icon
+              logoUrl
+              type {
+                name
+                display
+                group
+                __typename
+              }
+              subtype {
+                name
+                display
+                __typename
+              }
+              credential {
+                id
+                updateRequired
+                disconnectedFromDataProviderAt
+                dataProvider
+                institution {
+                  id
+                  plaidInstitutionId
+                  name
+                  status
+                  logo
+                  __typename
+                }
+                __typename
+              }
+              institution {
+                id
+                name
+                logo
+                primaryColor
+                url
+                __typename
+              }
+              __typename
+            }
+
+            fragment EditAccountFormFields on Account {
+              id
+              displayName
+              deactivatedAt
+              displayBalance
+              includeInNetWorth
+              hideFromList
+              hideTransactionsFromReports
+              dataProvider
+              dataProviderAccountId
+              isManual
+              manualInvestmentsTrackingMethod
+              isAsset
+              invertSyncedBalance
+              canInvertBalance
+              type {
+                name
+                display
+                __typename
+              }
+              subtype {
+                name
+                display
+                __typename
+              }
+              __typename
+            }
+
+            fragment InstitutionStatusFields on Institution {
+              id
+              hasIssuesReported
+              hasIssuesReportedMessage
+              plaidStatus
+              status
+              balanceStatus
+              transactionsStatus
+              __typename
+            }
+
+            fragment TransactionsListFields on Transaction {
+              id
+              ...TransactionOverviewFields
+              __typename
+            }
+
+            fragment TransactionOverviewFields on Transaction {
+              id
+              amount
+              pending
+              date
+              hideFromReports
+              plaidName
+              notes
+              isRecurring
+              reviewStatus
+              needsReview
+              dataProviderDescription
+              attachments {
+                id
+                __typename
+              }
+              isSplitTransaction
+              category {
+                id
+                name
+                icon
+                group {
+                  id
+                  type
+                  __typename
+                }
+                __typename
+              }
+              merchant {
+                name
+                id
+                transactionsCount
+                __typename
+              }
+              tags {
+                id
+                name
+                color
+                order
+                __typename
+              }
+              __typename
+            }
+            """
+        )
+
+        variables = {"id": str(account_id)}
+
+        account_details = await self.gql_call(
+            operation="AccountDetails_getAccount",
+            graphql_query=query,
+            variables=variables,
+        )
+
+        balance_history = account_details["snapshots"]
+
+        return balance_history
+
     async def get_institutions(self) -> Dict[str, Any]:
         """
         Gets institution data from the account.
