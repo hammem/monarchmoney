@@ -94,6 +94,7 @@ As of writing this README, the following methods are supported:
 
 - `delete_transaction_category` - deletes a category for transactions
 - `delete_transaction_categories` - deletes a list of transaction categories for transactions
+- `create_transaction_category` - creates a category for transactions
 - `request_accounts_refresh` - requests a synchronization / refresh of all accounts linked to Monarch Money. This is a **non-blocking call**. If the user wants to check on the status afterwards, they must call `is_accounts_refresh_complete`.
 - `request_accounts_refresh_and_wait` - requests a synchronization / refresh of all accounts linked to Monarch Money. This is a **blocking call** and will not return until the refresh is complete or no longer running.
 - `create_transaction` - creates a transaction with the given attributes
