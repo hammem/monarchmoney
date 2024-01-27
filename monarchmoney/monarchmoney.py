@@ -303,7 +303,7 @@ class MonarchMoney(object):
         }
 
         return await self.gql_call(
-            operation="Web_CreateManualAccount",
+            operation="Common_CreateTransactionMutation",
             graphql_query=query,
             variables=variables,
         )
