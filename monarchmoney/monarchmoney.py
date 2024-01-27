@@ -1481,7 +1481,7 @@ class MonarchMoney(object):
         group_id: str,
         transaction_category_name: str,
         rollover_start_month: datetime = datetime.today().replace(day=1),
-        icon: str = "\U00002753	",
+        icon: str = "\U00002753",
         rollover_enabled: bool = False,
         rollover_type: str = "monthly",
     ):
