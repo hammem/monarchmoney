@@ -1481,7 +1481,7 @@ class MonarchMoney(object):
         group_id: str,
         transaction_category_name: str,
         rollover_start_month: datetime = datetime.today().replace(day=1),
-        icon: str = "❓",
+        icon: str = "\U00002753	",
         rollover_enabled: bool = False,
         rollover_type: str = "monthly",
     ):
@@ -1489,7 +1489,7 @@ class MonarchMoney(object):
         Creates a new transaction category
         :param group_id: The transaction category group id
         :param transaction_category_name: The name of the transaction category being created
-        :param icon: The icon of the transaction category
+        :param icon: The icon of the transaction category. This accepts the unicode string or emoji.
         :param rollover_start_month: The datetime of the rollover start month
         :param rollover_enabled: A bool whether the transaction category should be rolled over or not
         :param rollover_type: The budget roll over type
