@@ -67,6 +67,32 @@ await mm.login(
 
 ```
 
+# Use a Saved Session
+
+You can easily save your session for use later on.  While we don't know precisely how long a session lasts, authors of this library have found it can last several months.
+
+```python
+from monarchmoney import MonarchMoney, RequireMFAException
+
+mm = MonarchMoney()
+mm.interactive_login()
+
+# Save it for later, no more need to login!
+mm.save_session()
+```
+
+Once you've logged in, you can simply load the saved session to pick up where you left off.
+
+```python
+from monarchmoney import MonarchMoney, RequireMFAException
+
+mm = MonarchMoney()
+mm.load_session()
+
+# Then, start accessing data!
+await mm.get_accounts()
+```
+
 # Accessing Data
 
 As of writing this README, the following methods are supported:
