@@ -1476,6 +1476,94 @@ class MonarchMoney(object):
             operation="ManageGetCategoryGroups", graphql_query=query
         )
 
+    async def create_transaction_category(
+        self,
+        group_id: str,
+        transaction_category_name: str,
+        rollover_start_month: datetime = datetime.today().replace(day=1),
+        icon: str = "\U00002753",
+        rollover_enabled: bool = False,
+        rollover_type: str = "monthly",
+    ):
+        """
+        Creates a new transaction category
+        :param group_id: The transaction category group id
+        :param transaction_category_name: The name of the transaction category being created
+        :param icon: The icon of the transaction category. This accepts the unicode string or emoji.
+        :param rollover_start_month: The datetime of the rollover start month
+        :param rollover_enabled: A bool whether the transaction category should be rolled over or not
+        :param rollover_type: The budget roll over type
+        """
+
+        query = gql(
+            """
+            mutation Web_CreateCategory($input: CreateCategoryInput!) {
+                createCategory(input: $input) {
+                    errors {
+                        ...PayloadErrorFields
+                        __typename
+                    }
+                    category {
+                        id
+                        ...CategoryFormFields
+                        __typename
+                    }
+                    __typename
+                }
+            }
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
+            }
+            fragment CategoryFormFields on Category {
+                id
+                order
+                name
+                icon
+                systemCategory
+                systemCategoryDisplayName
+                budgetVariability
+                isSystemCategory
+                isDisabled
+                group {
+                    id
+                    type
+                    groupLevelBudgetingEnabled
+                    __typename
+                }
+                rolloverPeriod {
+                    id
+                    startMonth
+                    startingBalance
+                    __typename
+                }
+                __typename
+            }
+            """
+        )
+        variables = {
+            "input": {
+                "group": group_id,
+                "name": transaction_category_name,
+                "icon": icon,
+                "rolloverEnabled": rollover_enabled,
+                "rolloverType": rollover_type,
+                "rolloverStartMonth": rollover_start_month.strftime("%Y-%m-%d"),
+            },
+        }
+
+        return await self.gql_call(
+            operation="Web_CreateCategory",
+            graphql_query=query,
+            variables=variables,
+        )
+
     async def get_transaction_tags(self) -> Dict[str, Any]:
         """
         Gets all the tags configured in the account.
