@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup, find_packages
 
-install_requires = ["aiohttp>=3.8.4", "gql>=3.4", "oathtool>=2.3.1"]
+install_requires = open("requirements.txt", "r").read().split("\n")
 
 setup(
     name="monarchmoney",
