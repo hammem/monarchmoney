@@ -1593,7 +1593,7 @@ class MonarchMoney(object):
         self,
         transaction_id: str,
         tag_ids: List[str],
-    ):
+    ) -> Dict[str, Any]:
         """
         Sets the tags on a transaction
         :param transaction_id: The transaction id
