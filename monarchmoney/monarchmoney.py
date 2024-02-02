@@ -1,19 +1,18 @@
+import asyncio
 import calendar
-from datetime import datetime
 import json
 import os
 import pickle
-import oathtool
 import time
-from typing import Any, Dict, Optional, List
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+import oathtool
 from aiohttp import ClientSession, FormData
 from aiohttp.client import DEFAULT_TIMEOUT
-import asyncio
-from gql import gql, Client
+from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
 from graphql import DocumentNode
-
 
 AUTH_HEADER_KEY = "authorization"
 CSRF_KEY = "csrftoken"
@@ -1588,6 +1587,61 @@ class MonarchMoney(object):
         )
         return await self.gql_call(
             operation="GetHouseholdTransactionTags", graphql_query=query
+        )
+
+    async def set_transaction_tags(
+        self,
+        transaction_id: str,
+        tag_ids: List[str],
+    ) -> Dict[str, Any]:
+        """
+        Sets the tags on a transaction
+        :param transaction_id: The transaction id
+        :param tag_ids: The list of tag ids to set on the transaction.
+          Overwrites existing tags. Empty list removes all tags.
+        """
+
+        query = gql(
+            """
+          mutation Web_SetTransactionTags($input: SetTransactionTagsInput!) {
+            setTransactionTags(input: $input) {
+              errors {
+                ...PayloadErrorFields
+                __typename
+              }
+              transaction {
+                id
+                tags {
+                  id
+                  __typename
+                }
+                __typename
+              }
+              __typename
+            }
+          }
+
+          fragment PayloadErrorFields on PayloadError {
+            fieldErrors {
+              field
+              messages
+              __typename
+            }
+            message
+            code
+            __typename
+          }
+          """
+        )
+
+        variables = {
+            "input": {"transactionId": transaction_id, "tagIds": tag_ids},
+        }
+
+        return await self.gql_call(
+            operation="Web_SetTransactionTags",
+            graphql_query=query,
+            variables=variables,
         )
 
     async def get_transaction_details(
