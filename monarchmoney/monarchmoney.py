@@ -1563,6 +1563,41 @@ class MonarchMoney(object):
             variables=variables,
         )
 
+    async def create_transaction_tag(self, name: str, color: str) -> Dict[str, Any]:
+        """
+        Creates a new transaction tag.
+        :param name: The name of the tag
+        :param color: The color of the tag. Not limited to selections in the dashboard.
+        """
+        mutation = gql(
+            """
+            mutation Common_CreateTransactionTag($input: CreateTransactionTagInput!) {
+              createTransactionTag(input: $input) {
+                tag {
+                  id
+                  name
+                  color
+                  order
+                  transactionCount
+                  __typename
+                }
+                errors {
+                  message
+                  __typename
+                }
+                __typename
+              }
+            }
+            """
+        )
+        variables = {"input": {"name": name, "color": color}}
+
+        return await self.gql_call(
+            operation="Common_CreateTransactionTag",
+            graphql_query=mutation,
+            variables=variables,
+        )
+
     async def get_transaction_tags(self) -> Dict[str, Any]:
         """
         Gets all the tags configured in the account.
