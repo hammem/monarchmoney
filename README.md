@@ -128,6 +128,7 @@ As of writing this README, the following methods are supported:
 - `update_transaction` - modifies one or more attributes for an existing transaction
 - `delete_transaction` - deletes a given transaction by the provided transaction id
 - `update_transaction_splits` - modifies how a transaction is split (or not)
+- `create_transaction_tag` - creates a tag for transactions
 - `set_transaction_tags` - sets the tags on a transaction
 - `set_budget_amount` - sets a budget's value to the given amount (date allowed, will only apply to month specified by default). A zero amount value will "unset" or "clear" the budget for the given category.
 - `create_manual_account` - creates a new manual account
