@@ -1567,7 +1567,11 @@ class MonarchMoney(object):
         """
         Creates a new transaction tag.
         :param name: The name of the tag
-        :param color: The color of the tag. Not limited to selections in the dashboard.
+        :param color: The color of the tag.
+          The observed format is six-digit RGB hexadecimal, including the leading number sign.
+          Example: color="#19D2A5".
+          More information can be found https://en.wikipedia.org/wiki/Web_colors#Hex_triplet.
+          Does not appear to be limited to the color selections in the dashboard.
         """
         mutation = gql(
             """
