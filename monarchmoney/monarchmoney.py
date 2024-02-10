@@ -2378,7 +2378,9 @@ class MonarchMoney(object):
                 raise RequestFailedException(f"HTTP Code {resp.status}: {resp.reason}")
 
     async def get_recurring_transactions(
-        self, start_date: str, end_date: str
+        self,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Fetches upcoming recurring transactions from Monarch Money's API.  This includes
@@ -2431,7 +2433,7 @@ class MonarchMoney(object):
 
         variables = {"startDate": start_date, "endDate": end_date}
 
-        if start_date is None ^ end_date is None:
+        if (start_date is None) ^ (end_date is None):
             raise Exception(
                 "You must specify both a start_date and end_date, not just one of them."
             )
@@ -2445,7 +2447,7 @@ class MonarchMoney(object):
 
     def _get_current_date(self) -> str:
         """
-        Returns the current date as a string formatted like yyyy-mm-dd.
+        Returns the current date as a string formatted like %Y-%m-%d.
         """
         return datetime.now().strftime("%Y-%m-%d")
 
