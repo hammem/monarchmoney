@@ -2061,15 +2061,8 @@ class MonarchMoney(object):
                 "You must specify both a startDate and endDate, not just one of them."
             )
         else:
-            current_year = datetime.now().year
-            current_month = datetime.now().month
-            last_date = calendar.monthrange(current_year, current_month)[1]
-            variables["filters"]["startDate"] = datetime(
-                current_year, current_month, 1
-            ).strftime("%Y-%m-%d")
-            variables["filters"]["endDate"] = datetime(
-                datetime.now().year, datetime.now().month, last_date
-            ).strftime("%Y-%m-%d")
+            variables["filters"]["startDate"] = self._get_start_of_current_month()
+            variables["filters"]["endDate"] = self._get_end_of_current_month()
 
         return await self.gql_call(
             operation="Web_GetCashFlowPage", variables=variables, graphql_query=query
@@ -2120,15 +2113,8 @@ class MonarchMoney(object):
                 "You must specify both a startDate and endDate, not just one of them."
             )
         else:
-            current_year = datetime.now().year
-            current_month = datetime.now().month
-            last_date = calendar.monthrange(current_year, current_month)[1]
-            variables["filters"]["startDate"] = datetime(
-                current_year, current_month, 1
-            ).strftime("%Y-%m-%d")
-            variables["filters"]["endDate"] = datetime(
-                datetime.now().year, datetime.now().month, last_date
-            ).strftime("%Y-%m-%d")
+            variables["filters"]["startDate"] = self._get_start_of_current_month()
+            variables["filters"]["endDate"] = self._get_end_of_current_month()
 
         return await self.gql_call(
             operation="Web_GetCashFlowPage", variables=variables, graphql_query=query
@@ -2358,11 +2344,7 @@ class MonarchMoney(object):
         }
 
         if start_date is None:
-            current_year = datetime.now().year
-            current_month = datetime.now().month
-            variables["input"]["startDate"] = datetime(
-                current_year, current_month, 1
-            ).strftime("%Y-%m-%d")
+            variables["input"]["startDate"] = self._get_start_of_current_month()
 
         return await self.gql_call(
             operation="Common_UpdateBudgetItem",
@@ -2394,6 +2376,95 @@ class MonarchMoney(object):
             )
             if resp.status != 200:
                 raise RequestFailedException(f"HTTP Code {resp.status}: {resp.reason}")
+
+    async def get_recurring_transactions(
+        self, start_date: str, end_date: str
+    ) -> Dict[str, Any]:
+        """
+        Fetches upcoming recurring transactions from Monarch Money's API.  This includes
+        all merchant data, as well as the accounts where the charge will take place.
+        """
+        query = gql(
+            """
+            query Web_GetUpcomingRecurringTransactionItems($startDate: Date!, $endDate: Date!, $filters: RecurringTransactionFilter) {
+              recurringTransactionItems(
+                startDate: $startDate
+                endDate: $endDate
+                filters: $filters
+              ) {
+                stream {
+                  id
+                  frequency
+                  amount
+                  isApproximate
+                  merchant {
+                    id
+                    name
+                    logoUrl
+                    __typename
+                  }
+                  __typename
+                }
+                date
+                isPast
+                transactionId
+                amount
+                amountDiff
+                category {
+                  id
+                  name
+                  icon
+                  __typename
+                }
+                account {
+                  id
+                  displayName
+                  icon
+                  logoUrl
+                  __typename
+                }
+                __typename
+              }
+            }
+        """
+        )
+
+        variables = {"startDate": start_date, "endDate": end_date}
+
+        if start_date is None ^ end_date is None:
+            raise Exception(
+                "You must specify both a start_date and end_date, not just one of them."
+            )
+        elif start_date is None and end_date is None:
+            variables["startDate"] = self._get_start_of_current_month()
+            variables["endDate"] = self._get_end_of_current_month()
+
+        return await self.gql_call(
+            "Web_GetUpcomingRecurringTransactionItems", query, variables
+        )
+
+    def _get_current_date(self) -> str:
+        """
+        Returns the current date as a string formatted like yyyy-mm-dd.
+        """
+        return datetime.now().strftime("%Y-%m-%d")
+
+    def _get_start_of_current_month(self) -> str:
+        """
+        Returns the date for the first day of the current month as a string formatted as %Y-%m-%d.
+        """
+        now = datetime.now()
+        start_of_month = now.replace(day=1)
+        return start_of_month.strftime("%Y-%m-%d")
+
+    def _get_end_of_current_month(self) -> str:
+        """
+        Returns the date for the last day of the current month as a string formatted as %Y-%m-%d.
+        """
+        now = datetime.now()
+        _, last_day = calendar.monthrange(now.year, now.month)
+        end_of_month = now.replace(day=last_day)
+        return end_of_month.strftime("%Y-%m-%d")
 
     async def gql_call(
         self,
