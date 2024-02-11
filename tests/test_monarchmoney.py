@@ -31,11 +31,10 @@ class TestMonarchMoney(unittest.IsolatedAsyncioTestCase):
         mock_execute_async.return_value = TestMonarchMoney.loadTestData(
             filename="get_transactions_summary.json",
         )
-
         result = await self.monarch_money.get_transactions_summary()
         self.assertIsNotNone(result, "Expected result to not be None")
         self.assertEqual(
-            result["aggregates"]["summary"]["sumIncome"],
+            result["aggregates"][0]["summary"]["sumIncome"],
             50000,
             "Expected sumIncome to be 50000",
         )
