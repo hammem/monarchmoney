@@ -348,6 +348,46 @@ class MonarchMoney(object):
             variables=variables,
         )
 
+    async def delete_account(
+        self,
+        account_id: str,
+    ) -> Dict[str, Any]:
+        """
+        Deletes an account
+        """
+        query = gql(
+            """
+            mutation Common_DeleteAccount($id: UUID!) {
+                deleteAccount(id: $id) {
+                    deleted
+                    errors {
+                    ...PayloadErrorFields
+                    __typename
+                }
+                __typename
+                }
+            }
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
+            }
+            """
+        )
+
+        variables = {"id": account_id}
+
+        return await self.gql_call(
+            operation="Common_DeleteAccount",
+            graphql_query=query,
+            variables=variables,
+        )
+
     async def request_accounts_refresh(self, account_ids: List[str]) -> bool:
         """
         Requests Monarch to refresh account balances and transactions with
