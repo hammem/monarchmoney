@@ -6,7 +6,7 @@ install_requires = open("requirements.txt", "r").read().split("\n")
 
 setup(
     name="monarchmoney",
-    version="0.1.10",
+    version="0.1.11",
     description="Monarch Money API for Python",
     long_description=open("README.md", "r").read(),
     long_description_content_type="text/markdown",
