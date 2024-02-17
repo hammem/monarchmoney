@@ -1,0 +1,612 @@
+{
+    "accountTypeOptions": [
+        {
+            "type": {
+                "name": "depository",
+                "display": "Cash",
+                "group": "asset",
+                "possibleSubtypes": [
+                    {
+                        "display": "CD",
+                        "name": "cd",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Checking",
+                        "name": "checking",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Savings",
+                        "name": "savings",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Money Market",
+                        "name": "money_market",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Mobile Payment System",
+                        "name": "paypal",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Prepaid",
+                        "name": "prepaid",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Cash Management",
+                        "name": "cash_management",
+                        "__typename": "AccountSubtype"
+                    }
+                ],
+                "__typename": "AccountType"
+            },
+            "subtype": null,
+            "__typename": "AccountTypeOption"
+        },
+        {
+            "type": {
+                "name": "brokerage",
+                "display": "Investments",
+                "group": "asset",
+                "possibleSubtypes": [
+                    {
+                        "display": "401a",
+                        "name": "st_401a",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "401k",
+                        "name": "st_401k",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "403b",
+                        "name": "st_403b",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "457b",
+                        "name": "st_457b",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "529 Plan",
+                        "name": "st_529",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Brokerage (Taxable)",
+                        "name": "brokerage",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Individual Savings Account (ISA) - Cash",
+                        "name": "cash_isa",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Cryptocurrency",
+                        "name": "cryptocurrency",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Coverdell Education Savings Account (ESA)",
+                        "name": "education_savings_account",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Guaranteed Investment Certificate (GIC)",
+                        "name": "gic",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Fixed Annuity",
+                        "name": "fixed_annuity",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Health Reimbursement Arrangement (HRA)",
+                        "name": "health_reimbursement_arrangement",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Health Savings Account (HSA)",
+                        "name": "health_savings_account",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Incentive Stock Options (ISO)",
+                        "name": "iso",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Individual Retirement Account (IRA)",
+                        "name": "ira",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Individual Savings Account (ISA) - Non-cash",
+                        "name": "isa",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Life Income Fund (LIF) Retirement Account",
+                        "name": "lif",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Locked-in Retirement Account (LIRA)",
+                        "name": "lira",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Locked-in Retirement Income Fund (LRIF)",
+                        "name": "lrif",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Locked-in Retirement Savings Plan (LRSP)",
+                        "name": "lrsp",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Keogh Plan",
+                        "name": "keogh_plan",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Mutual Fund",
+                        "name": "mutual_fund",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Non-qualified Stock Options (NSO)",
+                        "name": "nso",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Brokerage (Non-taxable)",
+                        "name": "non_taxable_brokerage_account",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Other",
+                        "name": "other",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Prescribed Registered Retirement Income Fund (PRIF)",
+                        "name": "prif",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Registered Disability Savings Plan (RDSP)",
+                        "name": "rdsp",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Registered Education Savings Plan (RESP)",
+                        "name": "resp",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Restricted Life Income Fund (RLIF)",
+                        "name": "rlif",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Registered Retirement Income Fund (RRIF)",
+                        "name": "rrif",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Pension",
+                        "name": "pension",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Profit Sharing Plan",
+                        "name": "profit_sharing_plan",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Qualifying Share Account",
+                        "name": "qualifying_share_account",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Retirement",
+                        "name": "retirement",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Roth IRA",
+                        "name": "roth",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Roth 401k",
+                        "name": "roth_401k",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Registered Retirement Savings Plan (RRSP)",
+                        "name": "rrsp",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Salary Reduction Simplified Employee Pension Plan (SARSEP)",
+                        "name": "sarsep_pension",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Simplified Employee Pension IRA (SEP IRA)",
+                        "name": "sep_ira",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Simple IRA",
+                        "name": "simple_ira",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Self-Invested Personal Pension (SIPP)",
+                        "name": "sipp",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Stock Plan",
+                        "name": "stock_plan",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Thrift Savings Plan (TSP)",
+                        "name": "thrift_savings_plan",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Trust",
+                        "name": "trust",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Tax-Free Savings Account (TFSA)",
+                        "name": "tfsa",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Uniform Gift to Minors Act (UGMA)",
+                        "name": "ugma",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Uniform Transfers to Minors Act (UTMA)",
+                        "name": "utma",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Variable Annuity",
+                        "name": "variable_annuity",
+                        "__typename": "AccountSubtype"
+                    }
+                ],
+                "__typename": "AccountType"
+            },
+            "subtype": null,
+            "__typename": "AccountTypeOption"
+        },
+        {
+            "type": {
+                "name": "real_estate",
+                "display": "Real Estate",
+                "group": "asset",
+                "possibleSubtypes": [
+                    {
+                        "display": "Primary Home",
+                        "name": "primary_home",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Secondary Home",
+                        "name": "secondary_home",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Rental Property",
+                        "name": "rental_property",
+                        "__typename": "AccountSubtype"
+                    }
+                ],
+                "__typename": "AccountType"
+            },
+            "subtype": null,
+            "__typename": "AccountTypeOption"
+        },
+        {
+            "type": {
+                "name": "vehicle",
+                "display": "Vehicles",
+                "group": "asset",
+                "possibleSubtypes": [
+                    {
+                        "display": "Car",
+                        "name": "car",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Boat",
+                        "name": "boat",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Motorcycle",
+                        "name": "motorcycle",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Snowmobile",
+                        "name": "snowmobile",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Bicycle",
+                        "name": "bicycle",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Other",
+                        "name": "other",
+                        "__typename": "AccountSubtype"
+                    }
+                ],
+                "__typename": "AccountType"
+            },
+            "subtype": null,
+            "__typename": "AccountTypeOption"
+        },
+        {
+            "type": {
+                "name": "valuables",
+                "display": "Valuables",
+                "group": "asset",
+                "possibleSubtypes": [
+                    {
+                        "display": "Art",
+                        "name": "art",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Jewelry",
+                        "name": "jewelry",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Collectibles",
+                        "name": "collectibles",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Furniture",
+                        "name": "furniture",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Other",
+                        "name": "other",
+                        "__typename": "AccountSubtype"
+                    }
+                ],
+                "__typename": "AccountType"
+            },
+            "subtype": null,
+            "__typename": "AccountTypeOption"
+        },
+        {
+            "type": {
+                "name": "credit",
+                "display": "Credit Cards",
+                "group": "liability",
+                "possibleSubtypes": [
+                    {
+                        "display": "Credit Card",
+                        "name": "credit_card",
+                        "__typename": "AccountSubtype"
+                    }
+                ],
+                "__typename": "AccountType"
+            },
+            "subtype": {
+                "name": "credit_card",
+                "display": "Credit Card",
+                "__typename": "AccountSubtype"
+            },
+            "__typename": "AccountTypeOption"
+        },
+        {
+            "type": {
+                "name": "loan",
+                "display": "Loans",
+                "group": "liability",
+                "possibleSubtypes": [
+                    {
+                        "display": "Auto",
+                        "name": "auto",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Business",
+                        "name": "business",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Commercial",
+                        "name": "commercial",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Construction",
+                        "name": "construction",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Consumer",
+                        "name": "consumer",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Home",
+                        "name": "home",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Home Equity",
+                        "name": "home_equity",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Loan",
+                        "name": "loan",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Mortgage",
+                        "name": "mortgage",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Overdraft",
+                        "name": "overdraft",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Line of Credit",
+                        "name": "line_of_credit",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Student",
+                        "name": "student",
+                        "__typename": "AccountSubtype"
+                    }
+                ],
+                "__typename": "AccountType"
+            },
+            "subtype": {
+                "name": "mortgage",
+                "display": "Mortgage",
+                "__typename": "AccountSubtype"
+            },
+            "__typename": "AccountTypeOption"
+        },
+        {
+            "type": {
+                "name": "loan",
+                "display": "Loans",
+                "group": "liability",
+                "possibleSubtypes": [
+                    {
+                        "display": "Auto",
+                        "name": "auto",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Business",
+                        "name": "business",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Commercial",
+                        "name": "commercial",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Construction",
+                        "name": "construction",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Consumer",
+                        "name": "consumer",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Home",
+                        "name": "home",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Home Equity",
+                        "name": "home_equity",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Loan",
+                        "name": "loan",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Mortgage",
+                        "name": "mortgage",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Overdraft",
+                        "name": "overdraft",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Line of Credit",
+                        "name": "line_of_credit",
+                        "__typename": "AccountSubtype"
+                    },
+                    {
+                        "display": "Student",
+                        "name": "student",
+                        "__typename": "AccountSubtype"
+                    }
+                ],
+                "__typename": "AccountType"
+            },
+            "subtype": null,
+            "__typename": "AccountTypeOption"
+        },
+        {
+            "type": {
+                "name": "other_asset",
+                "display": "Other",
+                "group": "asset",
+                "possibleSubtypes": [
+                    {
+                        "display": "Other",
+                        "name": "other",
+                        "__typename": "AccountSubtype"
+                    }
+                ],
+                "__typename": "AccountType"
+            },
+            "subtype": null,
+            "__typename": "AccountTypeOption"
+        },
+        {
+            "type": {
+                "name": "other_liability",
+                "display": "Other",
+                "group": "liability",
+                "possibleSubtypes": [
+                    {
+                        "display": "Other",
+                        "name": "other",
+                        "__typename": "AccountSubtype"
+                    }
+                ],
+                "__typename": "AccountType"
+            },
+            "subtype": null,
+            "__typename": "AccountTypeOption"
+        }
+    ]
+}
