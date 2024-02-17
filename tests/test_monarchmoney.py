@@ -112,7 +112,7 @@ class TestMonarchMoney(unittest.IsolatedAsyncioTestCase):
 
         # Assert that the result matches the expected output
         self.assertEqual(
-            len(result["accountTypeOptions"]), 10, "Expected 3 account type options"
+            len(result["accountTypeOptions"]), 10, "Expected 10 account type options"
         )
         self.assertEqual(
             result["accountTypeOptions"][0]["type"]["name"],
