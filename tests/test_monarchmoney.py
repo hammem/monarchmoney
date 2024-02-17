@@ -24,6 +24,57 @@ class TestMonarchMoney(unittest.IsolatedAsyncioTestCase):
         self.monarch_money.load_session("temp_session.pickle")
 
     @patch.object(Client, "execute_async")
+    async def test_get_accounts(self, mock_execute_async):
+        """
+        Test the get_accounts method.
+        """
+        mock_execute_async.return_value = TestMonarchMoney.loadTestData(
+            filename="get_accounts.json",
+        )
+        result = await self.monarch_money.get_accounts()
+        mock_execute_async.assert_called_once()
+        self.assertIsNotNone(result, "Expected result to not be None")
+        self.assertEqual(len(result["accounts"]), 7, "Expected 7 accounts")
+        self.assertEqual(
+            result["accounts"][0]["displayName"],
+            "Brokerage",
+            "Expected displayName to be Brokerage",
+        )
+        self.assertEqual(
+            result["accounts"][1]["currentBalance"],
+            1000.02,
+            "Expected currentBalance to be 1000.02",
+        )
+        self.assertFalse(
+            result["accounts"][2]["isAsset"],
+            "Expected isAsset to be False",
+        )
+        self.assertEqual(
+            result["accounts"][3]["subtype"]["display"],
+            "Roth IRA",
+            "Expected subtype display to be 'Roth IRA'",
+        )
+        self.assertFalse(
+            result["accounts"][4]["isManual"],
+            "Expected isManual to be False",
+        )
+        self.assertEqual(
+            result["accounts"][5]["institution"]["name"],
+            "Rando Employer Investments",
+            "Expected institution name to be 'Rando Employer Investments'",
+        )
+        self.assertEqual(
+            result["accounts"][6]["id"],
+            "90000000030",
+            "Expected id to be '90000000030'",
+        )
+        self.assertEqual(
+            result["accounts"][6]["type"]["name"],
+            "loan",
+            "Expected type name to be 'loan'",
+        )
+
+    @patch.object(Client, "execute_async")
     async def test_get_transactions_summary(self, mock_execute_async):
         """
         Test the get_transactions_summary method.
@@ -32,6 +83,7 @@ class TestMonarchMoney(unittest.IsolatedAsyncioTestCase):
             filename="get_transactions_summary.json",
         )
         result = await self.monarch_money.get_transactions_summary()
+        mock_execute_async.assert_called_once()
         self.assertIsNotNone(result, "Expected result to not be None")
         self.assertEqual(
             result["aggregates"][0]["summary"]["sumIncome"],
