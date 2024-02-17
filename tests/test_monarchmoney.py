@@ -91,6 +91,45 @@ class TestMonarchMoney(unittest.IsolatedAsyncioTestCase):
             "Expected sumIncome to be 50000",
         )
 
+    @patch.object(Client, "execute_async")
+    async def test_get_account_type_options(self, mock_execute_async):
+        """
+        Test the get_account_type_options method.
+        """
+        # Mock the execute_async method to return a test result
+        mock_execute_async.return_value = TestMonarchMoney.loadTestData(
+            filename="get_account_type_options.json",
+        )
+
+        # Call the get_account_type_options method
+        result = await self.monarch_money.get_account_type_options()
+
+        # Assert that the execute_async method was called once
+        mock_execute_async.assert_called_once()
+
+        # Assert that the result is not None
+        self.assertIsNotNone(result, "Expected result to not be None")
+
+        # Assert that the result matches the expected output
+        self.assertEqual(
+            len(result["accountTypeOptions"]), 3, "Expected 3 account type options"
+        )
+        self.assertEqual(
+            result["accountTypeOptions"][0]["name"],
+            "asset",
+            "Expected first account type option name to be 'asset'",
+        )
+        self.assertEqual(
+            result["accountTypeOptions"][1]["name"],
+            "liability",
+            "Expected second account type option name to be 'liability'",
+        )
+        self.assertEqual(
+            result["accountTypeOptions"][2]["name"],
+            "equity",
+            "Expected third account type option name to be 'equity'",
+        )
+
     @classmethod
     def loadTestData(cls, filename) -> dict:
         filename = f"{os.path.dirname(os.path.realpath(__file__))}/{filename}"
