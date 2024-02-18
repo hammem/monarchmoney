@@ -130,6 +130,49 @@ class TestMonarchMoney(unittest.IsolatedAsyncioTestCase):
             "Expected third account type option name to be 'real_estate'",
         )
 
+    @patch.object(Client, "execute_async")
+    async def test_get_account_holdings(self, mock_execute_async):
+        """
+        Test the get_account_holdings method.
+        """
+        # Mock the execute_async method to return a test result
+        mock_execute_async.return_value = TestMonarchMoney.loadTestData(
+            filename="get_account_holdings.json",
+        )
+
+        # Call the get_account_holdings method
+        result = await self.monarch_money.get_account_holdings(account_id=1234)
+
+        # Assert that the execute_async method was called once
+        mock_execute_async.assert_called_once()
+
+        # Assert that the result is not None
+        self.assertIsNotNone(result, "Expected result to not be None")
+
+        # Assert that the result matches the expected output
+        self.assertEqual(
+            len(result["portfolio"]["aggregateHoldings"]["edges"]),
+            3,
+            "Expected 3 holdings",
+        )
+        self.assertEqual(
+            result["portfolio"]["aggregateHoldings"]["edges"][0]["node"]["quantity"],
+            101,
+            "Expected first holding to be 101 in quantity",
+        )
+        self.assertEqual(
+            result["portfolio"]["aggregateHoldings"]["edges"][1]["node"]["totalValue"],
+            10000,
+            "Expected second holding to be 10000 in total value",
+        )
+        self.assertEqual(
+            result["portfolio"]["aggregateHoldings"]["edges"][2]["node"]["holdings"][0][
+                "name"
+            ],
+            "U S Dollar",
+            "Expected third holding name to be 'U S Dollar'",
+        )
+
     @classmethod
     def loadTestData(cls, filename) -> dict:
         filename = f"{os.path.dirname(os.path.realpath(__file__))}/{filename}"
