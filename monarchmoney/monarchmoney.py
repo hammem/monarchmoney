@@ -2487,6 +2487,7 @@ class MonarchMoney(object):
         """
         if filename is None:
             filename = self._session_file
+        filename = os.path.abspath(filename)
 
         session_data = {"token": self._token}
 
