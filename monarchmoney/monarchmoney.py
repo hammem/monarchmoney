@@ -2496,6 +2496,9 @@ class MonarchMoney(object):
         """
         Loads pre-existing auth token from a Python pickle file.
         """
+        if filename is None:
+            filename = self._session_file
+
         with open(filename, "rb") as fh:
             data = pickle.load(fh)
             self.set_token(data["token"])
