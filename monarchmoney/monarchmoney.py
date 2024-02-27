@@ -2489,8 +2489,8 @@ class MonarchMoney(object):
             filename = self._session_file
 
         session_data = {"token": self._token}
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
 
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, "wb") as fh:
             pickle.dump(session_data, fh)
 
