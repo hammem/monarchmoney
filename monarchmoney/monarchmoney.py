@@ -2492,7 +2492,7 @@ class MonarchMoney(object):
         with open(filename, "wb") as fh:
             pickle.dump(session_data, fh)
 
-    def load_session(self, filename: str = SESSION_FILE) -> None:
+    def load_session(self, filename: str = None) -> None:
         """
         Loads pre-existing auth token from a Python pickle file.
         """
