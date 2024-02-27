@@ -2481,13 +2481,15 @@ class MonarchMoney(object):
             document=graphql_query, operation_name=operation, variable_values=variables
         )
 
-    def save_session(self, filename: str) -> None:
+    def save_session(self, filename: str = None) -> None:
         """
         Saves the auth token needed to access a Monarch Money account.
         """
+        if filename is None:
+            filename = self._session_file
+
         session_data = {"token": self._token}
-        if not os.path.exists(SESSION_DIR):
-            os.makedirs(SESSION_DIR)
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
 
         with open(filename, "wb") as fh:
             pickle.dump(session_data, fh)
