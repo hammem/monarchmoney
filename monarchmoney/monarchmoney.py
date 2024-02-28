@@ -270,6 +270,67 @@ class MonarchMoney(object):
             variables={'startDate': start_date.isoformat()}
         )
 
+    async def get_account_snapshots_by_type(self, start_date: date, timeframe: str):
+        # if timeframe not in ('year', 'month', 'day'):
+        #     raise Exception(f'Unknown timeframe "{timeframe}"')
+
+        query = gql("""
+            query GetSnapshotsByAccountType($startDate: Date!, $timeframe: Timeframe!) {
+                snapshotsByAccountType(startDate: $startDate, timeframe: $timeframe) {
+                    accountType
+                    month
+                    balance
+                    __typename
+                }
+                accountTypes {
+                    name
+                    group
+                    __typename
+                }
+            }
+        """)
+        return await self.gql_call(
+            operation='GetSnapshotsByAccountType',
+            graphql_query=query,
+            variables={
+                'startDate': start_date.isoformat(),
+                'timeframe': timeframe
+            }
+        )
+
+    async def get_aggregate_snapshots(self, start_date: date = None, end_date: date = None, account_type: str = None) -> dict:
+        query = gql("""
+            query GetAggregateSnapshots($filters: AggregateSnapshotFilters) {
+                aggregateSnapshots(filters: $filters) {
+                    date
+                    balance
+                    __typename
+                }
+            }
+        """)
+
+        if start_date is not None:
+            start_date = start_date.isoformat()
+        else:
+            # The mobile app defaults to 150 years ago today
+            # The mobile app might have a leap year bug, so I'm just setting day=1
+            today = date.today()
+            start_date = date(year=today.year - 150, month=today.month, day=1).isoformat()
+        if end_date is not None:
+            end_date = end_date.isoformat()
+
+        return await self.gql_call(
+            operation='GetAggregateSnapshots',
+            graphql_query=query,
+            variables={
+                'filters': {
+                    'startDate': start_date,
+                    'endDate': end_date,
+                    'accountType': account_type
+                }
+            }
+        )
+
     async def create_manual_account(
         self,
         account_type: str,
