@@ -4,7 +4,7 @@ import json
 import os
 import pickle
 import time
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from typing import Any, Dict, List, Optional, Union
 
 import oathtool
@@ -245,6 +245,29 @@ class MonarchMoney(object):
         return await self.gql_call(
             operation="GetAccountTypeOptions",
             graphql_query=query,
+        )
+
+    async def get_accounts_page_recent_balance(self, start_date: date = None) -> Dict[str, Any]:
+        """
+        Retrieves the daily balance for all accounts starting from `start_date`. If
+        `start_date` is None, then the last 31 days are requested.
+        """
+        if start_date is None:
+            start_date = date.today() - timedelta(days=31)
+
+        query = gql("""
+            query GetAccountRecentBalances($startDate: Date!) {
+                accounts {
+                    id
+                    recentBalances(startDate: $startDate)
+                    __typename
+                }
+            }
+        """)
+        return await self.gql_call(
+            operation='GetAccountRecentBalances',
+            graphql_query=query,
+            variables={'startDate': start_date.isoformat()}
         )
 
     async def create_manual_account(
