@@ -247,7 +247,7 @@ class MonarchMoney(object):
             graphql_query=query,
         )
 
-    async def get_accounts_page_recent_balance(self, start_date: date = None) -> Dict[str, Any]:
+    async def get_recent_account_balances(self, start_date: date = None) -> Dict[str, Any]:
         """
         Retrieves the daily balance for all accounts starting from `start_date`. If
         `start_date` is None, then the last 31 days are requested.
