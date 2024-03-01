@@ -2,11 +2,11 @@ import os
 
 from setuptools import setup, find_packages
 
-install_requires = ["aiohttp>=3.8.4", "gql>=3.4", "oathtool>=2.3.1"]
+install_requires = open("requirements.txt", "r").read().split("\n")
 
 setup(
     name="monarchmoney",
-    version="0.1.9",
+    version="0.1.11",
     description="Monarch Money API for Python",
     long_description=open("README.md", "r").read(),
     long_description_content_type="text/markdown",

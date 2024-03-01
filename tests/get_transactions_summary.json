@@ -1,0 +1,1 @@
+{"aggregates": [{"summary": {"avg": 5, "count": 1000, "max": -1000, "maxExpense": -1000, "sum": -1500, "sumIncome": 50000, "sumExpense": -10000.1, "first": "2021-01-01", "last": "2024-02-09", "__typename": "TransactionsSummary"}, "__typename": "AggregateData"}]}

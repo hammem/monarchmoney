@@ -1,19 +1,18 @@
+import asyncio
 import calendar
-from datetime import datetime
 import json
 import os
 import pickle
-import oathtool
 import time
-from typing import Any, Dict, Optional, List
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+import oathtool
 from aiohttp import ClientSession, FormData
 from aiohttp.client import DEFAULT_TIMEOUT
-import asyncio
-from gql import gql, Client
+from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
 from graphql import DocumentNode
-
 
 AUTH_HEADER_KEY = "authorization"
 CSRF_KEY = "csrftoken"
@@ -303,7 +302,7 @@ class MonarchMoney(object):
         }
 
         return await self.gql_call(
-            operation="Common_CreateTransactionMutation",
+            operation="Web_CreateManualAccount",
             graphql_query=query,
             variables=variables,
         )
@@ -1604,6 +1603,45 @@ class MonarchMoney(object):
             variables=variables,
         )
 
+    async def create_transaction_tag(self, name: str, color: str) -> Dict[str, Any]:
+        """
+        Creates a new transaction tag.
+        :param name: The name of the tag
+        :param color: The color of the tag.
+          The observed format is six-digit RGB hexadecimal, including the leading number sign.
+          Example: color="#19D2A5".
+          More information can be found https://en.wikipedia.org/wiki/Web_colors#Hex_triplet.
+          Does not appear to be limited to the color selections in the dashboard.
+        """
+        mutation = gql(
+            """
+            mutation Common_CreateTransactionTag($input: CreateTransactionTagInput!) {
+              createTransactionTag(input: $input) {
+                tag {
+                  id
+                  name
+                  color
+                  order
+                  transactionCount
+                  __typename
+                }
+                errors {
+                  message
+                  __typename
+                }
+                __typename
+              }
+            }
+            """
+        )
+        variables = {"input": {"name": name, "color": color}}
+
+        return await self.gql_call(
+            operation="Common_CreateTransactionTag",
+            graphql_query=mutation,
+            variables=variables,
+        )
+
     async def get_transaction_tags(self) -> Dict[str, Any]:
         """
         Gets all the tags configured in the account.
@@ -1628,6 +1666,61 @@ class MonarchMoney(object):
         )
         return await self.gql_call(
             operation="GetHouseholdTransactionTags", graphql_query=query
+        )
+
+    async def set_transaction_tags(
+        self,
+        transaction_id: str,
+        tag_ids: List[str],
+    ) -> Dict[str, Any]:
+        """
+        Sets the tags on a transaction
+        :param transaction_id: The transaction id
+        :param tag_ids: The list of tag ids to set on the transaction.
+          Overwrites existing tags. Empty list removes all tags.
+        """
+
+        query = gql(
+            """
+          mutation Web_SetTransactionTags($input: SetTransactionTagsInput!) {
+            setTransactionTags(input: $input) {
+              errors {
+                ...PayloadErrorFields
+                __typename
+              }
+              transaction {
+                id
+                tags {
+                  id
+                  __typename
+                }
+                __typename
+              }
+              __typename
+            }
+          }
+
+          fragment PayloadErrorFields on PayloadError {
+            fieldErrors {
+              field
+              messages
+              __typename
+            }
+            message
+            code
+            __typename
+          }
+          """
+        )
+
+        variables = {
+            "input": {"transactionId": transaction_id, "tagIds": tag_ids},
+        }
+
+        return await self.gql_call(
+            operation="Web_SetTransactionTags",
+            graphql_query=query,
+            variables=variables,
         )
 
     async def get_transaction_details(
@@ -2008,15 +2101,8 @@ class MonarchMoney(object):
                 "You must specify both a startDate and endDate, not just one of them."
             )
         else:
-            current_year = datetime.now().year
-            current_month = datetime.now().month
-            last_date = calendar.monthrange(current_year, current_month)[1]
-            variables["filters"]["startDate"] = datetime(
-                current_year, current_month, 1
-            ).strftime("%Y-%m-%d")
-            variables["filters"]["endDate"] = datetime(
-                datetime.now().year, datetime.now().month, last_date
-            ).strftime("%Y-%m-%d")
+            variables["filters"]["startDate"] = self._get_start_of_current_month()
+            variables["filters"]["endDate"] = self._get_end_of_current_month()
 
         return await self.gql_call(
             operation="Web_GetCashFlowPage", variables=variables, graphql_query=query
@@ -2067,15 +2153,8 @@ class MonarchMoney(object):
                 "You must specify both a startDate and endDate, not just one of them."
             )
         else:
-            current_year = datetime.now().year
-            current_month = datetime.now().month
-            last_date = calendar.monthrange(current_year, current_month)[1]
-            variables["filters"]["startDate"] = datetime(
-                current_year, current_month, 1
-            ).strftime("%Y-%m-%d")
-            variables["filters"]["endDate"] = datetime(
-                datetime.now().year, datetime.now().month, last_date
-            ).strftime("%Y-%m-%d")
+            variables["filters"]["startDate"] = self._get_start_of_current_month()
+            variables["filters"]["endDate"] = self._get_end_of_current_month()
 
         return await self.gql_call(
             operation="Web_GetCashFlowPage", variables=variables, graphql_query=query
@@ -2305,11 +2384,7 @@ class MonarchMoney(object):
         }
 
         if start_date is None:
-            current_year = datetime.now().year
-            current_month = datetime.now().month
-            variables["input"]["startDate"] = datetime(
-                current_year, current_month, 1
-            ).strftime("%Y-%m-%d")
+            variables["input"]["startDate"] = self._get_start_of_current_month()
 
         return await self.gql_call(
             operation="Common_UpdateBudgetItem",
@@ -2341,6 +2416,97 @@ class MonarchMoney(object):
             )
             if resp.status != 200:
                 raise RequestFailedException(f"HTTP Code {resp.status}: {resp.reason}")
+
+    async def get_recurring_transactions(
+        self,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Fetches upcoming recurring transactions from Monarch Money's API.  This includes
+        all merchant data, as well as the accounts where the charge will take place.
+        """
+        query = gql(
+            """
+            query Web_GetUpcomingRecurringTransactionItems($startDate: Date!, $endDate: Date!, $filters: RecurringTransactionFilter) {
+              recurringTransactionItems(
+                startDate: $startDate
+                endDate: $endDate
+                filters: $filters
+              ) {
+                stream {
+                  id
+                  frequency
+                  amount
+                  isApproximate
+                  merchant {
+                    id
+                    name
+                    logoUrl
+                    __typename
+                  }
+                  __typename
+                }
+                date
+                isPast
+                transactionId
+                amount
+                amountDiff
+                category {
+                  id
+                  name
+                  icon
+                  __typename
+                }
+                account {
+                  id
+                  displayName
+                  icon
+                  logoUrl
+                  __typename
+                }
+                __typename
+              }
+            }
+        """
+        )
+
+        variables = {"startDate": start_date, "endDate": end_date}
+
+        if (start_date is None) ^ (end_date is None):
+            raise Exception(
+                "You must specify both a start_date and end_date, not just one of them."
+            )
+        elif start_date is None and end_date is None:
+            variables["startDate"] = self._get_start_of_current_month()
+            variables["endDate"] = self._get_end_of_current_month()
+
+        return await self.gql_call(
+            "Web_GetUpcomingRecurringTransactionItems", query, variables
+        )
+
+    def _get_current_date(self) -> str:
+        """
+        Returns the current date as a string formatted like %Y-%m-%d.
+        """
+        return datetime.now().strftime("%Y-%m-%d")
+
+    def _get_start_of_current_month(self) -> str:
+        """
+        Returns the date for the first day of the current month as a string formatted as %Y-%m-%d.
+        """
+        now = datetime.now()
+        start_of_month = now.replace(day=1)
+        return start_of_month.strftime("%Y-%m-%d")
+
+    def _get_end_of_current_month(self) -> str:
+        """
+        Returns the date for the last day of the current month as a string formatted as %Y-%m-%d.
+        """
+        now = datetime.now()
+        _, last_day = calendar.monthrange(now.year, now.month)
+        end_of_month = now.replace(day=last_day)
+        return end_of_month.strftime("%Y-%m-%d")
 
     async def gql_call(
         self,

@@ -106,6 +106,7 @@ As of writing this README, the following methods are supported:
 - `get_institutions` -- gets institutions linked to Monarch Money
 - `get_budgets` — all the budgets and the corresponding actual amounts
 - `get_subscription_details` - gets the Monarch Money account's status (e.g. paid or trial)
+- `get_recurring_transactions` - gets the future recurring transactions, including merchant and account details
 - `get_transactions_summary` - gets the transaction summary data from the transactions page
 - `get_transactions` - gets transaction data, defaults to returning the last 100 transactions; can also be searched by date range
 - `get_transaction_categories` - gets all of the categories configured in the account
@@ -128,6 +129,8 @@ As of writing this README, the following methods are supported:
 - `update_transaction` - modifies one or more attributes for an existing transaction
 - `delete_transaction` - deletes a given transaction by the provided transaction id
 - `update_transaction_splits` - modifies how a transaction is split (or not)
+- `create_transaction_tag` - creates a tag for transactions
+- `set_transaction_tags` - sets the tags on a transaction
 - `set_budget_amount` - sets a budget's value to the given amount (date allowed, will only apply to month specified by default). A zero amount value will "unset" or "clear" the budget for the given category.
 - `create_manual_account` - creates a new manual account
 - `delete_account` - deletes an account by the provided account id
