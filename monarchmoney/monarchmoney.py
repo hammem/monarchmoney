@@ -2436,7 +2436,7 @@ class MonarchMoney(object):
         self, account_id: str, csv_content: str
     ) -> str:
         """
-         Uploads the account balance history CSV for a specified account.
+        Uploads the account balance history CSV for a specified account.
 
         :param account_id: The account ID to apply the history to.
         :param csv_content: CSV representation of the balance history. Headers: Date, Amount, and Account Name.
