@@ -2481,7 +2481,7 @@ class MonarchMoney(object):
             document=graphql_query, operation_name=operation, variable_values=variables
         )
 
-    def save_session(self, filename: str = None) -> None:
+    def save_session(self, filename: Optional[str] = None) -> None:
         """
         Saves the auth token needed to access a Monarch Money account.
         """
@@ -2495,7 +2495,7 @@ class MonarchMoney(object):
         with open(filename, "wb") as fh:
             pickle.dump(session_data, fh)
 
-    def load_session(self, filename: str = None) -> None:
+    def load_session(self, filename: Optional[str] = None) -> None:
         """
         Loads pre-existing auth token from a Python pickle file.
         """
