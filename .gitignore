@@ -6,6 +6,7 @@ lib
 .DS_Store
 .mm
 .monarchmoney.egg-info
+.pytest_cache
 .venv
 .vscode
 *.pyc

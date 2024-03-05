@@ -5,7 +5,7 @@ import os
 import pickle
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import oathtool
 from aiohttp import ClientSession, FormData
@@ -1443,7 +1443,7 @@ class MonarchMoney(object):
 
     async def delete_transaction_categories(
         self, category_ids: List[str]
-    ) -> List[bool]:
+    ) -> List[Union[bool, BaseException]]:
         """
         Deletes a list of transaction categories.
         """
@@ -2242,7 +2242,7 @@ class MonarchMoney(object):
         """
         )
 
-        variables = {
+        variables: dict[str, Any] = {
             "input": {
                 "id": transaction_id,
             }
