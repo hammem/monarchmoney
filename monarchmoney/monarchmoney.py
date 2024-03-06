@@ -89,6 +89,17 @@ class MonarchMoney(object):
         """Performs an interactive login for iPython and similar environments."""
         email = input("Email: ")
         passwd = input("Password: ")
+
+        empty_values = [None, ""]
+        if (
+            (email in empty_values)
+            and (passwd in empty_values)
+            and (not use_saved_session)
+        ):
+            raise LoginFailedException(
+                "Email and password are required to login when not using a saved session."
+            )
+
         try:
             await self.login(email, passwd, use_saved_session, save_session)
         except RequireMFAException:
@@ -112,7 +123,7 @@ class MonarchMoney(object):
             self.load_session(self._session_file)
             return
 
-        if email is None or password is None:
+        if (email is None) or (password is None) or (email == "") or (password == ""):
             raise LoginFailedException(
                 "Email and password are required to login when not using a saved session."
             )
