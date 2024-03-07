@@ -1,5 +1,6 @@
 import asyncio
 import calendar
+import getpass
 import json
 import os
 import pickle
@@ -88,7 +89,7 @@ class MonarchMoney(object):
     ) -> None:
         """Performs an interactive login for iPython and similar environments."""
         email = input("Email: ")
-        passwd = input("Password: ")
+        passwd = getpass.getpass("Password: ")
         try:
             await self.login(email, passwd, use_saved_session, save_session)
         except RequireMFAException:
