@@ -247,7 +247,9 @@ class MonarchMoney(object):
             graphql_query=query,
         )
 
-    async def get_recent_account_balances(self, start_date: date = None) -> Dict[str, Any]:
+    async def get_recent_account_balances(
+        self, start_date: date = None
+    ) -> Dict[str, Any]:
         """
         Retrieves the daily balance for all accounts starting from `start_date`. If
         `start_date` is None, then the last 31 days are requested.
@@ -255,7 +257,8 @@ class MonarchMoney(object):
         if start_date is None:
             start_date = date.today() - timedelta(days=31)
 
-        query = gql("""
+        query = gql(
+            """
             query GetAccountRecentBalances($startDate: Date!) {
                 accounts {
                     id
@@ -263,11 +266,12 @@ class MonarchMoney(object):
                     __typename
                 }
             }
-        """)
+        """
+        )
         return await self.gql_call(
-            operation='GetAccountRecentBalances',
+            operation="GetAccountRecentBalances",
             graphql_query=query,
-            variables={'startDate': start_date.isoformat()}
+            variables={"startDate": start_date.isoformat()},
         )
 
     async def get_account_snapshots_by_type(self, start_date: date, timeframe: str):
@@ -277,10 +281,11 @@ class MonarchMoney(object):
         Note, `month` is not a full ISO datestring, as it doesn't include the day.
         Instead it looks like, e.g., 2023-01
         """
-        if timeframe not in ('year', 'month'):
+        if timeframe not in ("year", "month"):
             raise Exception(f'Unknown timeframe "{timeframe}"')
 
-        query = gql("""
+        query = gql(
+            """
             query GetSnapshotsByAccountType($startDate: Date!, $timeframe: Timeframe!) {
                 snapshotsByAccountType(startDate: $startDate, timeframe: $timeframe) {
                     accountType
@@ -294,24 +299,26 @@ class MonarchMoney(object):
                     __typename
                 }
             }
-        """)
+        """
+        )
         return await self.gql_call(
-            operation='GetSnapshotsByAccountType',
+            operation="GetSnapshotsByAccountType",
             graphql_query=query,
-            variables={
-                'startDate': start_date.isoformat(),
-                'timeframe': timeframe
-            }
+            variables={"startDate": start_date.isoformat(), "timeframe": timeframe},
         )
 
     async def get_aggregate_snapshots(
-            self, start_date: Optional[date] = None, end_date: Optional[date] = None, account_type: Optional[str] = None
+        self,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        account_type: Optional[str] = None,
     ) -> dict:
         """
         Retrieves the daily net value of all accounts, optionally between `start_date` and `end_date`,
         and optionally only for accounts of type `account_type`.
         """
-        query = gql("""
+        query = gql(
+            """
             query GetAggregateSnapshots($filters: AggregateSnapshotFilters) {
                 aggregateSnapshots(filters: $filters) {
                     date
@@ -319,7 +326,8 @@ class MonarchMoney(object):
                     __typename
                 }
             }
-        """)
+        """
+        )
 
         if start_date is not None:
             start_date = start_date.isoformat()
@@ -327,20 +335,22 @@ class MonarchMoney(object):
             # The mobile app defaults to 150 years ago today
             # The mobile app might have a leap year bug, so instead default to setting day=1
             today = date.today()
-            start_date = date(year=today.year - 150, month=today.month, day=1).isoformat()
+            start_date = date(
+                year=today.year - 150, month=today.month, day=1
+            ).isoformat()
         if end_date is not None:
             end_date = end_date.isoformat()
 
         return await self.gql_call(
-            operation='GetAggregateSnapshots',
+            operation="GetAggregateSnapshots",
             graphql_query=query,
             variables={
-                'filters': {
-                    'startDate': start_date,
-                    'endDate': end_date,
-                    'accountType': account_type
+                "filters": {
+                    "startDate": start_date,
+                    "endDate": end_date,
+                    "accountType": account_type,
                 }
-            }
+            },
         )
 
     async def create_manual_account(
