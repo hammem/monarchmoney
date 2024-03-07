@@ -271,8 +271,14 @@ class MonarchMoney(object):
         )
 
     async def get_account_snapshots_by_type(self, start_date: date, timeframe: str):
-        # if timeframe not in ('year', 'month', 'day'):
-        #     raise Exception(f'Unknown timeframe "{timeframe}"')
+        """
+        Retrieves snapshots of the net values of all accounts of a given type, with either a yearly
+        monthly granularity.
+        Note, `month` is not a full ISO datestring, as it doesn't include the day.
+        Instead it looks like, e.g., 2023-01
+        """
+        if timeframe not in ('year', 'month'):
+            raise Exception(f'Unknown timeframe "{timeframe}"')
 
         query = gql("""
             query GetSnapshotsByAccountType($startDate: Date!, $timeframe: Timeframe!) {
@@ -298,7 +304,13 @@ class MonarchMoney(object):
             }
         )
 
-    async def get_aggregate_snapshots(self, start_date: date = None, end_date: date = None, account_type: str = None) -> dict:
+    async def get_aggregate_snapshots(
+            self, start_date: Optional[date] = None, end_date: Optional[date] = None, account_type: Optional[str] = None
+    ) -> dict:
+        """
+        Retrieves the daily net value of all accounts, optionally between `start_date` and `end_date`,
+        and optionally only for accounts of type `account_type`.
+        """
         query = gql("""
             query GetAggregateSnapshots($filters: AggregateSnapshotFilters) {
                 aggregateSnapshots(filters: $filters) {
@@ -313,7 +325,7 @@ class MonarchMoney(object):
             start_date = start_date.isoformat()
         else:
             # The mobile app defaults to 150 years ago today
-            # The mobile app might have a leap year bug, so I'm just setting day=1
+            # The mobile app might have a leap year bug, so instead default to setting day=1
             today = date.today()
             start_date = date(year=today.year - 150, month=today.month, day=1).isoformat()
         if end_date is not None:
