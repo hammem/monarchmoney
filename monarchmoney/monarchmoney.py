@@ -248,7 +248,7 @@ class MonarchMoney(object):
         )
 
     async def get_recent_account_balances(
-        self, start_date: date = None
+        self, start_date: Optional[date] = None
     ) -> Dict[str, Any]:
         """
         Retrieves the daily balance for all accounts starting from `start_date`. If
