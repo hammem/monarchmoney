@@ -117,6 +117,7 @@ class TestMonarchMoney(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["deleteAccount"]["deleted"], True)
         self.assertEqual(result["deleteAccount"]["errors"], None)
 
+    @patch.object(Client, "execute_async")
     async def test_get_account_type_options(self, mock_execute_async):
         """
         Test the get_account_type_options method.
