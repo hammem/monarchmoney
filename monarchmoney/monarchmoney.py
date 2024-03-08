@@ -1,5 +1,6 @@
 import asyncio
 import calendar
+import getpass
 import json
 import os
 import pickle
@@ -88,7 +89,7 @@ class MonarchMoney(object):
     ) -> None:
         """Performs an interactive login for iPython and similar environments."""
         email = input("Email: ")
-        passwd = input("Password: ")
+        passwd = getpass.getpass("Password: ")
         try:
             await self.login(email, passwd, use_saved_session, save_session)
         except RequireMFAException:
@@ -409,6 +410,46 @@ class MonarchMoney(object):
 
         return await self.gql_call(
             operation="Web_CreateManualAccount",
+            graphql_query=query,
+            variables=variables,
+        )
+
+    async def delete_account(
+        self,
+        account_id: str,
+    ) -> Dict[str, Any]:
+        """
+        Deletes an account
+        """
+        query = gql(
+            """
+            mutation Common_DeleteAccount($id: UUID!) {
+                deleteAccount(id: $id) {
+                    deleted
+                    errors {
+                    ...PayloadErrorFields
+                    __typename
+                }
+                __typename
+                }
+            }
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
+            }
+            """
+        )
+
+        variables = {"id": account_id}
+
+        return await self.gql_call(
+            operation="Common_DeleteAccount",
             graphql_query=query,
             variables=variables,
         )
