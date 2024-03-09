@@ -18,9 +18,11 @@ from graphql import DocumentNode
 AUTH_HEADER_KEY = "authorization"
 CSRF_KEY = "csrftoken"
 DEFAULT_RECORD_LIMIT = 100
+DELAY = 10
 ERRORS_KEY = "error_code"
 SESSION_DIR = ".mm"
 SESSION_FILE = f"{SESSION_DIR}/mm_session.pickle"
+TIMEOUT = 300
 
 
 class MonarchMoneyEndpoints(object):
@@ -445,8 +447,8 @@ class MonarchMoney(object):
     async def request_accounts_refresh_and_wait(
         self,
         account_ids: Optional[List[str]] = None,
-        timeout: int = 300,
-        delay: int = 10,
+        timeout: int = TIMEOUT,
+        delay: int = DELAY,
     ) -> bool:
         """
         Convenience method for forcing an accounts refresh on Monarch, as well
@@ -2408,8 +2410,8 @@ class MonarchMoney(object):
         self,
         account_id: str,
         csv_content: str,
-        timeout: int = 300,
-        delay: int = 10,
+        timeout: int = TIMEOUT,
+        delay: int = DELAY,
     ) -> str:
         """
         Uploads the account balance history CSV for a specified account.
