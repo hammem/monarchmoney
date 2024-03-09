@@ -2452,9 +2452,9 @@ class MonarchMoney(object):
         while not is_completed and (time.time() <= (start + timeout)):
             await asyncio.sleep(delay)
 
-            is_completed = (await self._is_upload_balance_history_complete(session_key))[
-                "uploadBalanceHistorySession"
-            ]["status"] == "completed"
+            is_completed = (
+                await self._is_upload_balance_history_complete(session_key)
+            )["uploadBalanceHistorySession"]["status"] == "completed"
 
         return is_completed
 
