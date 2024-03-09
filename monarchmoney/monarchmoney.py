@@ -2417,7 +2417,8 @@ class MonarchMoney(object):
         Uploads the account balance history CSV for a specified account.
 
         :param account_id: The account ID to apply the history to.
-        :param csv_content: CSV representation of the balance history. Headers: Date, Amount, and Account Name.
+        :param csv_content: CSV representation of the balance history.
+                            Headers: Date, Amount, and Account Name.
         :param timeout: The number of seconds to wait before timing out
         :param delay: The number of seconds to wait for each check on whether parsing is completed
         """
