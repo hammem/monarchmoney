@@ -2434,7 +2434,7 @@ class MonarchMoney(object):
 
         session_key = upload_response["session_key"]
 
-        parse_response = await self._parse_upload_balance_history_session(
+        parse_response = await self._initiate_upload_balance_history_session(
             session_key=session_key
         )
 
@@ -2455,7 +2455,7 @@ class MonarchMoney(object):
 
         return is_completed
 
-    async def _parse_upload_balance_history_session(self, session_key: str) -> dict:
+    async def _initiate_upload_balance_history_session(self, session_key: str) -> dict:
         """
         Triggers parsing of the uploaded balance history CSV file.
 
