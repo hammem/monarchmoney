@@ -2449,7 +2449,7 @@ class MonarchMoney(object):
         while not is_completed and (time.time() <= (start + timeout)):
             await asyncio.sleep(delay)
 
-            is_completed = (await self.get_upload_balance_history_session(session_key))[
+            is_completed = (await self._is_upload_balance_history_complete(session_key))[
                 "uploadBalanceHistorySession"
             ]["status"] == "completed"
 
@@ -2487,7 +2487,7 @@ class MonarchMoney(object):
             "Web_ParseUploadBalanceHistorySession", query, variables
         )
 
-    async def get_upload_balance_history_session(self, session_key: str):
+    async def _is_upload_balance_history_complete(self, session_key: str):
         """
         Retrieves the status of the upload balance history session.
 
