@@ -1,11 +1,14 @@
 import asyncio
 import calendar
+import csv
 import getpass
 import json
 import os
 import pickle
 import time
+from dataclasses import dataclass
 from datetime import datetime
+from io import StringIO
 from typing import Any, Dict, List, Optional, Union
 
 import oathtool
@@ -23,6 +26,13 @@ ERRORS_KEY = "error_code"
 SESSION_DIR = ".mm"
 SESSION_FILE = f"{SESSION_DIR}/mm_session.pickle"
 TIMEOUT = 300
+
+
+@dataclass
+class BalanceHistoryRow:
+    date: datetime
+    amount: float
+    account_name: Optional[str] = None
 
 
 class MonarchMoneyEndpoints(object):
@@ -2409,7 +2419,7 @@ class MonarchMoney(object):
     async def upload_account_balance_history(
         self,
         account_id: str,
-        csv_content: str,
+        csv_content: List[BalanceHistoryRow],
         timeout: int = TIMEOUT,
         delay: int = DELAY,
     ) -> bool:
@@ -2425,9 +2435,11 @@ class MonarchMoney(object):
         if not account_id or not csv_content:
             raise RequestFailedException("account_id and csv_content cannot be empty")
 
+        csv_string = self._convert_to_csv_string(csv_content)
+
         filename = "upload.csv"
         form = FormData()
-        form.add_field("files", csv_content, filename=filename, content_type="text/csv")
+        form.add_field("files", csv_string, filename=filename, content_type="text/csv")
         form.add_field("account_files_mapping", json.dumps({filename: account_id}))
 
         upload_response = await self._upload_form_data(
@@ -2729,3 +2741,24 @@ class MonarchMoney(object):
             fetch_schema_from_transport=False,
             execute_timeout=self._timeout,
         )
+
+    def _convert_to_csv_string(self, csv_content: List[BalanceHistoryRow]) -> str:
+        """
+
+        :param csv_content:
+        :return:
+        """
+
+        if not csv_content:
+            return ""
+
+        csv_string = StringIO()
+        writer = csv.writer(csv_string)
+        writer.writerow(["Date", "Amount", "Account Name"])
+
+        for row in csv_content:
+            writer.writerow(
+                [row.date.strftime("%Y-%m-%d"), row.amount, row.account_name]
+            )
+
+        return csv_string.getvalue()
