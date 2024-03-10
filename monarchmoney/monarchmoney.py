@@ -2744,9 +2744,8 @@ class MonarchMoney(object):
 
     def _convert_to_csv_string(self, csv_content: List[BalanceHistoryRow]) -> str:
         """
-
-        :param csv_content:
-        :return:
+        Converts a list of BalanceHistoryRow to CSV string
+        :param csv_content: A list of BalanceHistoryRow to upload to the account balance
         """
 
         if not csv_content:
