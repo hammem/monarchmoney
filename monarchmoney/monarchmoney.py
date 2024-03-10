@@ -2412,7 +2412,7 @@ class MonarchMoney(object):
         csv_content: str,
         timeout: int = TIMEOUT,
         delay: int = DELAY,
-    ) -> str:
+    ) -> bool:
         """
         Uploads the account balance history CSV for a specified account.
 
