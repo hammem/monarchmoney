@@ -2548,6 +2548,16 @@ class MonarchMoney(object):
             self.set_token(data["token"])
             self._headers["Authorization"] = f"Token {self._token}"
 
+    def delete_session(self, filename: Optional[str] = None) -> None:
+        """
+        Deletes the session file.
+        """
+        if filename is None:
+            filename = self._session_file
+
+        if os.path.exists(filename):
+            os.remove(filename)
+
     async def _login_user(
         self, email: str, password: str, mfa_secret_key: Optional[str]
     ) -> None:

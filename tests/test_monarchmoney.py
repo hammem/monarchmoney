@@ -210,7 +210,7 @@ class TestMonarchMoney(unittest.IsolatedAsyncioTestCase):
         Tear down any necessary data or variables for the tests here.
         This method will be called after each test method is executed.
         """
-        os.remove("temp_session.pickle")
+        self.monarch_money.delete_session("temp_session.pickle")
 
 
 if __name__ == "__main__":
