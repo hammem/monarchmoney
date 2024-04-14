@@ -1,5 +1,6 @@
 import asyncio
 import calendar
+import getpass
 import json
 import os
 import pickle
@@ -88,18 +89,7 @@ class MonarchMoney(object):
     ) -> None:
         """Performs an interactive login for iPython and similar environments."""
         email = input("Email: ")
-        passwd = input("Password: ")
-
-        empty_values = [None, ""]
-        if (
-            (email in empty_values)
-            and (passwd in empty_values)
-            and (not use_saved_session)
-        ):
-            raise LoginFailedException(
-                "Email and password are required to login when not using a saved session."
-            )
-
+        passwd = getpass.getpass("Password: ")
         try:
             await self.login(email, passwd, use_saved_session, save_session)
         except RequireMFAException:
@@ -314,6 +304,46 @@ class MonarchMoney(object):
 
         return await self.gql_call(
             operation="Web_CreateManualAccount",
+            graphql_query=query,
+            variables=variables,
+        )
+
+    async def delete_account(
+        self,
+        account_id: str,
+    ) -> Dict[str, Any]:
+        """
+        Deletes an account
+        """
+        query = gql(
+            """
+            mutation Common_DeleteAccount($id: UUID!) {
+                deleteAccount(id: $id) {
+                    deleted
+                    errors {
+                    ...PayloadErrorFields
+                    __typename
+                }
+                __typename
+                }
+            }
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
+            }
+            """
+        )
+
+        variables = {"id": account_id}
+
+        return await self.gql_call(
+            operation="Common_DeleteAccount",
             graphql_query=query,
             variables=variables,
         )
@@ -2492,25 +2522,41 @@ class MonarchMoney(object):
             document=graphql_query, operation_name=operation, variable_values=variables
         )
 
-    def save_session(self, filename: str) -> None:
+    def save_session(self, filename: Optional[str] = None) -> None:
         """
         Saves the auth token needed to access a Monarch Money account.
         """
-        session_data = {"token": self._token}
-        if not os.path.exists(SESSION_DIR):
-            os.makedirs(SESSION_DIR)
+        if filename is None:
+            filename = self._session_file
+        filename = os.path.abspath(filename)
 
+        session_data = {"token": self._token}
+
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, "wb") as fh:
             pickle.dump(session_data, fh)
 
-    def load_session(self, filename: str = SESSION_FILE) -> None:
+    def load_session(self, filename: Optional[str] = None) -> None:
         """
         Loads pre-existing auth token from a Python pickle file.
         """
+        if filename is None:
+            filename = self._session_file
+
         with open(filename, "rb") as fh:
             data = pickle.load(fh)
             self.set_token(data["token"])
             self._headers["Authorization"] = f"Token {self._token}"
+
+    def delete_session(self, filename: Optional[str] = None) -> None:
+        """
+        Deletes the session file.
+        """
+        if filename is None:
+            filename = self._session_file
+
+        if os.path.exists(filename):
+            os.remove(filename)
 
     async def _login_user(
         self, email: str, password: str, mfa_secret_key: Optional[str]
