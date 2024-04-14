@@ -212,7 +212,8 @@ class TestMonarchMoney(unittest.IsolatedAsyncioTestCase):
             )
 
     @patch("builtins.input", return_value="")
-    async def test_interactive_login(self, _):
+    @patch("getpass.getpass", return_value="")
+    async def test_interactive_login(self, _input_mock, _getpass_mock):
         """
         Test the interactive_login method with empty values for email and password.
         """
