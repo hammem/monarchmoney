@@ -113,7 +113,7 @@ class MonarchMoney(object):
             self.load_session(self._session_file)
             return
 
-        if email is None or password is None:
+        if (email is None) or (password is None) or (email == "") or (password == ""):
             raise LoginFailedException(
                 "Email and password are required to login when not using a saved session."
             )

@@ -6,6 +6,7 @@ from unittest.mock import patch
 import json
 from gql import Client
 from monarchmoney import MonarchMoney
+from monarchmoney.monarchmoney import LoginFailedException
 
 
 class TestMonarchMoney(unittest.IsolatedAsyncioTestCase):
@@ -198,6 +199,26 @@ class TestMonarchMoney(unittest.IsolatedAsyncioTestCase):
             "U S Dollar",
             "Expected third holding name to be 'U S Dollar'",
         )
+
+    async def test_login(self):
+        """
+        Test the login method with empty values for email and password.
+        """
+        with self.assertRaises(LoginFailedException):
+            await self.monarch_money.login(use_saved_session=False)
+        with self.assertRaises(LoginFailedException):
+            await self.monarch_money.login(
+                email="", password="", use_saved_session=False
+            )
+
+    @patch("builtins.input", return_value="")
+    @patch("getpass.getpass", return_value="")
+    async def test_interactive_login(self, _input_mock, _getpass_mock):
+        """
+        Test the interactive_login method with empty values for email and password.
+        """
+        with self.assertRaises(LoginFailedException):
+            await self.monarch_money.interactive_login(use_saved_session=False)
 
     @classmethod
     def loadTestData(cls, filename) -> dict:
