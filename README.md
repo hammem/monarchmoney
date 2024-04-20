@@ -140,7 +140,12 @@ As of writing this README, the following methods are supported:
 
 Any and all contributions -- code, documentation, feature requests, feedback -- are welcome!
 
-If you plan to submit up a pull request, you can expect a timely review.  There aren't any strict requirements around the environment you need to configure aside from using [Black](https://github.com/psf/black) to auto-format the code.  An action is configured in this repo to run against all PRs and merges and will block them from being committed.
+If you plan to submit up a pull request, you can expect a timely review.  There aren't any strict requirements around the environment you'll need.  Please ensure you do the following:
+
+  - Configure your IDE or manually run [Black](https://github.com/psf/black) to auto-format the code.
+  - Ensure you run the unit tests in this project!
+    
+Actions are configured in this repo to run against all PRs and merges which will block them if a unit test fails or Black throws an error.
 
 # FAQ
 
