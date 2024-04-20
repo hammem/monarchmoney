@@ -1,11 +1,14 @@
 import asyncio
 import calendar
+import csv
 import getpass
 import json
 import os
 import pickle
 import time
+from dataclasses import dataclass
 from datetime import datetime
+from io import StringIO
 from typing import Any, Dict, List, Optional, Union
 
 import oathtool
@@ -18,9 +21,18 @@ from graphql import DocumentNode
 AUTH_HEADER_KEY = "authorization"
 CSRF_KEY = "csrftoken"
 DEFAULT_RECORD_LIMIT = 100
+DELAY = 10
 ERRORS_KEY = "error_code"
 SESSION_DIR = ".mm"
 SESSION_FILE = f"{SESSION_DIR}/mm_session.pickle"
+TIMEOUT = 300
+
+
+@dataclass
+class BalanceHistoryRow:
+    date: datetime
+    amount: float
+    account_name: Optional[str] = None
 
 
 class MonarchMoneyEndpoints(object):
@@ -126,6 +138,17 @@ class MonarchMoney(object):
     ) -> None:
         """Performs multi-factor authentication to access a Monarch Money account."""
         await self._multi_factor_authenticate(email, password, code)
+
+    async def _upload_form_data(self, url: str, data: FormData) -> dict:
+        """
+        Retrieves the response from the server for a given URL and form data.
+        """
+        async with ClientSession(headers=self._headers) as session:
+            resp = await session.post(url, data=data)
+            if resp.status != 200:
+                raise RequestFailedException(f"HTTP Code {resp.status}: {resp.reason}")
+
+            return await resp.json()
 
     async def get_accounts(self) -> Dict[str, Any]:
         """
@@ -434,8 +457,8 @@ class MonarchMoney(object):
     async def request_accounts_refresh_and_wait(
         self,
         account_ids: Optional[List[str]] = None,
-        timeout: int = 300,
-        delay: int = 10,
+        timeout: int = TIMEOUT,
+        delay: int = DELAY,
     ) -> bool:
         """
         Convenience method for forcing an accounts refresh on Monarch, as well
@@ -2394,29 +2417,119 @@ class MonarchMoney(object):
         )
 
     async def upload_account_balance_history(
-        self, account_id: str, csv_content: str
-    ) -> None:
+        self,
+        account_id: str,
+        csv_content: List[BalanceHistoryRow],
+        timeout: int = TIMEOUT,
+        delay: int = DELAY,
+    ) -> bool:
         """
-        Uploads the account balance history csv for a given account.
+        Uploads the account balance history CSV for a specified account.
 
         :param account_id: The account ID to apply the history to.
         :param csv_content: CSV representation of the balance history.
+                            Headers: Date, Amount, and Account Name.
+        :param timeout: The number of seconds to wait before timing out
+        :param delay: The number of seconds to wait for each check on whether parsing is completed
         """
         if not account_id or not csv_content:
             raise RequestFailedException("account_id and csv_content cannot be empty")
 
+        csv_string = self._convert_to_csv_string(csv_content)
+
         filename = "upload.csv"
         form = FormData()
-        form.add_field("files", csv_content, filename=filename, content_type="text/csv")
+        form.add_field("files", csv_string, filename=filename, content_type="text/csv")
         form.add_field("account_files_mapping", json.dumps({filename: account_id}))
 
-        async with ClientSession(headers=self._headers) as session:
-            resp = await session.post(
-                MonarchMoneyEndpoints.getAccountBalanceHistoryUploadEndpoint(),
-                data=form,
-            )
-            if resp.status != 200:
-                raise RequestFailedException(f"HTTP Code {resp.status}: {resp.reason}")
+        upload_response = await self._upload_form_data(
+            url=MonarchMoneyEndpoints.getAccountBalanceHistoryUploadEndpoint(),
+            data=form,
+        )
+
+        session_key = upload_response["session_key"]
+
+        parse_response = await self._initiate_upload_balance_history_session(
+            session_key=session_key
+        )
+
+        is_completed = (
+            parse_response["parseBalanceHistory"]["uploadBalanceHistorySession"][
+                "status"
+            ]
+            == "completed"
+        )
+
+        start = time.time()
+        while not is_completed and (time.time() <= (start + timeout)):
+            await asyncio.sleep(delay)
+
+            is_completed = (
+                await self._is_upload_balance_history_complete(session_key)
+            )["uploadBalanceHistorySession"]["status"] == "completed"
+
+        return is_completed
+
+    async def _initiate_upload_balance_history_session(self, session_key: str) -> dict:
+        """
+        Triggers parsing of the uploaded balance history CSV file.
+
+        :param session_key: The session key for the uploaded file.
+        """
+
+        query = gql(
+            """
+            mutation Web_ParseUploadBalanceHistorySession($input: ParseBalanceHistoryInput!) {
+                parseBalanceHistory(input: $input) {
+                    uploadBalanceHistorySession {
+                        ...UploadBalanceHistorySessionFields
+                        __typename
+                    }
+                    __typename
+                }
+            }
+            fragment UploadBalanceHistorySessionFields on UploadBalanceHistorySession {
+                sessionKey
+                status
+                __typename
+            }
+            """
+        )
+
+        variables = {"input": {"sessionKey": session_key}}
+
+        return await self.gql_call(
+            "Web_ParseUploadBalanceHistorySession", query, variables
+        )
+
+    async def _is_upload_balance_history_complete(self, session_key: str):
+        """
+        Retrieves the status of the upload balance history session.
+
+        :param session_key: The session key for the uploaded file.
+        """
+
+        query = gql(
+            """
+            query Web_GetUploadBalanceHistorySession($sessionKey: String!) {
+                uploadBalanceHistorySession(sessionKey: $sessionKey) {
+                    ...UploadBalanceHistorySessionFields
+                    __typename
+                }
+            }
+            fragment UploadBalanceHistorySessionFields on UploadBalanceHistorySession {
+                sessionKey
+                status
+                __typename
+            }
+            """
+        )
+
+        variables = {"sessionKey": session_key}
+
+        return await self.gql_call(
+            "Web_GetUploadBalanceHistorySession", query, variables
+        )
 
     async def get_recurring_transactions(
         self,
@@ -2638,3 +2751,23 @@ class MonarchMoney(object):
             fetch_schema_from_transport=False,
             execute_timeout=self._timeout,
         )
+
+    def _convert_to_csv_string(self, csv_content: List[BalanceHistoryRow]) -> str:
+        """
+        Converts a list of BalanceHistoryRow to CSV string
+        :param csv_content: A list of BalanceHistoryRow to upload to the account balance
+        """
+
+        if not csv_content:
+            return ""
+
+        csv_string = StringIO()
+        writer = csv.writer(csv_string)
+        writer.writerow(["Date", "Amount", "Account Name"])
+
+        for row in csv_content:
+            writer.writerow(
+                [row.date.strftime("%Y-%m-%d"), row.amount, row.account_name]
+            )
+
+        return csv_string.getvalue()
