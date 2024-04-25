@@ -506,7 +506,9 @@ class MonarchMoney(object):
 
         return True
 
-    async def is_accounts_refresh_complete(self) -> bool:
+    async def is_accounts_refresh_complete(
+        self, account_ids: Optional[List[str]] = None
+    ) -> bool:
         """
         Checks on the status of a prior request to refresh account balances.
 
@@ -515,6 +517,9 @@ class MonarchMoney(object):
           - False if refresh request still in progress.
 
         Otherwise, throws a `RequestFailedException`.
+
+        :param account_ids: The list of accounts IDs to check on the status of.
+          If set to None, all account IDs will be checked.
         """
         query = gql(
             """
@@ -537,7 +542,16 @@ class MonarchMoney(object):
         if "accounts" not in response:
             raise RequestFailedException("Unable to request status of refresh")
 
-        return all([not x["hasSyncInProgress"] for x in response["accounts"]])
+        if account_ids:
+            return all(
+                [
+                    not x["hasSyncInProgress"]
+                    for x in response["accounts"]
+                    if x["id"] in account_ids
+                ]
+            )
+        else:
+            return all([not x["hasSyncInProgress"] for x in response["accounts"]])
 
     async def request_accounts_refresh_and_wait(
         self,
@@ -564,7 +578,7 @@ class MonarchMoney(object):
         refreshed = False
         while not refreshed and (time.time() <= (start + timeout)):
             await asyncio.sleep(delay)
-            refreshed = await self.is_accounts_refresh_complete()
+            refreshed = await self.is_accounts_refresh_complete(account_ids)
         return refreshed
 
     async def get_account_holdings(self, account_id: int) -> Dict[str, Any]:
