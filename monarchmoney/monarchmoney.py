@@ -170,7 +170,6 @@ class MonarchMoney(object):
             holdingsCount
             manualInvestmentsTrackingMethod
             order
-            icon
             logoUrl
             type {
               name
@@ -192,7 +191,6 @@ class MonarchMoney(object):
                 plaidInstitutionId
                 name
                 status
-                logo
                 __typename
               }
               __typename
@@ -200,7 +198,6 @@ class MonarchMoney(object):
             institution {
               id
               name
-              logo
               primaryColor
               url
               __typename
@@ -735,7 +732,6 @@ class MonarchMoney(object):
               holdingsCount
               manualInvestmentsTrackingMethod
               order
-              icon
               logoUrl
               type {
                 name
@@ -758,7 +754,6 @@ class MonarchMoney(object):
                   plaidInstitutionId
                   name
                   status
-                  logo
                   __typename
                 }
                 __typename
@@ -766,7 +761,6 @@ class MonarchMoney(object):
               institution {
                 id
                 name
-                logo
                 primaryColor
                 url
                 __typename
@@ -839,7 +833,6 @@ class MonarchMoney(object):
               category {
                 id
                 name
-                icon
                 group {
                   id
                   type
@@ -927,7 +920,6 @@ class MonarchMoney(object):
               institution {
                 id
                 name
-                logo
                 url
                 __typename
               }
@@ -956,7 +948,6 @@ class MonarchMoney(object):
               updateRequired
               institution {
                 hasIssuesReported
-                logo
                 status
                 balanceStatus
                 transactionsStatus
@@ -1100,7 +1091,6 @@ class MonarchMoney(object):
               categories {
                 id
                 name
-                icon
                 order
                 budgetVariability
                 rolloverPeriod {
@@ -1117,7 +1107,6 @@ class MonarchMoney(object):
             goals @include(if: $useLegacyGoals) {
               id
               name
-              icon
               completedAt
               targetDate
               __typename
@@ -1349,7 +1338,6 @@ class MonarchMoney(object):
             category {
               id
               name
-              icon
               __typename
             }
             merchant {
@@ -1546,7 +1534,6 @@ class MonarchMoney(object):
             id
             order
             name
-            icon
             systemCategory
             isSystemCategory
             isDisabled
@@ -1687,7 +1674,6 @@ class MonarchMoney(object):
                 id
                 order
                 name
-                icon
                 systemCategory
                 systemCategoryDisplayName
                 budgetVariability
@@ -1954,7 +1940,6 @@ class MonarchMoney(object):
             }
             category {
               id
-              icon
               name
               __typename
             }
@@ -1976,7 +1961,6 @@ class MonarchMoney(object):
           fragment TransactionDrawerAccountSectionFields on Account {
             id
             displayName
-            icon
             logoUrl
             id
             mask
@@ -2013,7 +1997,6 @@ class MonarchMoney(object):
               category {
                 id
                 name
-                icon
                 __typename
               }
               merchant {
@@ -2030,7 +2013,6 @@ class MonarchMoney(object):
                 }
                 category {
                   id
-                  icon
                   name
                   __typename
                 }
@@ -2085,7 +2067,6 @@ class MonarchMoney(object):
                   }
                   category {
                     id
-                    icon
                     name
                     __typename
                   }
@@ -2142,7 +2123,6 @@ class MonarchMoney(object):
                 category {
                   id
                   name
-                  icon
                   group {
                     id
                     type
@@ -2578,13 +2558,11 @@ class MonarchMoney(object):
                 category {
                   id
                   name
-                  icon
                   __typename
                 }
                 account {
                   id
                   displayName
-                  icon
                   logoUrl
                   __typename
                 }
