@@ -134,6 +134,7 @@ As of writing this README, the following methods are supported:
 - `set_budget_amount` - sets a budget's value to the given amount (date allowed, will only apply to month specified by default). A zero amount value will "unset" or "clear" the budget for the given category.
 - `create_manual_account` - creates a new manual account
 - `delete_account` - deletes an account by the provided account id
+- `update_account` - updates settings and/or balance of the provided account id
 - `upload_account_balance_history` - uploads account history csv file for a given account
 
 # Contributing
