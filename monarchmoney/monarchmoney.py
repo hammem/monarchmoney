@@ -413,6 +413,150 @@ class MonarchMoney(object):
             variables=variables,
         )
 
+    #
+    async def update_account(
+        self,
+        account_id: str,
+        account_name: Optional[str] = None,
+        account_balance: Optional[float] = None,
+        account_type: Optional[str] = None,
+        account_sub_type: Optional[str] = None,
+        include_in_net_worth: Optional[bool] = None,
+        hide_from_summary_list: Optional[bool] = None,
+        hide_transactions_from_reports: Optional[bool] = None,
+    ) -> Dict[str, Any]:
+        """
+        Updates the details of an account.
+
+        With the exception of the account_balance parameter, the only available parameters currently are those
+        that are valid for both synced and manual accounts.
+
+        :param account_id: The string ID of the account to update
+        :param account_name: The string of the account name
+        :param account_balance: a float of the amount to update the account balance to
+        :param account_type: The string of account group type (i.e. loan, other_liability, other_asset, etc)
+        :param account_sub_type: The string sub type of the account (i.e. auto, commercial, mortgage, line_of_credit, etc)
+        :param include_in_net_worth: A boolean if the account should be considered in the net worth calculation
+        :param hide_from_summary_list: A boolean if the account should be hidden in the "Accounts" view
+        :param hide_transactions_from_reports: A boolean if the account should be excluded from budgets and reports
+        """
+        query = gql(
+            """
+            mutation Common_UpdateAccount($input: UpdateAccountMutationInput!) {
+                updateAccount(input: $input) {
+                    account {
+                        ...AccountFields
+                        __typename
+                    }
+                    errors {
+                        ...PayloadErrorFields
+                        __typename
+                    }
+                    __typename
+                }
+            }
+
+            fragment AccountFields on Account {
+                id
+                displayName
+                syncDisabled
+                deactivatedAt
+                isHidden
+                isAsset
+                mask
+                createdAt
+                updatedAt
+                displayLastUpdatedAt
+                currentBalance
+                displayBalance
+                includeInNetWorth
+                hideFromList
+                hideTransactionsFromReports
+                includeBalanceInNetWorth
+                includeInGoalBalance
+                dataProvider
+                dataProviderAccountId
+                isManual
+                transactionsCount
+                holdingsCount
+                manualInvestmentsTrackingMethod
+                order
+                icon
+                logoUrl
+                deactivatedAt
+                type {
+                    name
+                    display
+                    group
+                    __typename
+                }
+                subtype {
+                    name
+                    display
+                    __typename
+                }
+                credential {
+                    id
+                    updateRequired
+                    disconnectedFromDataProviderAt
+                    dataProvider
+                    institution {
+                        id
+                        plaidInstitutionId
+                        name
+                        status
+                        __typename
+                    }
+                    __typename
+                }
+                institution {
+                    id
+                    name
+                    primaryColor
+                    url
+                    __typename
+                }
+                __typename
+            }
+
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
+            }
+            """
+        )
+
+        variables = {
+            "id": str(account_id),
+        }
+
+        if account_type is not None:
+            variables["type"] = account_type
+        if account_sub_type is not None:
+            variables["subtype"] = account_sub_type
+        if include_in_net_worth is not None:
+            variables["includeInNetWorth"] = include_in_net_worth
+        if hide_from_summary_list is not None:
+            variables["hideFromList"] = hide_from_summary_list
+        if hide_transactions_from_reports is not None:
+            variables["hideTransactionsFromReports"] = hide_transactions_from_reports
+        if account_name is not None:
+            variables["name"] = account_name
+        if account_balance is not None:
+            variables["displayBalance"] = account_balance
+
+        return await self.gql_call(
+            operation="Common_UpdateAccount",
+            graphql_query=query,
+            variables={"input": variables},
+        )
+
     async def delete_account(
         self,
         account_id: str,
