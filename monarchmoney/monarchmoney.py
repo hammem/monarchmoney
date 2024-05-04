@@ -505,7 +505,6 @@ class MonarchMoney(object):
                         plaidInstitutionId
                         name
                         status
-                        logo
                         __typename
                     }
                     __typename
@@ -513,7 +512,6 @@ class MonarchMoney(object):
                 institution {
                     id
                     name
-                    logo
                     primaryColor
                     url
                     __typename
