@@ -686,13 +686,13 @@ class MonarchMoney(object):
         if account_ids:
             return all(
                 [
-                    not x["hasSyncInProgress"]
+                    x["hasSyncInProgress"]
                     for x in response["accounts"]
                     if x["id"] in account_ids
                 ]
             )
         else:
-            return all([not x["hasSyncInProgress"] for x in response["accounts"]])
+            return all([x["hasSyncInProgress"] for x in response["accounts"]])
 
     async def request_accounts_refresh_and_wait(
         self,
