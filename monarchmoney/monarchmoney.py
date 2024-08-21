@@ -15,6 +15,9 @@ from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
 from graphql import DocumentNode
 
+from monarchmoney.const import QUERY_GET_ACCOUNTS, QUERY_GET_ACCOUNT_TYPE_OPTIONS, QUERY_GET_ACCOUNT_RECENT_BALANCES, \
+    QUERY_GET_ACCOUNT_SNAPSHOTS_BY_TYPE, QUERY_GET_AGGREGATE_SNAPSHOTS
+
 AUTH_HEADER_KEY = "authorization"
 CSRF_KEY = "csrftoken"
 DEFAULT_RECORD_LIMIT = 100
@@ -131,81 +134,8 @@ class MonarchMoney(object):
         """
         Gets the list of accounts configured in the Monarch Money account.
         """
-        query = gql(
-            """
-          query GetAccounts {
-            accounts {
-              ...AccountFields
-              __typename
-            }
-            householdPreferences {
-              id
-              accountGroupOrder
-              __typename
-            }
-          }
+        query = gql(QUERY_GET_ACCOUNTS)
 
-          fragment AccountFields on Account {
-            id
-            displayName
-            syncDisabled
-            deactivatedAt
-            isHidden
-            isAsset
-            mask
-            createdAt
-            updatedAt
-            displayLastUpdatedAt
-            currentBalance
-            displayBalance
-            includeInNetWorth
-            hideFromList
-            hideTransactionsFromReports
-            includeBalanceInNetWorth
-            includeInGoalBalance
-            dataProvider
-            dataProviderAccountId
-            isManual
-            transactionsCount
-            holdingsCount
-            manualInvestmentsTrackingMethod
-            order
-            logoUrl
-            type {
-              name
-              display
-              __typename
-            }
-            subtype {
-              name
-              display
-              __typename
-            }
-            credential {
-              id
-              updateRequired
-              disconnectedFromDataProviderAt
-              dataProvider
-              institution {
-                id
-                plaidInstitutionId
-                name
-                status
-                __typename
-              }
-              __typename
-            }
-            institution {
-              id
-              name
-              primaryColor
-              url
-              __typename
-            }
-            __typename
-          }
-        """
-        )
         return await self.gql_call(
             operation="GetAccounts",
             graphql_query=query,
@@ -215,31 +145,7 @@ class MonarchMoney(object):
         """
         Retrieves a list of available account types and their subtypes.
         """
-        query = gql(
-            """
-            query GetAccountTypeOptions {
-                accountTypeOptions {
-                    type {
-                        name
-                        display
-                        group
-                        possibleSubtypes {
-                            display
-                            name
-                            __typename
-                        }
-                        __typename
-                    }
-                    subtype {
-                        name
-                        display
-                        __typename
-                    }
-                    __typename
-                }
-            }
-        """
-        )
+        query = gql(QUERY_GET_ACCOUNT_TYPE_OPTIONS)
         return await self.gql_call(
             operation="GetAccountTypeOptions",
             graphql_query=query,
@@ -256,16 +162,7 @@ class MonarchMoney(object):
         if start_date is None:
             start_date = (date.today() - timedelta(days=31)).isoformat()
 
-        query = gql(
-            """
-            query GetAccountRecentBalances($startDate: Date!) {
-                accounts {
-                    id
-                    recentBalances(startDate: $startDate)
-                    __typename
-                }
-            }
-        """
+        query = gql(QUERY_GET_ACCOUNT_RECENT_BALANCES
         )
         return await self.gql_call(
             operation="GetAccountRecentBalances",
@@ -287,22 +184,8 @@ class MonarchMoney(object):
         if timeframe not in ("year", "month"):
             raise Exception(f'Unknown timeframe "{timeframe}"')
 
-        query = gql(
-            """
-            query GetSnapshotsByAccountType($startDate: Date!, $timeframe: Timeframe!) {
-                snapshotsByAccountType(startDate: $startDate, timeframe: $timeframe) {
-                    accountType
-                    month
-                    balance
-                    __typename
-                }
-                accountTypes {
-                    name
-                    group
-                    __typename
-                }
-            }
-        """
+        query = gql(QUERY_GET_ACCOUNT_SNAPSHOTS_BY_TYPE
+
         )
         return await self.gql_call(
             operation="GetSnapshotsByAccountType",
@@ -321,16 +204,9 @@ class MonarchMoney(object):
         and optionally only for accounts of type `account_type`.
         Both `start_date` and `end_date` are ISO datestrings, formatted as YYYY-MM-DD
         """
-        query = gql(
-            """
-            query GetAggregateSnapshots($filters: AggregateSnapshotFilters) {
-                aggregateSnapshots(filters: $filters) {
-                    date
-                    balance
-                    __typename
-                }
-            }
-        """
+        query = gql(QUERY_GET_AGGREGATE_SNAPSHOTS
+
+
         )
 
         if start_date is None:
