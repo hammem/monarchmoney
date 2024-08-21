@@ -15,8 +15,24 @@ from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
 from graphql import DocumentNode
 
-from monarchmoney.const import QUERY_GET_ACCOUNTS, QUERY_GET_ACCOUNT_TYPE_OPTIONS, QUERY_GET_ACCOUNT_RECENT_BALANCES, \
-    QUERY_GET_ACCOUNT_SNAPSHOTS_BY_TYPE, QUERY_GET_AGGREGATE_SNAPSHOTS
+from monarchmoney.const import (
+    QUERY_GET_ACCOUNTS,
+    QUERY_GET_ACCOUNT_TYPE_OPTIONS,
+    QUERY_GET_ACCOUNT_RECENT_BALANCES,
+    QUERY_GET_ACCOUNT_SNAPSHOTS_BY_TYPE,
+    QUERY_GET_AGGREGATE_SNAPSHOTS,
+    QUERY_GET_SUBSCRIPTION_DETAILS,
+    QUERY_GET_TRANSACTIONS_SUMMARY,
+    QUERY_GET_TRANSACTIONS_LIST,
+    QUERY_GET_TRANSACTION_CATEGORIES,
+    QUERY_GET_TRANSACTION_CATEGORY_GROUPS,
+    QUERY_GET_TRANSACTION_TAGS,
+    QUERY_GET_TRANSACTION_DETAILS,
+    QUERY_GET_TRANSACTION_SPLITS,
+    QUERY_GET_CASHFLOW,
+    QUERY_GET_CASHFLOW_SUMMARY,
+    QUERY_GET_RECURRING_TRANSACTIONS,
+)
 
 AUTH_HEADER_KEY = "authorization"
 CSRF_KEY = "csrftoken"
@@ -162,8 +178,7 @@ class MonarchMoney(object):
         if start_date is None:
             start_date = (date.today() - timedelta(days=31)).isoformat()
 
-        query = gql(QUERY_GET_ACCOUNT_RECENT_BALANCES
-        )
+        query = gql(QUERY_GET_ACCOUNT_RECENT_BALANCES)
         return await self.gql_call(
             operation="GetAccountRecentBalances",
             graphql_query=query,
@@ -184,9 +199,7 @@ class MonarchMoney(object):
         if timeframe not in ("year", "month"):
             raise Exception(f'Unknown timeframe "{timeframe}"')
 
-        query = gql(QUERY_GET_ACCOUNT_SNAPSHOTS_BY_TYPE
-
-        )
+        query = gql(QUERY_GET_ACCOUNT_SNAPSHOTS_BY_TYPE)
         return await self.gql_call(
             operation="GetSnapshotsByAccountType",
             graphql_query=query,
@@ -204,10 +217,7 @@ class MonarchMoney(object):
         and optionally only for accounts of type `account_type`.
         Both `start_date` and `end_date` are ISO datestrings, formatted as YYYY-MM-DD
         """
-        query = gql(QUERY_GET_AGGREGATE_SNAPSHOTS
-
-
-        )
+        query = gql(QUERY_GET_AGGREGATE_SNAPSHOTS)
 
         if start_date is None:
             # The mobile app defaults to 150 years ago today
@@ -1221,20 +1231,7 @@ class MonarchMoney(object):
         """
         The type of subscription for the Monarch Money account.
         """
-        query = gql(
-            """
-          query GetSubscriptionDetails {
-            subscription {
-              id
-              paymentSource
-              referralCode
-              isOnFreeTrial
-              hasPremiumEntitlement
-              __typename
-            }
-          }
-        """
-        )
+        query = gql(QUERY_GET_SUBSCRIPTION_DETAILS)
         return await self.gql_call(
             operation="GetSubscriptionDetails",
             graphql_query=query,
@@ -1245,32 +1242,7 @@ class MonarchMoney(object):
         Gets transactions summary from the account.
         """
 
-        query = gql(
-            """
-            query GetTransactionsPage($filters: TransactionFilterInput) {
-              aggregates(filters: $filters) {
-                summary {
-                  ...TransactionsSummaryFields
-                  __typename
-                }
-                __typename
-              }
-            }
-
-            fragment TransactionsSummaryFields on TransactionsSummary {
-              avg
-              count
-              max
-              maxExpense
-              sum
-              sumIncome
-              sumExpense
-              first
-              last
-              __typename
-            }
-        """
-        )
+        query = gql(QUERY_GET_TRANSACTIONS_SUMMARY)
         return await self.gql_call(
             operation="GetTransactionsPage",
             graphql_query=query,
@@ -1314,74 +1286,7 @@ class MonarchMoney(object):
         :param synced_from_institution: a bool to filter for whether the transactions were synced from an institution.
         """
 
-        query = gql(
-            """
-          query GetTransactionsList($offset: Int, $limit: Int, $filters: TransactionFilterInput, $orderBy: TransactionOrdering) {
-            allTransactions(filters: $filters) {
-              totalCount
-              results(offset: $offset, limit: $limit, orderBy: $orderBy) {
-                id
-                ...TransactionOverviewFields
-                __typename
-              }
-              __typename
-            }
-            transactionRules {
-              id
-              __typename
-            }
-          }
-    
-          fragment TransactionOverviewFields on Transaction {
-            id
-            amount
-            pending
-            date
-            hideFromReports
-            plaidName
-            notes
-            isRecurring
-            reviewStatus
-            needsReview
-            attachments {
-              id
-              extension
-              filename
-              originalAssetUrl
-              publicId
-              sizeBytes
-              __typename
-            }
-            isSplitTransaction
-            createdAt
-            updatedAt
-            category {
-              id
-              name
-              __typename
-            }
-            merchant {
-              name
-              id
-              transactionsCount
-              __typename
-            }
-            account {
-              id
-              displayName
-              __typename
-            }
-            tags {
-              id
-              name
-              color
-              order
-              __typename
-            }
-            __typename
-          }
-        """
-        )
+        query = gql(QUERY_GET_TRANSACTIONS_LIST)
 
         variables = {
             "offset": offset,
@@ -1541,34 +1446,7 @@ class MonarchMoney(object):
         """
         Gets all the categories configured in the account.
         """
-        query = gql(
-            """
-          query GetCategories {
-            categories {
-              ...CategoryFields
-              __typename
-            }
-          }
-
-          fragment CategoryFields on Category {
-            id
-            order
-            name
-            systemCategory
-            isSystemCategory
-            isDisabled
-            updatedAt
-            createdAt
-            group {
-              id
-              name
-              type
-              __typename
-            }
-            __typename
-          }
-        """
-        )
+        query = gql(QUERY_GET_TRANSACTION_CATEGORIES)
         return await self.gql_call(operation="GetCategories", graphql_query=query)
 
     async def delete_transaction_category(self, category_id: str) -> bool:
@@ -1626,21 +1504,7 @@ class MonarchMoney(object):
         """
         Gets all the category groups configured in the account.
         """
-        query = gql(
-            """
-          query ManageGetCategoryGroups {
-              categoryGroups {
-                  id
-                  name
-                  order
-                  type
-                  updatedAt
-                  createdAt
-                  __typename
-              }
-          }
-        """
-        )
+        query = gql(QUERY_GET_TRANSACTION_CATEGORY_GROUPS)
         return await self.gql_call(
             operation="ManageGetCategoryGroups", graphql_query=query
         )
@@ -1775,24 +1639,7 @@ class MonarchMoney(object):
         """
         Gets all the tags configured in the account.
         """
-        query = gql(
-            """
-          query GetHouseholdTransactionTags($search: String, $limit: Int, $bulkParams: BulkTransactionDataParams) {
-            householdTransactionTags(
-              search: $search
-              limit: $limit
-              bulkParams: $bulkParams
-            ) {
-              id
-              name
-              color
-              order
-              transactionCount
-              __typename
-            }
-          }
-        """
-        )
+        query = gql(QUERY_GET_TRANSACTION_TAGS)
         return await self.gql_call(
             operation="GetHouseholdTransactionTags", graphql_query=query
         )
@@ -1861,137 +1708,7 @@ class MonarchMoney(object):
         :param transaction_id: the transaction to fetch.
         :param redirect_posted: whether to redirect posted transactions. Defaults to True.
         """
-        query = gql(
-            """
-          query GetTransactionDrawer($id: UUID!, $redirectPosted: Boolean) {
-            getTransaction(id: $id, redirectPosted: $redirectPosted) {
-              id
-              amount
-              pending
-              isRecurring
-              date
-              originalDate
-              hideFromReports
-              needsReview
-              reviewedAt
-              reviewedByUser {
-                id
-                name
-                __typename
-              }
-              plaidName
-              notes
-              hasSplitTransactions
-              isSplitTransaction
-              isManual
-              splitTransactions {
-                id
-                ...TransactionDrawerSplitMessageFields
-                __typename
-              }
-              originalTransaction {
-                id
-                ...OriginalTransactionFields
-                __typename
-              }
-              attachments {
-                id
-                publicId
-                extension
-                sizeBytes
-                filename
-                originalAssetUrl
-                __typename
-              }
-              account {
-                id
-                ...TransactionDrawerAccountSectionFields
-                __typename
-              }
-              category {
-                id
-                __typename
-              }
-              goal {
-                id
-                __typename
-              }
-              merchant {
-                id
-                name
-                transactionCount
-                logoUrl
-                recurringTransactionStream {
-                  id
-                  __typename
-                }
-                __typename
-              }
-              tags {
-                id
-                name
-                color
-                order
-                __typename
-              }
-              needsReviewByUser {
-                id
-                __typename
-              }
-              __typename
-            }
-            myHousehold {
-              users {
-                id
-                name
-                __typename
-              }
-              __typename
-            }
-          }
-
-          fragment TransactionDrawerSplitMessageFields on Transaction {
-            id
-            amount
-            merchant {
-              id
-              name
-              __typename
-            }
-            category {
-              id
-              name
-              __typename
-            }
-            __typename
-          }
-
-          fragment OriginalTransactionFields on Transaction {
-            id
-            date
-            amount
-            merchant {
-              id
-              name
-              __typename
-            }
-            __typename
-          }
-
-          fragment TransactionDrawerAccountSectionFields on Account {
-            id
-            displayName
-            logoUrl
-            id
-            mask
-            subtype {
-              display
-              __typename
-            }
-            __typename
-          }
-        """
-        )
+        query = gql(QUERY_GET_TRANSACTION_DETAILS)
 
         variables = {
             "id": transaction_id,
@@ -2008,43 +1725,7 @@ class MonarchMoney(object):
 
         :param transaction_id: the transaction to query.
         """
-        query = gql(
-            """
-          query TransactionSplitQuery($id: UUID!) {
-            getTransaction(id: $id) {
-              id
-              amount
-              category {
-                id
-                name
-                __typename
-              }
-              merchant {
-                id
-                name
-                __typename
-              }
-              splitTransactions {
-                id
-                merchant {
-                  id
-                  name
-                  __typename
-                }
-                category {
-                  id
-                  name
-                  __typename
-                }
-                amount
-                notes
-                __typename
-              }
-              __typename
-            }
-          }
-        """
-        )
+        query = gql(QUERY_GET_TRANSACTION_SPLITS)
 
         variables = {"id": transaction_id}
 
@@ -2135,75 +1816,7 @@ class MonarchMoney(object):
         """
         Gets all the categories configured in the account.
         """
-        query = gql(
-            """
-          query Web_GetCashFlowPage($filters: TransactionFilterInput) {
-            byCategory: aggregates(filters: $filters, groupBy: ["category"]) {
-              groupBy {
-                category {
-                  id
-                  name
-                  group {
-                    id
-                    type
-                    __typename
-                  }
-                  __typename
-                }
-                __typename
-              }
-              summary {
-                sum
-                __typename
-              }
-              __typename
-            }
-            byCategoryGroup: aggregates(filters: $filters, groupBy: ["categoryGroup"]) {
-              groupBy {
-                categoryGroup {
-                  id
-                  name
-                  type
-                  __typename
-                }
-                __typename
-              }
-              summary {
-                sum
-                __typename
-              }
-              __typename
-            }
-            byMerchant: aggregates(filters: $filters, groupBy: ["merchant"]) {
-              groupBy {
-                merchant {
-                  id
-                  name
-                  logoUrl
-                  __typename
-                }
-                __typename
-              }
-              summary {
-                sumIncome
-                sumExpense
-                __typename
-              }
-              __typename
-            }
-            summary: aggregates(filters: $filters, fillEmptyValues: true) {
-              summary {
-                sumIncome
-                sumExpense
-                savings
-                savingsRate
-                __typename
-              }
-              __typename
-            }
-          }
-        """
-        )
+        query = gql(QUERY_GET_CASHFLOW)
 
         variables = {
             "limit": limit,
@@ -2240,22 +1853,7 @@ class MonarchMoney(object):
         """
         Gets all the categories configured in the account.
         """
-        query = gql(
-            """
-          query Web_GetCashFlowPage($filters: TransactionFilterInput) {
-            summary: aggregates(filters: $filters, fillEmptyValues: true) {
-              summary {
-                sumIncome
-                sumExpense
-                savings
-                savingsRate
-                __typename
-              }
-              __typename
-            }
-          }
-        """
-        )
+        query = gql(QUERY_GET_CASHFLOW_SUMMARY)
 
         variables = {
             "limit": limit,
@@ -2549,48 +2147,7 @@ class MonarchMoney(object):
         Fetches upcoming recurring transactions from Monarch Money's API.  This includes
         all merchant data, as well as the accounts where the charge will take place.
         """
-        query = gql(
-            """
-            query Web_GetUpcomingRecurringTransactionItems($startDate: Date!, $endDate: Date!, $filters: RecurringTransactionFilter) {
-              recurringTransactionItems(
-                startDate: $startDate
-                endDate: $endDate
-                filters: $filters
-              ) {
-                stream {
-                  id
-                  frequency
-                  amount
-                  isApproximate
-                  merchant {
-                    id
-                    name
-                    logoUrl
-                    __typename
-                  }
-                  __typename
-                }
-                date
-                isPast
-                transactionId
-                amount
-                amountDiff
-                category {
-                  id
-                  name
-                  __typename
-                }
-                account {
-                  id
-                  displayName
-                  logoUrl
-                  __typename
-                }
-                __typename
-              }
-            }
-        """
-        )
+        query = gql(QUERY_GET_RECURRING_TRANSACTIONS)
 
         variables = {"startDate": start_date, "endDate": end_date}
 
