@@ -14,3 +14,6 @@ uninstall:
 
 clean:
 	rm -fR build dist monarchmoney.egg-info monarchmoney/__pycache__ *.json
+
+
+models:
