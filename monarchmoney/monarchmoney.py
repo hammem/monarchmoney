@@ -25,7 +25,7 @@ DEFAULT_DELAY_SECS = 10
 ERRORS_KEY = "error_code"
 SESSION_DIR = ".mm"
 SESSION_FILE = f"{SESSION_DIR}/mm_session.pickle"
-TIMEOUT = 300
+DEFAULT_TIMEOUT_SECS = 300
 
 
 @dataclass
