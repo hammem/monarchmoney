@@ -155,3 +155,9 @@ Actions are configured in this repo to run against all PRs and merges which will
 If you currently use Google or 'Continue with Google' to access your Monarch account, you'll need to set a password to leverage this API.  You can set a password on your Monarch account by going to your [security settings](https://app.monarchmoney.com/settings/security).  
 
 Don't forget to use a password unique to your Monarch account and to enable multi-factor authentication!
+
+# Projects Using This Library
+
+*Disclaimer: These projects are neither affiliated nor endorsed by the `monarchmoney` project.*
+
+- [monarch-money-amazon-connector](https://github.com/elsell/monarch-money-amazon-connector): Automate annotating and tagging Amazon transactions (ALPHA)
