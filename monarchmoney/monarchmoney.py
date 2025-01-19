@@ -2659,7 +2659,7 @@ class MonarchMoney(object):
         async with ClientSession(headers=self._headers) as session:
             resp = await session.post(
                 MonarchMoneyEndpoints.getAccountBalanceHistoryUploadEndpoint(),
-                data=form,
+                json=form,
             )
             if resp.status != 200:
                 raise RequestFailedException(f"HTTP Code {resp.status}: {resp.reason}")
@@ -2820,7 +2820,7 @@ class MonarchMoney(object):
 
         async with ClientSession(headers=self._headers) as session:
             async with session.post(
-                MonarchMoneyEndpoints.getLoginEndpoint(), data=data
+                MonarchMoneyEndpoints.getLoginEndpoint(), json=data
             ) as resp:
                 if resp.status == 403:
                     raise RequireMFAException("Multi-Factor Auth Required")
@@ -2849,7 +2849,7 @@ class MonarchMoney(object):
 
         async with ClientSession(headers=self._headers) as session:
             async with session.post(
-                MonarchMoneyEndpoints.getLoginEndpoint(), data=data
+                MonarchMoneyEndpoints.getLoginEndpoint(), json=data
             ) as resp:
                 if resp.status != 200:
                     response = await resp.json()
