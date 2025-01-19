@@ -2853,11 +2853,13 @@ class MonarchMoney(object):
             ) as resp:
                 if resp.status != 200:
                     response = await resp.json()
-                    error_message = (
-                        response["error_code"]
-                        if response is not None
-                        else "Unknown error"
-                    )
+                    error_message = ""
+                    if "detail" in response:
+                        raise RequireMFAException(response["detail"])
+                    elif "error_code" in response:
+                        error_message = response["error_code"]
+                    else:
+                      "Unknown error"
                     raise LoginFailedException(error_message)
 
                 response = await resp.json()
