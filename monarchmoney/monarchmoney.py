@@ -59,7 +59,10 @@ class MonarchMoney(object):
         token: Optional[str] = None,
     ) -> None:
         self._headers = {
+            "Accept": "application/json",
             "Client-Platform": "web",
+            "Content-Type": "application/json",
+            "User-Agent": "MonarchMoneyAPI (https://github.com/hammem/monarchmoney)",
         }
         if token:
             self._headers["Authorization"] = f"Token {token}"
@@ -2852,17 +2855,20 @@ class MonarchMoney(object):
                 MonarchMoneyEndpoints.getLoginEndpoint(), json=data
             ) as resp:
                 if resp.status != 200:
-                    response = await resp.json()
-                    error_message = ""
-                    if "detail" in response:
-                        error_message = response["detail"]
-                        raise RequireMFAException(error_message)
-                    elif "error_code" in response:
-                        error_message = response["error_code"]
-                    else:
-                        error_message = f"Unrecognized error message: '{response}'"
-                    raise LoginFailedException(error_message)
-
+                    try:
+                        response = await resp.json()
+                        if "detail" in response:
+                            error_message = response["detail"]
+                            raise RequireMFAException(error_message)
+                        elif "error_code" in response:
+                            error_message = response["error_code"]
+                        else:
+                            error_message = f"Unrecognized error message: '{response}'"
+                        raise LoginFailedException(error_message)
+                    except:
+                        raise LoginFailedException(
+                            f"HTTP Code {resp.status}: {resp.reason}\nRaw response: {resp.text}"
+                        )
                 response = await resp.json()
                 self.set_token(response["token"])
                 self._headers["Authorization"] = f"Token {self._token}"
