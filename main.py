@@ -29,7 +29,7 @@ def main() -> None:
     # Budgets
     budgets = asyncio.run(mm.get_budgets())
     with open("budgets.json", "w") as outfile:
-        json.dump(budgets, outfile)
+        json.dump(budgets, outfile, indent=4)
 
     # Transactions summary
     transactions_summary = asyncio.run(mm.get_transactions_summary())

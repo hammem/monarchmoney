@@ -1128,153 +1128,187 @@ class MonarchMoney(object):
         :param end_date:
             the latest date to get budget data, in "yyyy-mm-dd" format (default: next month)
         :param use_legacy_goals:
-            Set True to return a list of monthly budget set aside for goals (default: no list)
+            Inoperative (plan to remove)
         :param use_v2_goals:
-            Set True to return a list of monthly budget set aside for version 2 goals (default list)
+            Inoperative (paln to remove)
         """
         query = gql(
             """
-          query GetJointPlanningData($startDate: Date!, $endDate: Date!, $useLegacyGoals: Boolean!, $useV2Goals: Boolean!) {
-            budgetData(startMonth: $startDate, endMonth: $endDate) {
-              monthlyAmountsByCategory {
-                category {
-                  id
-                  __typename
-                }
-                monthlyAmounts {
-                  month
-                  plannedCashFlowAmount
-                  plannedSetAsideAmount
-                  actualAmount
-                  remainingAmount
-                  previousMonthRolloverAmount
-                  rolloverType
-                  __typename
-                }
+            query Common_GetJointPlanningData($startDate: Date!, $endDate: Date!) {
+              budgetSystem
+              budgetData(startMonth: $startDate, endMonth: $endDate) {
+                ...BudgetDataFields
                 __typename
               }
-              monthlyAmountsByCategoryGroup {
-                categoryGroup {
-                  id
-                  __typename
-                }
-                monthlyAmounts {
-                  month
-                  plannedCashFlowAmount
-                  actualAmount
-                  remainingAmount
-                  previousMonthRolloverAmount
-                  rolloverType
-                  __typename
-                }
+              categoryGroups {
+                ...BudgetCategoryGroupFields
                 __typename
               }
-              monthlyAmountsForFlexExpense {
-                budgetVariability
-                monthlyAmounts {
-                  month
-                  plannedCashFlowAmount
-                  actualAmount
-                  remainingAmount
-                  previousMonthRolloverAmount
-                  rolloverType
-                  __typename
-                }
+              goalsV2 {
+                ...BudgetDataGoalsV2Fields
                 __typename
               }
-              totalsByMonth {
-                month
-                totalIncome {
-                  plannedAmount
-                  actualAmount
-                  remainingAmount
-                  previousMonthRolloverAmount
-                  __typename
-                }
-                totalExpenses {
-                  plannedAmount
-                  actualAmount
-                  remainingAmount
-                  previousMonthRolloverAmount
-                  __typename
-                }
-                totalFixedExpenses {
-                  plannedAmount
-                  actualAmount
-                  remainingAmount
-                  previousMonthRolloverAmount
-                  __typename
-                }
-                totalNonMonthlyExpenses {
-                  plannedAmount
-                  actualAmount
-                  remainingAmount
-                  previousMonthRolloverAmount
-                  __typename
-                }
-                totalFlexibleExpenses {
-                  plannedAmount
-                  actualAmount
-                  remainingAmount
-                  previousMonthRolloverAmount
-                  __typename
-                }
+            }
+            
+            fragment BudgetDataMonthlyAmountsFields on BudgetMonthlyAmounts {
+              month
+              plannedCashFlowAmount
+              plannedSetAsideAmount
+              actualAmount
+              remainingAmount
+              previousMonthRolloverAmount
+              rolloverType
+              cumulativeActualAmount
+              rolloverTargetAmount
+              __typename
+            }
+            
+            fragment BudgetMonthlyAmountsByCategoryFields on BudgetCategoryMonthlyAmounts {
+              category {
+                id
+                __typename
+              }
+              monthlyAmounts {
+                ...BudgetDataMonthlyAmountsFields
                 __typename
               }
               __typename
             }
-            categoryGroups {
-              id
-              name
-              order
-              groupLevelBudgetingEnabled
+            
+            fragment BudgetMonthlyAmountsByCategoryGroupFields on BudgetCategoryGroupMonthlyAmounts {
+              categoryGroup {
+                id
+                __typename
+              }
+              monthlyAmounts {
+                ...BudgetDataMonthlyAmountsFields
+                __typename
+              }
+              __typename
+            }
+            
+            fragment BudgetMonthlyAmountsForFlexExpenseFields on BudgetFlexMonthlyAmounts {
               budgetVariability
-              rolloverPeriod {
-                id
-                startMonth
-                endMonth
+              monthlyAmounts {
+                ...BudgetDataMonthlyAmountsFields
                 __typename
               }
-              categories {
-                id
-                name
-                order
-                budgetVariability
-                rolloverPeriod {
-                  id
-                  startMonth
-                  endMonth
-                  __typename
-                }
+              __typename
+            }
+            
+            fragment BudgetDataTotalsByMonthFields on BudgetTotals {
+              actualAmount
+              plannedAmount
+              previousMonthRolloverAmount
+              remainingAmount
+              __typename
+            }
+            
+            fragment BudgetTotalsByMonthFields on BudgetMonthTotals {
+              month
+              totalIncome {
+                ...BudgetDataTotalsByMonthFields
                 __typename
               }
+              totalExpenses {
+                ...BudgetDataTotalsByMonthFields
+                __typename
+              }
+              totalFixedExpenses {
+                ...BudgetDataTotalsByMonthFields
+                __typename
+              }
+              totalNonMonthlyExpenses {
+                ...BudgetDataTotalsByMonthFields
+                __typename
+              }
+              totalFlexibleExpenses {
+                ...BudgetDataTotalsByMonthFields
+                __typename
+              }
+              __typename
+            }
+            
+            fragment BudgetRolloverPeriodFields on BudgetRolloverPeriod {
+              id
+              startMonth
+              endMonth
+              startingBalance
+              targetAmount
+              frequency
               type
               __typename
             }
-            goals @include(if: $useLegacyGoals) {
+            
+            fragment BudgetCategoryFields on Category {
               id
               name
-              completedAt
-              targetDate
-              __typename
-            }
-            goalMonthlyContributions(startDate: $startDate, endDate: $endDate) @include(if: $useLegacyGoals) {
-              mount: monthlyContribution
-              startDate
-              goalId
-              __typename
-            }
-            goalPlannedContributions(startDate: $startDate, endDate: $endDate) @include(if: $useLegacyGoals) {
-              id
-              amount
-              startDate
-              goal {
+              icon
+              order
+              budgetVariability
+              excludeFromBudget
+              isSystemCategory
+              updatedAt
+              group {
                 id
+                type
+                budgetVariability
+                groupLevelBudgetingEnabled
+                __typename
+              }
+              rolloverPeriod {
+                ...BudgetRolloverPeriodFields
                 __typename
               }
               __typename
             }
-            goalsV2 @include(if: $useV2Goals) {
+            
+            fragment BudgetDataFields on BudgetData {
+              monthlyAmountsByCategory {
+                ...BudgetMonthlyAmountsByCategoryFields
+                __typename
+              }
+              monthlyAmountsByCategoryGroup {
+                ...BudgetMonthlyAmountsByCategoryGroupFields
+                __typename
+              }
+              monthlyAmountsForFlexExpense {
+                ...BudgetMonthlyAmountsForFlexExpenseFields
+                __typename
+              }
+              totalsByMonth {
+                ...BudgetTotalsByMonthFields
+                __typename
+              }
+              __typename
+            }
+            
+            fragment BudgetCategoryGroupFields on CategoryGroup {
+              id
+              name
+              order
+              type
+              budgetVariability
+              updatedAt
+              groupLevelBudgetingEnabled
+              categories {
+                ...BudgetCategoryFields
+                __typename
+              }
+              rolloverPeriod {
+                id
+                type
+                startMonth
+                endMonth
+                startingBalance
+                frequency
+                targetAmount
+                __typename
+              }
+              __typename
+            }
+            
+            fragment BudgetDataGoalsV2Fields on GoalV2 {
               id
               name
               archivedAt
@@ -1294,17 +1328,13 @@ class MonarchMoney(object):
                 __typename
               }
               __typename
-            }
-            budgetSystem
-          }
-        """
+            }            
+            """
         )
 
         variables = {
             "startDate": start_date,
             "endDate": end_date,
-            "useLegacyGoals": use_legacy_goals,
-            "useV2Goals": use_v2_goals,
         }
 
         if not start_date and not end_date:
@@ -1339,7 +1369,7 @@ class MonarchMoney(object):
             )
 
         return await self.gql_call(
-            operation="GetJointPlanningData",
+            operation="Common_GetJointPlanningData",
             graphql_query=query,
             variables=variables,
         )

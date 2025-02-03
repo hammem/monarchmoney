@@ -1,0 +1,301 @@
+{
+    "budgetSystem": "groups_and_categories",
+    "budgetData": {
+        "monthlyAmountsByCategory": [
+            {
+                "category": {
+                    "id": "1",
+                    "__typename": "Category"
+                },
+                "monthlyAmounts": [
+                    {
+                        "month": "2024-12-01",
+                        "plannedCashFlowAmount": 100.0,
+                        "plannedSetAsideAmount": 0.0,
+                        "actualAmount": 200.0,
+                        "remainingAmount": -100.0,
+                        "previousMonthRolloverAmount": null,
+                        "rolloverType": null,
+                        "cumulativeActualAmount": 0.0,
+                        "rolloverTargetAmount": null,
+                        "__typename": "BudgetMonthlyAmounts"
+                    },
+                    {
+                        "month": "2025-01-01",
+                        "plannedCashFlowAmount": 100.0,
+                        "plannedSetAsideAmount": 0.0,
+                        "actualAmount": 0.0,
+                        "remainingAmount": 100.0,
+                        "previousMonthRolloverAmount": null,
+                        "rolloverType": null,
+                        "cumulativeActualAmount": 0.0,
+                        "rolloverTargetAmount": null,
+                        "__typename": "BudgetMonthlyAmounts"
+                    },
+                    {
+                        "month": "2025-02-01",
+                        "plannedCashFlowAmount": 100.0,
+                        "plannedSetAsideAmount": 0.0,
+                        "actualAmount": 0.0,
+                        "remainingAmount": 100.0,
+                        "previousMonthRolloverAmount": null,
+                        "rolloverType": null,
+                        "cumulativeActualAmount": 0.0,
+                        "rolloverTargetAmount": null,
+                        "__typename": "BudgetMonthlyAmounts"
+                    }
+                ],
+                "__typename": "BudgetCategoryMonthlyAmounts"
+            },
+            {
+                "category": {
+                    "id": "2",
+                    "__typename": "Category"
+                },
+                "monthlyAmounts": [
+                    {
+                        "month": "2024-12-01",
+                        "plannedCashFlowAmount": 110.0,
+                        "plannedSetAsideAmount": 0.0,
+                        "actualAmount": 0.0,
+                        "remainingAmount": 110.0,
+                        "previousMonthRolloverAmount": null,
+                        "rolloverType": null,
+                        "cumulativeActualAmount": 0.0,
+                        "rolloverTargetAmount": null,
+                        "__typename": "BudgetMonthlyAmounts"
+                    },
+                    {
+                        "month": "2025-01-01",
+                        "plannedCashFlowAmount": 110.0,
+                        "plannedSetAsideAmount": 0.0,
+                        "actualAmount": 0.0,
+                        "remainingAmount": 110.0,
+                        "previousMonthRolloverAmount": null,
+                        "rolloverType": null,
+                        "cumulativeActualAmount": 0.0,
+                        "rolloverTargetAmount": null,
+                        "__typename": "BudgetMonthlyAmounts"
+                    },
+                    {
+                        "month": "2025-02-01",
+                        "plannedCashFlowAmount": 110.0,
+                        "plannedSetAsideAmount": 0.0,
+                        "actualAmount": 0.0,
+                        "remainingAmount": 110.0,
+                        "previousMonthRolloverAmount": null,
+                        "rolloverType": null,
+                        "cumulativeActualAmount": 0.0,
+                        "rolloverTargetAmount": null,
+                        "__typename": "BudgetMonthlyAmounts"
+                    }
+                ],
+                "__typename": "BudgetCategoryMonthlyAmounts"
+            }
+        ],    
+        "monthlyAmountsForFlexExpense": {
+            "budgetVariability": "flexible",
+            "monthlyAmounts": [
+                {
+                    "month": "2024-12-01",
+                    "plannedCashFlowAmount": 0.0,
+                    "plannedSetAsideAmount": null,
+                    "actualAmount": 1000.00,
+                    "remainingAmount": -1000.00,
+                    "previousMonthRolloverAmount": null,
+                    "rolloverType": null,
+                    "cumulativeActualAmount": 0.0,
+                    "rolloverTargetAmount": null,
+                    "__typename": "BudgetMonthlyAmounts"
+                },
+                {
+                    "month": "2025-01-01",
+                    "plannedCashFlowAmount": 0.0,
+                    "plannedSetAsideAmount": null,
+                    "actualAmount": 1000.00,
+                    "remainingAmount": -1000.00,
+                    "previousMonthRolloverAmount": null,
+                    "rolloverType": null,
+                    "cumulativeActualAmount": 0.0,
+                    "rolloverTargetAmount": null,
+                    "__typename": "BudgetMonthlyAmounts"
+                },
+                {
+                    "month": "2025-02-01",
+                    "plannedCashFlowAmount": 0.0,
+                    "plannedSetAsideAmount": null,
+                    "actualAmount": 0.0,
+                    "remainingAmount": 0.0,
+                    "previousMonthRolloverAmount": null,
+                    "rolloverType": null,
+                    "cumulativeActualAmount": 0.0,
+                    "rolloverTargetAmount": null,
+                    "__typename": "BudgetMonthlyAmounts"
+                }
+            ],
+            "__typename": "BudgetFlexMonthlyAmounts"
+        },
+        "totalsByMonth": [
+            {
+                "month": "2024-12-01",
+                "totalIncome": {
+                    "actualAmount": 1000.0,
+                    "plannedAmount": 1000.0,
+                    "previousMonthRolloverAmount": 0.0,
+                    "remainingAmount": 0.0,
+                    "__typename": "BudgetTotals"
+                },
+                "totalExpenses": {
+                    "actualAmount": 1000.0,
+                    "plannedAmount": 1000.0,
+                    "previousMonthRolloverAmount": 0.0,
+                    "remainingAmount": 0.0,
+                    "__typename": "BudgetTotals"
+                },
+                "totalFixedExpenses": {
+                    "actualAmount": 0.0,
+                    "plannedAmount": 0.0,
+                    "previousMonthRolloverAmount": 0.0,
+                    "remainingAmount": 0.0,
+                    "__typename": "BudgetTotals"
+                },
+                "totalNonMonthlyExpenses": {
+                    "actualAmount": 0.0,
+                    "plannedAmount": 0.0,
+                    "previousMonthRolloverAmount": 0.0,
+                    "remainingAmount": 0.0,
+                    "__typename": "BudgetTotals"
+                },
+                "totalFlexibleExpenses": {
+                    "actualAmount": 1000.0,
+                    "plannedAmount": 0.0,
+                    "previousMonthRolloverAmount": 0.0,
+                    "remainingAmount": -1000.0,
+                    "__typename": "BudgetTotals"
+                },
+                "__typename": "BudgetMonthTotals"
+            }
+        ],
+        "__typename": "BudgetData"
+    },
+    "categoryGroups": [
+        {
+            "id": "3",
+            "name": "Income",
+            "order": 0,
+            "type": "income",
+            "budgetVariability": null,
+            "updatedAt": "2024-12-31T23:59:59.000001+00:00",
+            "groupLevelBudgetingEnabled": true,
+            "categories": [
+                {
+                    "id": "4",
+                    "name": "Category1",
+                    "icon": "\ud83d\udcb5",
+                    "order": 0,
+                    "budgetVariability": null,
+                    "excludeFromBudget": false,
+                    "isSystemCategory": true,
+                    "updatedAt": "2024-12-31T23:59:59.000001+00:00",
+                    "group": {
+                        "id": "5",
+                        "type": "income",
+                        "budgetVariability": null,
+                        "groupLevelBudgetingEnabled": true,
+                        "__typename": "CategoryGroup"
+                    },
+                    "rolloverPeriod": null,
+                    "__typename": "Category"
+                },
+                {
+                    "id": "6",
+                    "name": "Interest",
+                    "icon": "\ud83d\udcb8",
+                    "order": 1,
+                    "budgetVariability": null,
+                    "excludeFromBudget": false,
+                    "isSystemCategory": true,
+                    "updatedAt": "2024-12-31T23:59:59.000001+00:00",
+                    "group": {
+                        "id": "7",
+                        "type": "income",
+                        "budgetVariability": null,
+                        "groupLevelBudgetingEnabled": true,
+                        "__typename": "CategoryGroup"
+                    },
+                    "rolloverPeriod": null,
+                    "__typename": "Category"
+                }
+            ],
+            "rolloverPeriod": null,
+            "__typename": "CategoryGroup"
+        },
+        {
+            "id": "8",
+            "name": "Auto & Transport",
+            "order": 1,
+            "type": "expense",
+            "budgetVariability": null,
+            "updatedAt": "2024-12-31T23:59:59.000001+00:00",
+            "groupLevelBudgetingEnabled": true,
+            "categories": [
+                {
+                    "id": "9",
+                    "name": "Auto & Transport",
+                    "icon": "\ud83d\udea6",
+                    "order": 0,
+                    "budgetVariability": null,
+                    "excludeFromBudget": false,
+                    "isSystemCategory": false,
+                    "updatedAt": "2024-12-31T23:59:59.000001+00:00",
+                    "group": {
+                        "id": "10",
+                        "type": "expense",
+                        "budgetVariability": null,
+                        "groupLevelBudgetingEnabled": true,
+                        "__typename": "CategoryGroup"
+                    },
+                    "rolloverPeriod": null,
+                    "__typename": "Category"
+                }
+            ],
+            "rolloverPeriod": null,
+            "__typename": "CategoryGroup"
+        }
+    ],
+    "goalsV2": [
+        {
+            "id": "11",
+            "name": "Goal1",
+            "archivedAt": null,
+            "completedAt": null,
+            "priority": 1,
+            "imageStorageProvider": "cloudinary",
+            "imageStorageProviderId": "production/goals/defaults/p1",
+            "plannedContributions": [],
+            "monthlyContributionSummaries": [
+                {
+                    "month": "2024-12-01",
+                    "sum": 0.0,
+                    "__typename": "GoalContributionMonthlySummary"
+                },
+                {
+                    "month": "2025-01-01",
+                    "sum": 0.0,
+                    "__typename": "GoalContributionMonthlySummary"
+                },
+                {
+                    "month": "2025-02-01",
+                    "sum": 0.0,
+                    "__typename": "GoalContributionMonthlySummary"
+                },
+                {
+                    "month": "2025-03-01",
+                    "sum": 0.0,
+                    "__typename": "GoalContributionMonthlySummary"
+                }
+            ],
+            "__typename": "GoalV2"
+        }
+    ]
+}
