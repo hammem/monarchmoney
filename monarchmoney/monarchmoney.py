@@ -1024,6 +1024,72 @@ class MonarchMoney(object):
 
         return account_balance_history
 
+    async def get_categories(self) -> Dict[str, Any]:
+        """
+        Gets transaction category data from the account.
+        """
+
+        query = gql(
+            """
+            query GetCategories {
+              categories {
+                ...CategoryFields
+                __typename
+              }
+            }
+
+            fragment CategoryFields on Category {
+              id
+              order
+              name
+              icon
+              systemCategory
+              isSystemCategory
+              isDisabled
+              group {
+                id
+                name
+                type
+                __typename
+              }
+              __typename
+            }
+            """
+        )
+        return await self.gql_call(
+            operation="GetCategories",
+            graphql_query=query,
+        )
+    
+    async def get_merchants(self) -> Dict[str, Any]:
+        query = gql(
+            """
+            query Web_GetMerchantSettingsPage($offset: Int, $orderBy: MerchantOrdering, $search: String) {
+              merchants(offset: $offset, orderBy: $orderBy, search: $search) {
+                id
+                name
+                transactionCount
+                createdAt
+                logoUrl
+                recurringTransactionStream {
+                  id
+                  __typename
+                }
+                __typename
+              }
+              merchantCount
+            }
+            """
+        )
+        return await self.gql_call(
+            operation="",
+            graphql_query=query,
+            variables={
+                "search" : "", 
+                "orderBy": "NAME",
+            },
+        )
+
     async def get_institutions(self) -> Dict[str, Any]:
         """
         Gets institution data from the account.
