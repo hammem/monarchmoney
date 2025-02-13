@@ -2758,8 +2758,6 @@ class MonarchMoney(object):
         if not csv_content:
             return ""
 
-        csv_content = [BalanceHistoryRow(row["date"], row["amount"], row["account_name"]) for row in csv_content]
-
         csv_string = StringIO()
         writer = csv.writer(csv_string)
         writer.writerow(["Date", "Amount", "Account Name"])
