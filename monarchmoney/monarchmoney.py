@@ -2717,8 +2717,6 @@ class MonarchMoney(object):
         file_part.set_content_disposition("form-data", name="files", filename=filename)
         file_part.headers["Content-Type"] = "text/csv"
 
-        print(f'{{"{filename}":"{account_id}"}}')
-
         json_part = mpwriter.append(f'{{"{filename}":"{account_id}"}}')
         json_part.set_content_disposition("form-data", name="account_files_mapping")
         json_part.headers["Content-Type"] = "application/json"
