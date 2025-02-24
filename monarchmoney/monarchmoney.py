@@ -1433,6 +1433,32 @@ class MonarchMoney(object):
             graphql_query=query,
         )
 
+    async def get_transactions_summary_card(self) -> Dict[str, Any]:
+        """
+        Gets transactions summary from the account using the transaction summary card operation.
+        """
+
+        query = gql(
+            """
+            query Web_GetTransactionsSummaryCard($filters: TransactionFilterInput!) {
+              allTransactions(filters: $filters) {
+                totalCount
+                __typename
+              }
+            }
+            """
+        )
+
+        variables = {
+            "filters": {"search": "", "categories": [], "accounts": [], "tags": []}
+        }
+
+        return await self.gql_call(
+            operation="Web_GetTransactionsSummaryCard",
+            graphql_query=query,
+            variables=variables,
+        )
+
     async def get_transactions(
         self,
         limit: int = DEFAULT_RECORD_LIMIT,
