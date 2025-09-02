@@ -287,20 +287,48 @@ class MonarchMoney(object):
             """
             query Common_GetMe {
                 me {
+                    ...UserFields
                     id
-                    email
-                    name
-                    birthday
-                    timezone
-                    profilePicture {
+                    profile {
                         id
-                        url
+                        hasSeenCategoriesManagementTour
+                        dismissedTransactionsListUpdatesTourAt
+                        viewedMarkAsReviewedUpdatesCalloutAt
+                        hasDismissedWhatsNewAt
                         __typename
                     }
-                    hasPassword
-                    hasMfaEnabled
                     __typename
                 }
+            }
+
+            fragment UserFields on User {
+                birthday
+                email
+                id
+                isSuperuser
+                name
+                timezone
+                hasPassword
+                hasMfaOn
+                externalAuthProviderNames
+                pendingEmailUpdateVerification {
+                    email
+                    __typename
+                }
+                profilePicture {
+                    id
+                    cloudinaryPublicId
+                    thumbnailUrl
+                    __typename
+                }
+                profilePictureUrl
+                activeSupportAccountAccessGrant {
+                    id
+                    createdAt
+                    expiresAt
+                    __typename
+                }
+                __typename
             }
             """
         )
@@ -315,20 +343,25 @@ class MonarchMoney(object):
         """
         query = gql(
             """
-            query GetMerchants {
-                merchants {
+            query GetMerchantsSearch($search: String, $limit: Int, $includeIds: [ID!]) {
+                merchants(
+                    search: $search
+                    limit: $limit
+                    orderBy: TRANSACTION_COUNT
+                    includeIds: $includeIds
+                ) {
                     id
                     name
-                    logoUrl
-                    transactionsCount
+                    transactionCount
                     __typename
                 }
             }
             """
         )
         return await self.gql_call(
-            operation="GetMerchants",
+            operation="GetMerchantsSearch",
             graphql_query=query,
+            variables={"search": "", "limit": 100}
         )
 
     async def get_account_type_options(self) -> Dict[str, Any]:
@@ -488,19 +521,14 @@ class MonarchMoney(object):
         """
         query = gql(
             """
-            query GetNetWorthHistory($startDate: Date!, $endDate: Date!, $timeframe: TimeFrame!) {
-              netWorthHistory: aggregateSnapshots(filters: {
-                startDate: $startDate,
-                endDate: $endDate,
-                timeframe: $timeframe
-              }) {
-                date
-                totalAssets: signedBalance
-                netWorth: signedBalance
-                change: dayChange
-                changePercent: dayChangePercent
-                __typename
-              }
+            query Web_GetAggregateSnapshots($filters: AggregateSnapshotFilters) {
+                aggregateSnapshots(filters: $filters) {
+                    date
+                    balance
+                    assetsBalance
+                    liabilitiesBalance
+                    __typename
+                }
             }
             """
         )
@@ -512,14 +540,20 @@ class MonarchMoney(object):
         if not end_date:
             end_date = datetime.now().strftime("%Y-%m-%d")
 
-        variables = {
+        filters = {
             "startDate": start_date,
-            "endDate": end_date,
-            "timeframe": timeframe.upper(),
+            "useAdaptiveGranularity": True
         }
+        
+        if end_date:
+            filters["endDate"] = end_date
+        else:
+            filters["endDate"] = None
+            
+        variables = {"filters": filters}
 
         return await self.gql_call(
-            operation="GetNetWorthHistory",
+            operation="Web_GetAggregateSnapshots",
             graphql_query=query,
             variables=variables,
         )
@@ -1706,32 +1740,12 @@ class MonarchMoney(object):
         """
         query = gql(
             """
-            query GetGoals {
+            query GetGoalsV2 {
               goalsV2 {
                 id
                 name
-                targetAmount
-                currentAmount
-                targetDate
-                createdAt
-                updatedAt
-                archivedAt
-                completedAt
-                priority
                 imageStorageProvider
                 imageStorageProviderId
-                description
-                category
-                monthlyContributionSummaries {
-                  month
-                  sum
-                  __typename
-                }
-                accounts {
-                  id
-                  displayName
-                  __typename
-                }
                 __typename
               }
             }
@@ -1739,7 +1753,7 @@ class MonarchMoney(object):
         )
 
         return await self.gql_call(
-            operation="GetGoals",
+            operation="GetGoalsV2",
             graphql_query=query,
         )
 
@@ -1957,14 +1971,103 @@ class MonarchMoney(object):
         
         return result.get("deleteGoal", {}).get("deleted", False)
 
+    async def update_transaction_rule_retroactive(
+        self,
+        rule_data: Dict[str, Any],
+        apply_to_existing_transactions: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Update an existing transaction rule to apply retroactively.
+        
+        :param rule_data: Complete rule data from get_transaction_rules()
+        :param apply_to_existing_transactions: Apply rule to existing transactions
+        :return: Updated rule data
+        """
+        query = gql(
+            """
+            mutation Common_UpdateTransactionRuleMutationV2($input: UpdateTransactionRuleInput!) {
+                updateTransactionRuleV2(input: $input) {
+                    errors {
+                        ...PayloadErrorFields
+                        __typename
+                    }
+                    __typename
+                }
+            }
+
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
+            }
+            """
+        )
+        
+        # Clean function to remove __typename fields
+        def clean_graphql_data(obj):
+            if isinstance(obj, dict):
+                return {k: clean_graphql_data(v) for k, v in obj.items() if k != '__typename'}
+            elif isinstance(obj, list):
+                return [clean_graphql_data(item) for item in obj]
+            return obj
+        
+        # Build rule input using existing rule data 
+        rule_input = {
+            "id": rule_data.get("id"),
+            "merchantCriteriaUseOriginalStatement": rule_data.get("merchantCriteriaUseOriginalStatement", False),
+            "merchantCriteria": clean_graphql_data(rule_data.get("merchantCriteria", [])),
+            "amountCriteria": clean_graphql_data(rule_data.get("amountCriteria")),
+            "categoryIds": rule_data.get("categoryIds"),
+            "accountIds": rule_data.get("accountIds"),
+            "reviewStatusAction": rule_data.get("reviewStatusAction"),
+            "splitTransactionsAction": rule_data.get("splitTransactionsAction"),
+            "applyToExistingTransactions": apply_to_existing_transactions,
+        }
+        
+        # Handle setCategoryAction - it's returned as an object but needs to be sent as just the ID
+        set_category_action = rule_data.get("setCategoryAction")
+        if set_category_action:
+            if isinstance(set_category_action, dict) and "id" in set_category_action:
+                rule_input["setCategoryAction"] = set_category_action["id"]
+            else:
+                rule_input["setCategoryAction"] = set_category_action
+        else:
+            rule_input["setCategoryAction"] = None
+            
+        variables = {"input": rule_input}
+        
+        result = await self.gql_call(
+            operation="Common_UpdateTransactionRuleMutationV2",
+            graphql_query=query,
+            variables=variables,
+        )
+        
+        # Check for errors in the response
+        errors = result.get("updateTransactionRuleV2", {}).get("errors")
+        if errors and (errors.get("message") or errors.get("fieldErrors")):
+            if errors.get("message"):
+                raise Exception(f"Rule update failed: {errors['message']}")
+            elif errors.get("fieldErrors"):
+                field_errors = []
+                for field_error in errors["fieldErrors"]:
+                    field_errors.append(f"{field_error['field']}: {', '.join(field_error['messages'])}")
+                raise Exception(f"Rule update failed: {'; '.join(field_errors)}")
+        
+        return result
+
     async def apply_rules_to_existing_transactions(self, limit: Optional[int] = None) -> Dict[str, Any]:
         """
         Apply all transaction rules to existing transactions retroactively.
         
-        This is implemented by fetching transactions and rules, then applying the logic client-side.
-        Note: This is slower than the web interface but provides the same functionality.
+        This works by updating each rule to set applyToExistingTransactions=true,
+        which triggers the MonarchMoney backend to apply the rule retroactively.
         
-        :param limit: Maximum number of transactions to process (default: all)
+        :param limit: Maximum number of rules to process (default: all)
         :return: Results of rule application
         """
         print("🔄 Applying rules to existing transactions...")
@@ -1978,31 +2081,39 @@ class MonarchMoney(object):
         if not rules:
             return {"processed": 0, "applied": 0, "message": "No rules to apply"}
         
-        # Step 2: Get transactions to process
-        print("   📊 Fetching transactions...")
-        # Get recent transactions (can be expanded with pagination)
-        transactions_response = await self.get_transactions(limit=limit or 1000)
-        transactions = transactions_response.get('transactions', [])
-        print(f"   ✅ Found {len(transactions)} transactions to process")
-        
-        # Step 3: Apply rules (this is a basic implementation)
+        # Step 2: Apply each rule retroactively by updating it
         applied_count = 0
-        processed_count = len(transactions)
+        processed_count = min(len(rules), limit) if limit else len(rules)
         
-        # TODO: Implement actual rule matching logic
-        # This would require parsing rule criteria and matching against transaction fields
-        # For now, return a status message
+        print(f"   🔄 Updating {processed_count} rules to apply retroactively...")
         
-        print(f"   🎯 Would apply rules to {processed_count} transactions")
-        print("   ⚠️  Full implementation requires HAR file with rule application operation")
+        for i, rule in enumerate(rules[:processed_count]):
+            rule_id = rule.get('id')
+            if not rule_id:
+                continue
+                
+            try:
+                # Update the rule with applyToExistingTransactions=true
+                await self.update_transaction_rule_retroactive(
+                    rule_data=rule,
+                    apply_to_existing_transactions=True
+                )
+                applied_count += 1
+                
+                if i % 10 == 0:  # Progress update every 10 rules
+                    print(f"   📊 Progress: {i+1}/{processed_count} rules updated")
+                    
+            except Exception as e:
+                print(f"   ⚠️  Failed to update rule {rule_id}: {str(e)[:50]}...")
+                continue
         
-        # TODO: Implement actual rule matching using PreviewTransactionRule
-        # For now, return basic statistics
+        print(f"   ✅ Successfully applied {applied_count}/{processed_count} rules to existing transactions")
+        
         return {
             "processed": processed_count,
             "applied": applied_count,
             "rules_count": len(rules),
-            "message": "Basic implementation complete - enhanced rule application available via preview_transaction_rule()"
+            "message": f"Successfully applied {applied_count} rules to existing transactions using MonarchMoney API"
         }
 
     async def preview_transaction_rule(
