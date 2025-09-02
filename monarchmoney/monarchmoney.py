@@ -540,19 +540,17 @@ class MonarchMoney(object):
         if not end_date:
             end_date = datetime.now().strftime("%Y-%m-%d")
 
-        filters = {"startDate": start_date, "useAdaptiveGranularity": True}
-
-        if end_date:
-            filters["endDate"] = end_date
-        else:
-            filters["endDate"] = None
-
-        variables = {"filters": filters}
-
         return await self.gql_call(
             operation="Web_GetAggregateSnapshots",
             graphql_query=query,
-            variables=variables,
+            variables={
+                "filters": {
+                    "startDate": start_date,
+                    "endDate": end_date,
+                    "accountType": None,
+                    "useAdaptiveGranularity": True
+                }
+            },
         )
 
     async def create_manual_account(
@@ -1992,6 +1990,33 @@ class MonarchMoney(object):
                         ...PayloadErrorFields
                         __typename
                     }
+                    transactionRule {
+                        id
+                        name
+                        categoryIds
+                        accountIds
+                        merchantCriteria {
+                            operator
+                            value
+                            __typename
+                        }
+                        amountCriteria {
+                            operator
+                            value
+                            isExpense
+                            valueRange {
+                                lower
+                                upper
+                                __typename
+                            }
+                            __typename
+                        }
+                        setCategoryAction
+                        addTagsAction
+                        applyToExistingTransactions
+                        merchantCriteriaUseOriginalStatement
+                        __typename
+                    }
                     __typename
                 }
             }
@@ -2069,7 +2094,12 @@ class MonarchMoney(object):
                     )
                 raise Exception(f"Rule update failed: {'; '.join(field_errors)}")
 
-        return result
+        # Return the updated transaction rule data
+        rule_data = result.get("updateTransactionRuleV2", {}).get("transactionRule")
+        if rule_data:
+            return {"transactionRule": rule_data}
+        else:
+            return result
 
     async def apply_rules_to_existing_transactions(
         self, limit: Optional[int] = None
@@ -3110,6 +3140,10 @@ class MonarchMoney(object):
                         ...PayloadErrorFields
                         __typename
                     }
+                    transactionRule {
+                        id
+                        __typename
+                    }
                     __typename
                 }
             }
@@ -3167,7 +3201,12 @@ class MonarchMoney(object):
                 )
             # If errors object exists but all fields are None/empty, it means success
 
-        return result
+        # Return the created transaction rule data
+        rule_data = result.get("createTransactionRuleV2", {}).get("transactionRule")
+        if rule_data:
+            return {"transactionRule": rule_data}
+        else:
+            return result
 
     async def update_transaction_rule(
         self,
@@ -3205,6 +3244,33 @@ class MonarchMoney(object):
                 updateTransactionRuleV2(input: $input) {
                     errors {
                         ...PayloadErrorFields
+                        __typename
+                    }
+                    transactionRule {
+                        id
+                        name
+                        categoryIds
+                        accountIds
+                        merchantCriteria {
+                            operator
+                            value
+                            __typename
+                        }
+                        amountCriteria {
+                            operator
+                            value
+                            isExpense
+                            valueRange {
+                                lower
+                                upper
+                                __typename
+                            }
+                            __typename
+                        }
+                        setCategoryAction
+                        addTagsAction
+                        applyToExistingTransactions
+                        merchantCriteriaUseOriginalStatement
                         __typename
                     }
                     __typename
@@ -3251,11 +3317,31 @@ class MonarchMoney(object):
 
         variables = {"input": rule_input}
 
-        return await self.gql_call(
+        result = await self.gql_call(
             operation="Common_UpdateTransactionRuleMutationV2",
             graphql_query=query,
             variables=variables,
         )
+
+        # Check for errors in the response
+        errors = result.get("updateTransactionRuleV2", {}).get("errors")
+        if errors and (errors.get("message") or errors.get("fieldErrors")):
+            if errors.get("message"):
+                raise Exception(f"Rule update failed: {errors['message']}")
+            elif errors.get("fieldErrors"):
+                field_errors = []
+                for field_error in errors["fieldErrors"]:
+                    field_errors.append(
+                        f"{field_error['field']}: {', '.join(field_error['messages'])}"
+                    )
+                raise Exception(f"Rule update failed: {'; '.join(field_errors)}")
+
+        # Return the updated transaction rule data
+        rule_data = result.get("updateTransactionRuleV2", {}).get("transactionRule")
+        if rule_data:
+            return {"transactionRule": rule_data}
+        else:
+            return result
 
     async def delete_transaction_rule(self, rule_id: str) -> bool:
         """

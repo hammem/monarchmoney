@@ -21,9 +21,6 @@ class TestLogin:
 
     @pytest.mark.asyncio
     @pytest.mark.auth
-    @pytest.mark.skip(
-        reason="Authentication tests need better mocking - real API calls failing"
-    )
     async def test_successful_login(
         self, mock_successful_login_response, sample_credentials, tmp_path
     ):
@@ -52,9 +49,6 @@ class TestLogin:
 
     @pytest.mark.asyncio
     @pytest.mark.auth
-    @pytest.mark.skip(
-        reason="Authentication tests need better mocking - real API calls failing"
-    )
     async def test_login_requires_mfa(
         self, mock_mfa_required_response, sample_credentials, tmp_path
     ):
