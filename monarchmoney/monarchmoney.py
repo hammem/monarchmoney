@@ -3518,7 +3518,7 @@ class MonarchMoney(object):
 
         :param merchant_contains: Merchant name pattern to match
         :param amount: Amount threshold (e.g., 200 for "> $200")
-        :param amount_operator: Amount comparison ("gt", "lt", "eq", "between")
+        :param amount_operator: Amount comparison ("gt", "lt", "eq", "greater_than", "less_than", "equals")
         :param category_name: Name of category to assign
         :param set_category_action: Category ID to assign directly
         :param apply_to_existing: Whether to apply to existing transactions
@@ -3533,11 +3533,24 @@ class MonarchMoney(object):
             if not set_category_action:
                 raise ValueError(f"Category '{category_name}' not found")
 
+        # Map user-friendly operator names to GraphQL operators
+        operator_mapping = {
+            "greater_than": "gt",
+            "less_than": "lt", 
+            "equals": "eq",
+            "equal": "eq",
+            "gt": "gt",
+            "lt": "lt",
+            "eq": "eq"
+        }
+        
+        mapped_operator = operator_mapping.get(amount_operator.lower(), amount_operator)
+
         merchant_criteria = [{"operator": "contains", "value": merchant_contains}]
         amount_criteria = None
         if amount:
             amount_criteria = {
-                "operator": amount_operator,
+                "operator": mapped_operator,
                 "isExpense": True,
                 "value": amount,
             }

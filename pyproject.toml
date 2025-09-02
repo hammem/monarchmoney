@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "monarchmoney-enhanced"
-version = "0.3.4"
-description = "Enhanced Monarch Money API for Python with comprehensive GraphQL fixes"
+version = "0.3.5"
+description = "Enhanced Monarch Money API for Python with GraphQL fixes and user-friendly operator mapping"
 readme = "README.md"
 authors = [
     {name = "keithah", email = "keithah@users.noreply.github.com"}
