@@ -17,6 +17,7 @@ from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
 from graphql import DocumentNode
 
+
 AUTH_HEADER_KEY = "authorization"
 CSRF_KEY = "csrftoken"
 DEFAULT_RECORD_LIMIT = 100
@@ -149,6 +150,17 @@ class MonarchMoney(object):
         if not self._session_created_at:
             self._session_created_at = current_time
         self._session_last_validated = current_time
+
+    def get_version(self) -> Dict[str, str]:
+        """Get version information for the MonarchMoney library."""
+        # Import version here to avoid circular imports
+        from . import __version__
+        return {
+            "library_version": __version__,
+            "library_name": "monarchmoney-enhanced",
+            "session_active": self._token is not None,
+            "session_file": self._session_file
+        }
 
     async def interactive_login(
         self, use_saved_session: bool = True, save_session: bool = True
