@@ -33,11 +33,13 @@ This document maps the MonarchMoney GraphQL API operations and their implementat
 | `Common_SplitTransactionMutation` | `update_transaction_splits()` | ✅ | Update transaction splits |
 | `Web_TransactionDrawerUpdateTransaction` | `update_transaction()` | ✅ | Update transaction details |
 | **Transaction Rules** | | | |
-| `GetTransactionRules` | `get_transaction_rules()` | ⚠️ | Get all transaction rules (EXPERIMENTAL - API endpoints unverified) |
-| `CreateTransactionRule` | `create_transaction_rule()` | ⚠️ | Create new transaction rule (EXPERIMENTAL - API endpoints unverified) |
-| `UpdateTransactionRule` | `update_transaction_rule()` | ⚠️ | Update existing transaction rule (EXPERIMENTAL - API endpoints unverified) |
-| `DeleteTransactionRule` | `delete_transaction_rule()` | ⚠️ | Delete transaction rule (EXPERIMENTAL - API endpoints unverified) |
-| `ReorderTransactionRules` | `reorder_transaction_rules()` | ⚠️ | Reorder rule priority (EXPERIMENTAL - API endpoints unverified) |
+| `GetTransactionRules` | `get_transaction_rules()` | ✅ | Get all transaction rules with criteria and actions |
+| `Common_CreateTransactionRuleMutationV2` | `create_transaction_rule()` | ✅ | Create new transaction rule with merchant/amount criteria |
+| `Common_UpdateTransactionRuleMutationV2` | `update_transaction_rule()` | ✅ | Update existing transaction rule |
+| `Common_DeleteTransactionRule` | `delete_transaction_rule()` | ✅ | Delete individual transaction rule |
+| `Web_UpdateRuleOrderMutation` | `reorder_transaction_rules()` | ✅ | Update rule order/priority |
+| `PreviewTransactionRule` | `preview_transaction_rule()` | ✅ | Preview rule effects before creating |
+| `Web_DeleteAllTransactionRulesMutation` | `delete_all_transaction_rules()` | ✅ | Delete all transaction rules |
 | **Categories & Tags** | | | |
 | `GetCategories` | `get_transaction_categories()` | ✅ | Get all transaction categories |
 | `Web_DeleteCategory` | `delete_transaction_category()` | ✅ | Delete a transaction category |

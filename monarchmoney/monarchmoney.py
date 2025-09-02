@@ -2144,32 +2144,42 @@ class MonarchMoney(object):
 
     async def create_transaction_rule(
         self,
-        conditions: List[Dict[str, Any]],
-        actions: List[Dict[str, Any]],
-        enabled: bool = True,
-        priority: Optional[int] = None,
+        merchant_criteria: Optional[List[Dict[str, str]]] = None,
+        amount_criteria: Optional[Dict[str, Any]] = None,
+        category_ids: Optional[List[str]] = None,
+        account_ids: Optional[List[str]] = None,
+        set_category_action: Optional[str] = None,
+        add_tags_action: Optional[List[str]] = None,
+        set_merchant_action: Optional[str] = None,
+        split_transactions_action: Optional[Dict[str, Any]] = None,
+        apply_to_existing_transactions: bool = False,
+        merchant_criteria_use_original_statement: bool = False,
     ) -> Dict[str, Any]:
         """
-        Creates a new transaction rule.
+        Creates a new transaction rule for automatic categorization.
 
-        :param conditions: List of conditions that must be met for the rule to apply
-            Example: [{"field": "merchant", "operation": "contains", "value": "Sentris Network LLC"}]
-        :param actions: List of actions to perform when conditions are met
-            Example: [{"type": "set_category", "categoryId": "123"}, {"type": "set_merchant", "value": "Sentris"}]
-        :param enabled: Whether the rule is active (default True)
-        :param priority: Rule priority/order (lower numbers = higher priority). If None, adds to end.
+        :param merchant_criteria: List of merchant criteria [{"operator": "contains", "value": "amazon"}]
+        :param amount_criteria: Amount criteria {"operator": "gt", "isExpense": True, "value": 20}
+        :param category_ids: List of category IDs to match
+        :param account_ids: List of account IDs to match
+        :param set_category_action: Category ID to set when rule matches
+        :param add_tags_action: List of tag IDs to add when rule matches
+        :param set_merchant_action: Merchant ID to set when rule matches
+        :param split_transactions_action: Split action configuration
+        :param apply_to_existing_transactions: Whether to apply to existing transactions
+        :param merchant_criteria_use_original_statement: Use original statement text
+        :return: The created rule data
         """
         query = gql(
             """
-            mutation CreateTransactionRule($input: CreateTransactionRuleInput!) {
-                createTransactionRule(input: $input) {
-                    rule {
-                        id
-                        priority
-                        enabled
-                        __typename
-                    }
+            mutation Common_CreateTransactionRuleMutationV2($input: CreateTransactionRuleInput!) {
+                createTransactionRuleV2(input: $input) {
                     errors {
+                        fieldErrors {
+                            field
+                            messages
+                            __typename
+                        }
                         message
                         code
                         __typename
@@ -2180,19 +2190,32 @@ class MonarchMoney(object):
             """
         )
 
-        variables = {
-            "input": {
-                "conditions": conditions,
-                "actions": actions,
-                "enabled": enabled,
-            }
+        rule_input = {
+            "merchantCriteriaUseOriginalStatement": merchant_criteria_use_original_statement,
+            "applyToExistingTransactions": apply_to_existing_transactions,
         }
 
-        if priority is not None:
-            variables["input"]["priority"] = priority
+        if merchant_criteria:
+            rule_input["merchantCriteria"] = merchant_criteria
+        if amount_criteria:
+            rule_input["amountCriteria"] = amount_criteria
+        if category_ids:
+            rule_input["categoryIds"] = category_ids
+        if account_ids:
+            rule_input["accountIds"] = account_ids
+        if set_category_action:
+            rule_input["setCategoryAction"] = set_category_action
+        if add_tags_action:
+            rule_input["addTagsAction"] = add_tags_action
+        if set_merchant_action:
+            rule_input["setMerchantAction"] = set_merchant_action
+        if split_transactions_action:
+            rule_input["splitTransactionsAction"] = split_transactions_action
+
+        variables = {"input": rule_input}
 
         return await self.gql_call(
-            operation="CreateTransactionRule",
+            operation="Common_CreateTransactionRuleMutationV2",
             graphql_query=query,
             variables=variables,
         )
@@ -2200,31 +2223,43 @@ class MonarchMoney(object):
     async def update_transaction_rule(
         self,
         rule_id: str,
-        conditions: Optional[List[Dict[str, Any]]] = None,
-        actions: Optional[List[Dict[str, Any]]] = None,
-        enabled: Optional[bool] = None,
-        priority: Optional[int] = None,
+        merchant_criteria: Optional[List[Dict[str, str]]] = None,
+        amount_criteria: Optional[Dict[str, Any]] = None,
+        category_ids: Optional[List[str]] = None,
+        account_ids: Optional[List[str]] = None,
+        set_category_action: Optional[str] = None,
+        add_tags_action: Optional[List[str]] = None,
+        set_merchant_action: Optional[str] = None,
+        split_transactions_action: Optional[Dict[str, Any]] = None,
+        apply_to_existing_transactions: Optional[bool] = None,
+        merchant_criteria_use_original_statement: Optional[bool] = None,
     ) -> Dict[str, Any]:
         """
         Updates an existing transaction rule.
 
         :param rule_id: The ID of the rule to update
-        :param conditions: New conditions (if provided)
-        :param actions: New actions (if provided)
-        :param enabled: New enabled state (if provided)
-        :param priority: New priority/order (if provided)
+        :param merchant_criteria: List of merchant criteria [{"operator": "contains", "value": "amazon"}]
+        :param amount_criteria: Amount criteria {"operator": "gt", "isExpense": True, "value": 20}
+        :param category_ids: List of category IDs to match
+        :param account_ids: List of account IDs to match
+        :param set_category_action: Category ID to set when rule matches
+        :param add_tags_action: List of tag IDs to add when rule matches
+        :param set_merchant_action: Merchant ID to set when rule matches
+        :param split_transactions_action: Split action configuration
+        :param apply_to_existing_transactions: Whether to apply to existing transactions
+        :param merchant_criteria_use_original_statement: Use original statement text
+        :return: The updated rule data
         """
         query = gql(
             """
-            mutation UpdateTransactionRule($input: UpdateTransactionRuleInput!) {
-                updateTransactionRule(input: $input) {
-                    rule {
-                        id
-                        priority
-                        enabled
-                        __typename
-                    }
+            mutation Common_UpdateTransactionRuleMutationV2($input: UpdateTransactionRuleInput!) {
+                updateTransactionRuleV2(input: $input) {
                     errors {
+                        fieldErrors {
+                            field
+                            messages
+                            __typename
+                        }
                         message
                         code
                         __typename
@@ -2235,19 +2270,35 @@ class MonarchMoney(object):
             """
         )
 
-        variables = {"input": {"id": rule_id}}
+        rule_input = {"id": rule_id}
 
-        if conditions is not None:
-            variables["input"]["conditions"] = conditions
-        if actions is not None:
-            variables["input"]["actions"] = actions
-        if enabled is not None:
-            variables["input"]["enabled"] = enabled
-        if priority is not None:
-            variables["input"]["priority"] = priority
+        if merchant_criteria is not None:
+            rule_input["merchantCriteria"] = merchant_criteria
+        if amount_criteria is not None:
+            rule_input["amountCriteria"] = amount_criteria
+        if category_ids is not None:
+            rule_input["categoryIds"] = category_ids
+        if account_ids is not None:
+            rule_input["accountIds"] = account_ids
+        if set_category_action is not None:
+            rule_input["setCategoryAction"] = set_category_action
+        if add_tags_action is not None:
+            rule_input["addTagsAction"] = add_tags_action
+        if set_merchant_action is not None:
+            rule_input["setMerchantAction"] = set_merchant_action
+        if split_transactions_action is not None:
+            rule_input["splitTransactionsAction"] = split_transactions_action
+        if apply_to_existing_transactions is not None:
+            rule_input["applyToExistingTransactions"] = apply_to_existing_transactions
+        if merchant_criteria_use_original_statement is not None:
+            rule_input["merchantCriteriaUseOriginalStatement"] = (
+                merchant_criteria_use_original_statement
+            )
+
+        variables = {"input": rule_input}
 
         return await self.gql_call(
-            operation="UpdateTransactionRule",
+            operation="Common_UpdateTransactionRuleMutationV2",
             graphql_query=query,
             variables=variables,
         )
@@ -2261,10 +2312,15 @@ class MonarchMoney(object):
         """
         query = gql(
             """
-            mutation DeleteTransactionRule($id: ID!) {
+            mutation Common_DeleteTransactionRule($id: ID!) {
                 deleteTransactionRule(id: $id) {
                     deleted
                     errors {
+                        fieldErrors {
+                            field
+                            messages
+                            __typename
+                        }
                         message
                         code
                         __typename
@@ -2277,33 +2333,42 @@ class MonarchMoney(object):
 
         variables = {"id": rule_id}
 
-        response = await self.gql_call(
-            operation="DeleteTransactionRule",
+        result = await self.gql_call(
+            operation="Common_DeleteTransactionRule",
             graphql_query=query,
             variables=variables,
         )
 
-        if not response["deleteTransactionRule"]["deleted"]:
-            raise RequestFailedException(
-                str(response["deleteTransactionRule"]["errors"])
-            )
+        return result.get("deleteTransactionRule", {}).get("deleted", False)
 
-        return True
-
-    async def reorder_transaction_rules(self, rule_ids: List[str]) -> Dict[str, Any]:
+    async def reorder_transaction_rules(
+        self, rule_id: str, new_order: int
+    ) -> Dict[str, Any]:
         """
-        Reorders transaction rules by providing a list of rule IDs in the desired order.
+        Updates the order of a transaction rule.
 
-        :param rule_ids: List of rule IDs in the desired priority order
+        :param rule_id: The ID of the rule to reorder
+        :param new_order: The new order position for the rule
+        :return: The updated rules data
         """
         query = gql(
             """
-            mutation ReorderTransactionRules($ruleIds: [ID!]!) {
-                reorderTransactionRules(ruleIds: $ruleIds) {
-                    success
-                    errors {
-                        message
-                        code
+            mutation Web_UpdateRuleOrderMutation($id: ID!, $order: Int!) {
+                updateTransactionRuleOrderV2(id: $id, order: $order) {
+                    transactionRules {
+                        id
+                        order
+                        merchantCriteria {
+                            operator
+                            value
+                            __typename
+                        }
+                        setCategoryAction {
+                            id
+                            name
+                            icon
+                            __typename
+                        }
                         __typename
                     }
                     __typename
@@ -2312,10 +2377,10 @@ class MonarchMoney(object):
             """
         )
 
-        variables = {"ruleIds": rule_ids}
+        variables = {"id": rule_id, "order": new_order}
 
         return await self.gql_call(
-            operation="ReorderTransactionRules",
+            operation="Web_UpdateRuleOrderMutation",
             graphql_query=query,
             variables=variables,
         )
@@ -2324,46 +2389,173 @@ class MonarchMoney(object):
         self,
         merchant_contains: str,
         category_name: str,
-        enabled: bool = True,
+        apply_to_existing: bool = False,
     ) -> Dict[str, Any]:
         """
-        Helper method to create a rule that categorizes transactions based on merchant name.
+        Helper method to create a simple categorization rule.
 
-        :param merchant_contains: Text that must be contained in the merchant name
-        :param category_name: Name of the category to apply (e.g., "Shared - Telco")
-        :return: The created rule
-
-        Example:
-            mm.create_categorization_rule(
-                merchant_contains="Sentris Network LLC",
-                category_name="Shared - Telco"
-            )
+        :param merchant_contains: Merchant name pattern to match (case-insensitive contains)
+        :param category_name: Name of the category to assign
+        :param apply_to_existing: Whether to apply to existing transactions
+        :return: The created rule data
         """
-        # First, get all categories to find the category ID
-        categories_response = await self.get_transaction_categories()
-        categories = categories_response.get("categories", [])
+        categories = await self.get_transaction_categories()
+        category_id = None
 
-        # Find the category by name
-        category = None
-        for cat in categories:
-            full_name = f"{cat['group']['name']} - {cat['name']}"
-            if full_name == category_name or cat["name"] == category_name:
-                category = cat
+        for cat in categories.get("categories", []):
+            if cat.get("name", "").lower() == category_name.lower():
+                category_id = cat.get("id")
                 break
 
-        if not category:
+        if not category_id:
             raise ValueError(f"Category '{category_name}' not found")
 
-        # Create the rule
-        conditions = [
-            {"field": "merchant", "operation": "contains", "value": merchant_contains}
-        ]
-
-        actions = [{"type": "set_category", "categoryId": category["id"]}]
+        merchant_criteria = [{"operator": "contains", "value": merchant_contains}]
 
         return await self.create_transaction_rule(
-            conditions=conditions, actions=actions, enabled=enabled
+            merchant_criteria=merchant_criteria,
+            set_category_action=category_id,
+            apply_to_existing_transactions=apply_to_existing,
         )
+
+    async def preview_transaction_rule(
+        self,
+        merchant_criteria: Optional[List[Dict[str, str]]] = None,
+        amount_criteria: Optional[Dict[str, Any]] = None,
+        category_ids: Optional[List[str]] = None,
+        account_ids: Optional[List[str]] = None,
+        set_category_action: Optional[str] = None,
+        add_tags_action: Optional[List[str]] = None,
+        set_merchant_action: Optional[str] = None,
+        split_transactions_action: Optional[Dict[str, Any]] = None,
+        apply_to_existing_transactions: bool = False,
+        merchant_criteria_use_original_statement: bool = False,
+        offset: int = 0,
+    ) -> Dict[str, Any]:
+        """
+        Previews what transactions would be affected by a rule before creating it.
+
+        :param merchant_criteria: List of merchant criteria [{"operator": "contains", "value": "amazon"}]
+        :param amount_criteria: Amount criteria {"operator": "gt", "isExpense": True, "value": 20}
+        :param category_ids: List of category IDs to match
+        :param account_ids: List of account IDs to match
+        :param set_category_action: Category ID to set when rule matches
+        :param add_tags_action: List of tag IDs to add when rule matches
+        :param set_merchant_action: Merchant ID to set when rule matches
+        :param split_transactions_action: Split action configuration
+        :param apply_to_existing_transactions: Whether to apply to existing transactions
+        :param merchant_criteria_use_original_statement: Use original statement text
+        :param offset: Pagination offset for results
+        :return: Preview results showing affected transactions
+        """
+        query = gql(
+            """
+            query PreviewTransactionRule($rule: TransactionRulePreviewInput!, $offset: Int) {
+                transactionRulePreview(input: $rule) {
+                    totalCount
+                    results(offset: $offset, limit: 30) {
+                        newName
+                        newSplitTransactions
+                        newCategory {
+                            id
+                            icon
+                            name
+                            __typename
+                        }
+                        newHideFromReports
+                        newTags {
+                            id
+                            name
+                            color
+                            order
+                            __typename
+                        }
+                        newGoal {
+                            id
+                            name
+                            imageStorageProvider
+                            imageStorageProviderId
+                            __typename
+                        }
+                        transaction {
+                            id
+                            date
+                            amount
+                            merchant {
+                                id
+                                name
+                                __typename
+                            }
+                            category {
+                                id
+                                name
+                                icon
+                                __typename
+                            }
+                            __typename
+                        }
+                        __typename
+                    }
+                    __typename
+                }
+            }
+            """
+        )
+
+        rule_input = {
+            "merchantCriteriaUseOriginalStatement": merchant_criteria_use_original_statement,
+            "applyToExistingTransactions": apply_to_existing_transactions,
+        }
+
+        if merchant_criteria:
+            rule_input["merchantCriteria"] = merchant_criteria
+        if amount_criteria:
+            rule_input["amountCriteria"] = amount_criteria
+        if category_ids:
+            rule_input["categoryIds"] = category_ids
+        if account_ids:
+            rule_input["accountIds"] = account_ids
+        if set_category_action:
+            rule_input["setCategoryAction"] = set_category_action
+        if add_tags_action:
+            rule_input["addTagsAction"] = add_tags_action
+        if set_merchant_action:
+            rule_input["setMerchantAction"] = set_merchant_action
+        if split_transactions_action:
+            rule_input["splitTransactionsAction"] = split_transactions_action
+
+        variables = {"rule": rule_input, "offset": offset}
+
+        return await self.gql_call(
+            operation="PreviewTransactionRule",
+            graphql_query=query,
+            variables=variables,
+        )
+
+    async def delete_all_transaction_rules(self) -> bool:
+        """
+        Deletes all transaction rules.
+
+        :return: True if all rules were deleted successfully
+        """
+        query = gql(
+            """
+            mutation Web_DeleteAllTransactionRulesMutation {
+                deleteAllTransactionRules {
+                    deleted
+                    __typename
+                }
+            }
+            """
+        )
+
+        result = await self.gql_call(
+            operation="Web_DeleteAllTransactionRulesMutation",
+            graphql_query=query,
+            variables={},
+        )
+
+        return result.get("deleteAllTransactionRules", {}).get("deleted", False)
 
     async def get_transaction_categories(self) -> Dict[str, Any]:
         """

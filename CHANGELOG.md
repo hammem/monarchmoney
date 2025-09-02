@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.3] - 2025-09-02
+
+### 🔧 Fixed
+- **Transaction Rules API**: Fixed all transaction rules functionality with correct GraphQL operations from HAR analysis
+  - Updated `create_transaction_rule()` to use `Common_CreateTransactionRuleMutationV2`
+  - Updated `update_transaction_rule()` to use `Common_UpdateTransactionRuleMutationV2` 
+  - Updated `delete_transaction_rule()` to use `Common_DeleteTransactionRule`
+  - Updated `reorder_transaction_rules()` to use `Web_UpdateRuleOrderMutation`
+  - Fixed parameter structure to match MonarchMoney's actual API requirements
+  - Added `apply_to_existing_transactions` parameter for retroactive rule application
+
+### ✨ Added
+- **Transaction Rules Preview**: Added `preview_transaction_rule()` to preview rule effects before creating
+- **Bulk Rule Management**: Added `delete_all_transaction_rules()` for removing all rules at once
+
+### 📚 Documentation
+- **Transaction Rules**: Updated documentation to reflect working functionality, removed experimental warnings
+- **GraphQL Documentation**: Updated GRAPHQL.md with correct operation names and implementation status
+
 ## [0.2.2] - 2025-09-02
 
 ### 🔧 Fixed
