@@ -1957,6 +1957,54 @@ class MonarchMoney(object):
         
         return result.get("deleteGoal", {}).get("deleted", False)
 
+    async def apply_rules_to_existing_transactions(self) -> Dict[str, Any]:
+        """
+        Apply all transaction rules to existing transactions retroactively.
+        This processes all 18,881+ transactions against current rules.
+        
+        :return: Application results
+        """
+        query = gql(
+            """
+            mutation ApplyRulesToExistingTransactions {
+                applyTransactionRulesToExisting {
+                    processedCount
+                    appliedCount
+                    errors {
+                        ...PayloadErrorFields
+                        __typename
+                    }
+                    __typename
+                }
+            }
+
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
+            }
+            """
+        )
+        
+        result = await self.gql_call(
+            operation="ApplyRulesToExistingTransactions",
+            graphql_query=query,
+            variables={},
+        )
+        
+        # Check for errors
+        if result.get("applyTransactionRulesToExisting", {}).get("errors"):
+            errors = result["applyTransactionRulesToExisting"]["errors"]
+            if errors.get("message"):
+                raise Exception(f"Retroactive rule application failed: {errors['message']}")
+        
+        return result
+
     async def get_investment_performance(
         self,
         start_date: Optional[str] = None,
@@ -2507,12 +2555,21 @@ class MonarchMoney(object):
         split_transactions_action: Optional[Dict[str, Any]] = None,
         apply_to_existing_transactions: bool = False,
         merchant_criteria_use_original_statement: bool = False,
+        # New advanced action parameters
+        set_hide_from_reports_action: Optional[bool] = None,
+        needs_review_by_user_action: Optional[str] = None,
+        unassign_needs_review_by_user_action: Optional[bool] = None,
+        send_notification_action: Optional[bool] = None,
+        review_status_action: Optional[str] = None,
+        link_goal_action: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Creates a new transaction rule for automatic categorization.
+        Creates a new transaction rule for automatic categorization and actions.
 
         :param merchant_criteria: List of merchant criteria [{"operator": "contains", "value": "amazon"}]
-        :param amount_criteria: Amount criteria {"operator": "gt", "isExpense": True, "value": 20}
+        :param amount_criteria: Amount criteria {"operator": "eq", "isExpense": True, "value": 115.32}
+                               For exact amounts: {"operator": "eq", "value": 115.32}
+                               For ranges: {"operator": "between", "valueRange": {"lower": 100, "upper": 200}}
         :param category_ids: List of category IDs to match
         :param account_ids: List of account IDs to match
         :param set_category_action: Category ID to set when rule matches
@@ -2521,6 +2578,12 @@ class MonarchMoney(object):
         :param split_transactions_action: Split action configuration
         :param apply_to_existing_transactions: Whether to apply to existing transactions
         :param merchant_criteria_use_original_statement: Use original statement text
+        :param set_hide_from_reports_action: Hide transactions from reports (True/False)
+        :param needs_review_by_user_action: User ID to assign for review
+        :param unassign_needs_review_by_user_action: Remove review assignment (True/False)
+        :param send_notification_action: Send notification when rule applies (True/False)
+        :param review_status_action: Set review status (e.g., "tax_deductible")
+        :param link_goal_action: Goal ID to link transactions to
         :return: The created rule data
         """
         query = gql(
@@ -2559,6 +2622,13 @@ class MonarchMoney(object):
             "addTagsAction": add_tags_action,
             "setMerchantAction": set_merchant_action,
             "splitTransactionsAction": split_transactions_action,
+            # Advanced actions
+            "setHideFromReportsAction": set_hide_from_reports_action,
+            "needsReviewByUserAction": needs_review_by_user_action,
+            "unassignNeedsReviewByUserAction": unassign_needs_review_by_user_action,
+            "sendNotificationAction": send_notification_action,
+            "reviewStatusAction": review_status_action,
+            "linkGoalAction": link_goal_action,
         }
 
         variables = {"input": rule_input}
@@ -2789,6 +2859,162 @@ class MonarchMoney(object):
         return await self.create_transaction_rule(
             merchant_criteria=merchant_criteria,
             set_category_action=category_id,
+            apply_to_existing_transactions=apply_to_existing,
+        )
+
+    async def create_amount_rule(
+        self,
+        amount: float,
+        operator: str = "eq",
+        is_expense: bool = True,
+        category_name: Optional[str] = None,
+        set_category_action: Optional[str] = None,
+        apply_to_existing: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Helper method to create an amount-based rule.
+        
+        :param amount: Exact amount to match (e.g., 115.32)
+        :param operator: Amount operator ("eq" for exact, "gt", "lt", "between")
+        :param is_expense: True for expenses (negative), False for income (positive)
+        :param category_name: Name of category to assign (alternative to set_category_action)
+        :param set_category_action: Category ID to assign directly
+        :param apply_to_existing: Whether to apply to existing transactions
+        :return: Created rule data
+        """
+        if category_name and not set_category_action:
+            categories = await self.get_transaction_categories()
+            for cat in categories.get("categories", []):
+                if cat.get("name", "").lower() == category_name.lower():
+                    set_category_action = cat.get("id")
+                    break
+            if not set_category_action:
+                raise ValueError(f"Category '{category_name}' not found")
+        
+        amount_criteria = {
+            "operator": operator,
+            "isExpense": is_expense,
+            "value": amount,
+        }
+        
+        return await self.create_transaction_rule(
+            amount_criteria=amount_criteria,
+            set_category_action=set_category_action,
+            apply_to_existing_transactions=apply_to_existing,
+        )
+
+    async def create_combined_rule(
+        self,
+        merchant_contains: str,
+        amount: Optional[float] = None,
+        amount_operator: str = "gt",
+        category_name: Optional[str] = None,
+        set_category_action: Optional[str] = None,
+        apply_to_existing: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Helper method to create combined merchant + amount rules.
+        
+        :param merchant_contains: Merchant name pattern to match
+        :param amount: Amount threshold (e.g., 200 for "> $200")
+        :param amount_operator: Amount comparison ("gt", "lt", "eq", "between")
+        :param category_name: Name of category to assign
+        :param set_category_action: Category ID to assign directly
+        :param apply_to_existing: Whether to apply to existing transactions
+        :return: Created rule data
+        """
+        if category_name and not set_category_action:
+            categories = await self.get_transaction_categories()
+            for cat in categories.get("categories", []):
+                if cat.get("name", "").lower() == category_name.lower():
+                    set_category_action = cat.get("id")
+                    break
+            if not set_category_action:
+                raise ValueError(f"Category '{category_name}' not found")
+        
+        merchant_criteria = [{"operator": "contains", "value": merchant_contains}]
+        amount_criteria = None
+        if amount:
+            amount_criteria = {
+                "operator": amount_operator,
+                "isExpense": True,
+                "value": amount,
+            }
+        
+        return await self.create_transaction_rule(
+            merchant_criteria=merchant_criteria,
+            amount_criteria=amount_criteria,
+            set_category_action=set_category_action,
+            apply_to_existing_transactions=apply_to_existing,
+        )
+
+    async def create_tax_deductible_rule(
+        self,
+        merchant_contains: Optional[str] = None,
+        amount: Optional[float] = None,
+        amount_operator: str = "gt",
+        apply_to_existing: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Helper method to create tax-deductible marking rules.
+        
+        :param merchant_contains: Merchant pattern to match
+        :param amount: Amount threshold
+        :param amount_operator: Amount comparison operator
+        :param apply_to_existing: Whether to apply to existing transactions
+        :return: Created rule data
+        """
+        merchant_criteria = None
+        if merchant_contains:
+            merchant_criteria = [{"operator": "contains", "value": merchant_contains}]
+        
+        amount_criteria = None
+        if amount:
+            amount_criteria = {
+                "operator": amount_operator,
+                "isExpense": True,
+                "value": amount,
+            }
+        
+        return await self.create_transaction_rule(
+            merchant_criteria=merchant_criteria,
+            amount_criteria=amount_criteria,
+            review_status_action="tax_deductible",
+            apply_to_existing_transactions=apply_to_existing,
+        )
+
+    async def create_ignore_rule(
+        self,
+        merchant_contains: Optional[str] = None,
+        amount: Optional[float] = None,
+        amount_operator: str = "eq",
+        apply_to_existing: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Helper method to create "ignore from everything" rules.
+        
+        :param merchant_contains: Merchant pattern to match
+        :param amount: Exact amount to match
+        :param amount_operator: Amount comparison operator
+        :param apply_to_existing: Whether to apply to existing transactions
+        :return: Created rule data
+        """
+        merchant_criteria = None
+        if merchant_contains:
+            merchant_criteria = [{"operator": "contains", "value": merchant_contains}]
+        
+        amount_criteria = None
+        if amount:
+            amount_criteria = {
+                "operator": amount_operator,
+                "isExpense": True,
+                "value": amount,
+            }
+        
+        return await self.create_transaction_rule(
+            merchant_criteria=merchant_criteria,
+            amount_criteria=amount_criteria,
+            set_hide_from_reports_action=True,
             apply_to_existing_transactions=apply_to_existing,
         )
 

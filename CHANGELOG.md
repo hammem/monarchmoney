@@ -14,6 +14,18 @@ All notable changes to this project will be documented in this file.
   - Account-level performance breakdown
   - Individual holding performance data
   - Date range filtering and account filtering
+- **Advanced Transaction Rules**: Enhanced transaction rules with complete action support
+  - **Amount-based rules**: `create_amount_rule()` for exact amount matching (e.g., $115.32)
+  - **Combined conditions**: `create_combined_rule()` for merchant + amount rules (e.g., "Airbnb + amount > $200")
+  - **Tax deductible marking**: `create_tax_deductible_rule()` for automatic tax categorization
+  - **Ignore from everything**: `create_ignore_rule()` for hiding transactions from all reports
+  - **Retroactive application**: `apply_rules_to_existing_transactions()` to process all existing transactions
+- **Advanced Rule Actions**: Full support for all MonarchMoney rule actions
+  - Transaction hiding from reports (`set_hide_from_reports_action`)
+  - Review status assignment (`review_status_action`)
+  - User review assignment (`needs_review_by_user_action`)
+  - Goal linking (`link_goal_action`)
+  - Notification triggers (`send_notification_action`)
 
 ### 📚 Documentation
 - **GraphQL Documentation**: Updated GRAPHQL.md with new goal and investment operations
