@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
 import sys
+
 sys.path.insert(0, "/home/keith/src/monarchmoney")
 
 from gql import gql
 
+
 def test_queries():
     """Test that our GraphQL queries parse correctly."""
-    
+
     print("=== Testing GetTransactionRules Query ===")
     try:
         query = gql(
@@ -111,7 +113,7 @@ def test_queries():
         print("✓ GetTransactionRules query parsed successfully")
     except Exception as e:
         print(f"✗ GetTransactionRules query parsing failed: {e}")
-    
+
     print("\n=== Testing CreateTransactionRule Mutation ===")
     try:
         query = gql(

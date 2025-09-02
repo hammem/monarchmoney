@@ -14,9 +14,9 @@ from gql import gql
 async def debug_graphql_operations():
     """Debug GraphQL operations by examining the structure."""
     mm = MonarchMoney()
-    
+
     print("=== Debugging GraphQL Transaction Rules Operations ===")
-    
+
     # Check the create_transaction_rule query structure
     print("\n1. CREATE TRANSACTION RULE QUERY:")
     create_query = gql(
@@ -39,7 +39,7 @@ async def debug_graphql_operations():
         """
     )
     print(f"Query AST: {create_query}")
-    
+
     # Show the input structure we're sending
     print("\n2. SAMPLE INPUT STRUCTURE:")
     sample_input = {
@@ -55,7 +55,7 @@ async def debug_graphql_operations():
         "splitTransactionsAction": None,
     }
     print(json.dumps({"input": sample_input}, indent=2))
-    
+
     # Check the get_transaction_rules query
     print("\n3. GET TRANSACTION RULES QUERY:")
     get_query = gql(
@@ -95,14 +95,14 @@ async def debug_graphql_operations():
         """
     )
     print(f"Query AST: {get_query}")
-    
+
     print("\n4. POSSIBLE ISSUES TO CHECK:")
     print("- Field name mismatches (camelCase vs snake_case)")
     print("- Missing required fields in input")
     print("- Incorrect GraphQL operation names")
     print("- Authentication headers missing")
     print("- Wrong API endpoint being called")
-    
+
     print("\n5. HAR FILE EVIDENCE:")
     print("From HAR analysis, the correct operation should be:")
     print("- Mutation: Common_CreateTransactionRuleMutationV2")

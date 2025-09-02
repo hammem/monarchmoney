@@ -15,7 +15,7 @@ from gql import gql
 async def test_exact_har_queries():
     """Test using the exact GraphQL queries from HAR files."""
     mm = MonarchMoney()
-    
+
     print("=== Login ===")
     try:
         await mm.interactive_login()
@@ -23,11 +23,12 @@ async def test_exact_har_queries():
     except Exception as e:
         print(f"✗ Login failed: {e}")
         return
-    
+
     print("\n=== Test Exact HAR Query for GetTransactionRules ===")
     try:
         # Exact query from app.monarchmoney.com.har
-        query = gql("""query GetTransactionRules {
+        query = gql(
+            """query GetTransactionRules {
   transactionRules {
     id
     order
@@ -121,18 +122,20 @@ fragment TransactionRuleFields on TransactionRuleV2 {
     __typename
   }
   __typename
-}""")
-        
-        result = await mm.gql_call(
-            operation="GetTransactionRules",
-            graphql_query=query,
-            variables={}
+}"""
         )
-        print(f"✓ HAR query successful: {len(result.get('transactionRules', []))} rules")
-        
+
+        result = await mm.gql_call(
+            operation="GetTransactionRules", graphql_query=query, variables={}
+        )
+        print(
+            f"✓ HAR query successful: {len(result.get('transactionRules', []))} rules"
+        )
+
     except Exception as e:
         print(f"✗ HAR query failed: {e}")
         import traceback
+
         traceback.print_exc()
 
 

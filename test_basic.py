@@ -14,9 +14,9 @@ from monarchmoney import MonarchMoney
 async def test_basic():
     """Basic test to check if API access is working."""
     mm = MonarchMoney()
-    
+
     print("=== Testing Basic API Access ===")
-    
+
     # Try interactive login
     try:
         await mm.interactive_login()
@@ -24,7 +24,7 @@ async def test_basic():
     except Exception as e:
         print(f"✗ Login failed: {e}")
         return
-    
+
     # Test basic API call - get accounts (should always work)
     print("\n=== Testing get_accounts ===")
     try:
@@ -33,7 +33,7 @@ async def test_basic():
     except Exception as e:
         print(f"✗ get_accounts failed: {e}")
         return
-    
+
     # Test get_transaction_rules (our problem area)
     print("\n=== Testing get_transaction_rules ===")
     try:
@@ -43,6 +43,7 @@ async def test_basic():
     except Exception as e:
         print(f"✗ get_transaction_rules failed: {e}")
         import traceback
+
         traceback.print_exc()
 
 
