@@ -2112,27 +2112,97 @@ class MonarchMoney(object):
             query GetTransactionRules {
                 transactionRules {
                     id
-                    priority
-                    enabled
-                    conditions {
-                        field
-                        operation
-                        value
-                        __typename
-                    }
-                    actions {
-                        type
-                        value
-                        categoryId
-                        merchantName
-                        note
-                        tagIds
-                        __typename
-                    }
-                    createdAt
-                    updatedAt
+                    order
+                    ...TransactionRuleFields
                     __typename
                 }
+            }
+
+            fragment TransactionRuleFields on TransactionRuleV2 {
+                id
+                merchantCriteriaUseOriginalStatement
+                merchantCriteria {
+                    operator
+                    value
+                    __typename
+                }
+                amountCriteria {
+                    operator
+                    isExpense
+                    value
+                    valueRange {
+                        lower
+                        upper
+                        __typename
+                    }
+                    __typename
+                }
+                categoryIds
+                accountIds
+                categories {
+                    id
+                    name
+                    icon
+                    __typename
+                }
+                accounts {
+                    id
+                    displayName
+                    icon
+                    logoUrl
+                    __typename
+                }
+                setMerchantAction {
+                    id
+                    name
+                    __typename
+                }
+                setCategoryAction {
+                    id
+                    name
+                    icon
+                    __typename
+                }
+                addTagsAction {
+                    id
+                    name
+                    color
+                    __typename
+                }
+                linkGoalAction {
+                    id
+                    name
+                    imageStorageProvider
+                    imageStorageProviderId
+                    __typename
+                }
+                needsReviewByUserAction {
+                    id
+                    name
+                    __typename
+                }
+                unassignNeedsReviewByUserAction
+                sendNotificationAction
+                setHideFromReportsAction
+                reviewStatusAction
+                recentApplicationCount
+                lastAppliedAt
+                splitTransactionsAction {
+                    amountType
+                    splitsInfo {
+                        categoryId
+                        merchantName
+                        amount
+                        goalId
+                        tags
+                        hideFromReports
+                        reviewStatus
+                        needsReviewByUserId
+                        __typename
+                    }
+                    __typename
+                }
+                __typename
             }
             """
         )
@@ -2175,17 +2245,22 @@ class MonarchMoney(object):
             mutation Common_CreateTransactionRuleMutationV2($input: CreateTransactionRuleInput!) {
                 createTransactionRuleV2(input: $input) {
                     errors {
-                        fieldErrors {
-                            field
-                            messages
-                            __typename
-                        }
-                        message
-                        code
+                        ...PayloadErrorFields
                         __typename
                     }
                     __typename
                 }
+            }
+
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
             }
             """
         )
@@ -2193,32 +2268,38 @@ class MonarchMoney(object):
         rule_input = {
             "merchantCriteriaUseOriginalStatement": merchant_criteria_use_original_statement,
             "applyToExistingTransactions": apply_to_existing_transactions,
+            "merchantCriteria": merchant_criteria,
+            "amountCriteria": amount_criteria,
+            "categoryIds": category_ids,
+            "accountIds": account_ids,
+            "setCategoryAction": set_category_action,
+            "addTagsAction": add_tags_action,
+            "setMerchantAction": set_merchant_action,
+            "splitTransactionsAction": split_transactions_action,
         }
-
-        if merchant_criteria:
-            rule_input["merchantCriteria"] = merchant_criteria
-        if amount_criteria:
-            rule_input["amountCriteria"] = amount_criteria
-        if category_ids:
-            rule_input["categoryIds"] = category_ids
-        if account_ids:
-            rule_input["accountIds"] = account_ids
-        if set_category_action:
-            rule_input["setCategoryAction"] = set_category_action
-        if add_tags_action:
-            rule_input["addTagsAction"] = add_tags_action
-        if set_merchant_action:
-            rule_input["setMerchantAction"] = set_merchant_action
-        if split_transactions_action:
-            rule_input["splitTransactionsAction"] = split_transactions_action
 
         variables = {"input": rule_input}
 
-        return await self.gql_call(
+        result = await self.gql_call(
             operation="Common_CreateTransactionRuleMutationV2",
             graphql_query=query,
             variables=variables,
         )
+        
+        # Check for GraphQL errors in the response
+        if result.get("createTransactionRuleV2", {}).get("errors"):
+            errors = result["createTransactionRuleV2"]["errors"]
+            if errors.get("message"):
+                raise Exception(f"Transaction rule creation failed: {errors['message']}")
+            elif errors.get("fieldErrors"):
+                field_errors = []
+                for field_error in errors["fieldErrors"]:
+                    field_errors.append(f"{field_error['field']}: {', '.join(field_error['messages'])}")
+                raise Exception(f"Transaction rule creation failed: {'; '.join(field_errors)}")
+            else:
+                raise Exception(f"Transaction rule creation failed: {errors}")
+        
+        return result
 
     async def update_transaction_rule(
         self,
@@ -2255,17 +2336,22 @@ class MonarchMoney(object):
             mutation Common_UpdateTransactionRuleMutationV2($input: UpdateTransactionRuleInput!) {
                 updateTransactionRuleV2(input: $input) {
                     errors {
-                        fieldErrors {
-                            field
-                            messages
-                            __typename
-                        }
-                        message
-                        code
+                        ...PayloadErrorFields
                         __typename
                     }
                     __typename
                 }
+            }
+
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
             }
             """
         )
@@ -2316,17 +2402,22 @@ class MonarchMoney(object):
                 deleteTransactionRule(id: $id) {
                     deleted
                     errors {
-                        fieldErrors {
-                            field
-                            messages
-                            __typename
-                        }
-                        message
-                        code
+                        ...PayloadErrorFields
                         __typename
                     }
                     __typename
                 }
+            }
+
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
             }
             """
         )
@@ -2505,24 +2596,15 @@ class MonarchMoney(object):
         rule_input = {
             "merchantCriteriaUseOriginalStatement": merchant_criteria_use_original_statement,
             "applyToExistingTransactions": apply_to_existing_transactions,
+            "merchantCriteria": merchant_criteria,
+            "amountCriteria": amount_criteria,
+            "categoryIds": category_ids,
+            "accountIds": account_ids,
+            "setCategoryAction": set_category_action,
+            "addTagsAction": add_tags_action,
+            "setMerchantAction": set_merchant_action,
+            "splitTransactionsAction": split_transactions_action,
         }
-
-        if merchant_criteria:
-            rule_input["merchantCriteria"] = merchant_criteria
-        if amount_criteria:
-            rule_input["amountCriteria"] = amount_criteria
-        if category_ids:
-            rule_input["categoryIds"] = category_ids
-        if account_ids:
-            rule_input["accountIds"] = account_ids
-        if set_category_action:
-            rule_input["setCategoryAction"] = set_category_action
-        if add_tags_action:
-            rule_input["addTagsAction"] = add_tags_action
-        if set_merchant_action:
-            rule_input["setMerchantAction"] = set_merchant_action
-        if split_transactions_action:
-            rule_input["splitTransactionsAction"] = split_transactions_action
 
         variables = {"rule": rule_input, "offset": offset}
 

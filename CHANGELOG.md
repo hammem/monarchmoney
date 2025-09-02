@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.4] - 2025-09-02
+
+### 🔧 Fixed
+- **Transaction Rules GraphQL**: Fixed GraphQL fragment structure to match MonarchMoney's actual API
+  - Added missing `PayloadErrorFields` fragment to all mutation queries
+  - Updated `get_transaction_rules()` to use correct `TransactionRuleFields` fragment structure
+  - Improved error handling for GraphQL responses with detailed error messages
+  - Fixed query structure to exactly match HAR file analysis
+
 ## [0.2.3] - 2025-09-02
 
 ### 🔧 Fixed
