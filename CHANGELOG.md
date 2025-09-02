@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2025-09-02
+
+### ✨ Added
+- **Goal Management**: Added complete financial goal management functionality
+  - `create_goal()` - Create new financial goals with target amounts and dates
+  - `update_goal()` - Update existing goal details (name, amount, date, description)
+  - `delete_goal()` - Delete financial goals
+- **Investment Analytics**: Added `get_investment_performance()` for detailed investment tracking
+  - Portfolio performance metrics (total value, gains, percentages)
+  - Account-level performance breakdown
+  - Individual holding performance data
+  - Date range filtering and account filtering
+
+### 📚 Documentation
+- **GraphQL Documentation**: Updated GRAPHQL.md with new goal and investment operations
+- **API Coverage**: Now covers 45+ GraphQL operations with comprehensive goal and investment management
+
 ## [0.2.5] - 2025-09-02
 
 ### 🔧 Fixed

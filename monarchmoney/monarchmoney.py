@@ -1743,6 +1743,286 @@ class MonarchMoney(object):
             graphql_query=query,
         )
 
+    async def create_goal(
+        self,
+        name: str,
+        target_amount: float,
+        target_date: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Create a new financial goal.
+        
+        :param name: Goal name
+        :param target_amount: Target amount for the goal
+        :param target_date: Target date (YYYY-MM-DD format)
+        :param description: Optional goal description
+        :return: Created goal data
+        """
+        query = gql(
+            """
+            mutation CreateGoal($input: CreateGoalInput!) {
+                createGoal(input: $input) {
+                    goal {
+                        id
+                        name
+                        targetAmount
+                        currentAmount
+                        targetDate
+                        description
+                        createdAt
+                        __typename
+                    }
+                    errors {
+                        ...PayloadErrorFields
+                        __typename
+                    }
+                    __typename
+                }
+            }
+
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
+            }
+            """
+        )
+        
+        goal_input = {
+            "name": name,
+            "targetAmount": target_amount,
+        }
+        if target_date:
+            goal_input["targetDate"] = target_date
+        if description:
+            goal_input["description"] = description
+            
+        variables = {"input": goal_input}
+        
+        result = await self.gql_call(
+            operation="CreateGoal",
+            graphql_query=query,
+            variables=variables,
+        )
+        
+        # Check for errors
+        if result.get("createGoal", {}).get("errors"):
+            errors = result["createGoal"]["errors"]
+            if errors.get("message"):
+                raise Exception(f"Goal creation failed: {errors['message']}")
+            elif errors.get("fieldErrors"):
+                field_errors = []
+                for field_error in errors["fieldErrors"]:
+                    field_errors.append(f"{field_error['field']}: {', '.join(field_error['messages'])}")
+                raise Exception(f"Goal creation failed: {'; '.join(field_errors)}")
+        
+        return result
+
+    async def update_goal(
+        self,
+        goal_id: str,
+        name: Optional[str] = None,
+        target_amount: Optional[float] = None,
+        target_date: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Update an existing financial goal.
+        
+        :param goal_id: ID of the goal to update
+        :param name: New goal name
+        :param target_amount: New target amount
+        :param target_date: New target date (YYYY-MM-DD format)
+        :param description: New description
+        :return: Updated goal data
+        """
+        query = gql(
+            """
+            mutation UpdateGoal($input: UpdateGoalInput!) {
+                updateGoal(input: $input) {
+                    goal {
+                        id
+                        name
+                        targetAmount
+                        currentAmount
+                        targetDate
+                        description
+                        updatedAt
+                        __typename
+                    }
+                    errors {
+                        ...PayloadErrorFields
+                        __typename
+                    }
+                    __typename
+                }
+            }
+
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
+            }
+            """
+        )
+        
+        goal_input = {"id": goal_id}
+        if name is not None:
+            goal_input["name"] = name
+        if target_amount is not None:
+            goal_input["targetAmount"] = target_amount
+        if target_date is not None:
+            goal_input["targetDate"] = target_date
+        if description is not None:
+            goal_input["description"] = description
+            
+        variables = {"input": goal_input}
+        
+        result = await self.gql_call(
+            operation="UpdateGoal",
+            graphql_query=query,
+            variables=variables,
+        )
+        
+        # Check for errors
+        if result.get("updateGoal", {}).get("errors"):
+            errors = result["updateGoal"]["errors"]
+            if errors.get("message"):
+                raise Exception(f"Goal update failed: {errors['message']}")
+            elif errors.get("fieldErrors"):
+                field_errors = []
+                for field_error in errors["fieldErrors"]:
+                    field_errors.append(f"{field_error['field']}: {', '.join(field_error['messages'])}")
+                raise Exception(f"Goal update failed: {'; '.join(field_errors)}")
+        
+        return result
+
+    async def delete_goal(self, goal_id: str) -> bool:
+        """
+        Delete a financial goal.
+        
+        :param goal_id: ID of the goal to delete
+        :return: True if successfully deleted
+        """
+        query = gql(
+            """
+            mutation DeleteGoal($id: ID!) {
+                deleteGoal(id: $id) {
+                    deleted
+                    errors {
+                        ...PayloadErrorFields
+                        __typename
+                    }
+                    __typename
+                }
+            }
+
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
+            }
+            """
+        )
+        
+        variables = {"id": goal_id}
+        
+        result = await self.gql_call(
+            operation="DeleteGoal",
+            graphql_query=query,
+            variables=variables,
+        )
+        
+        # Check for errors
+        if result.get("deleteGoal", {}).get("errors"):
+            errors = result["deleteGoal"]["errors"]
+            if errors.get("message"):
+                raise Exception(f"Goal deletion failed: {errors['message']}")
+        
+        return result.get("deleteGoal", {}).get("deleted", False)
+
+    async def get_investment_performance(
+        self,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        account_ids: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get investment performance metrics and analytics.
+        
+        :param start_date: Start date for performance analysis (YYYY-MM-DD)
+        :param end_date: End date for performance analysis (YYYY-MM-DD)
+        :param account_ids: List of account IDs to include (default: all investment accounts)
+        :return: Investment performance data
+        """
+        query = gql(
+            """
+            query GetInvestmentPerformance($startDate: Date, $endDate: Date, $accountIds: [String!]) {
+                investmentPerformance(startDate: $startDate, endDate: $endDate, accountIds: $accountIds) {
+                    totalValue
+                    totalGain
+                    totalGainPercent
+                    dayGain
+                    dayGainPercent
+                    accounts {
+                        id
+                        name
+                        totalValue
+                        totalGain
+                        totalGainPercent
+                        dayGain
+                        dayGainPercent
+                        holdings {
+                            id
+                            ticker
+                            name
+                            quantity
+                            price
+                            value
+                            gain
+                            gainPercent
+                            dayGain
+                            dayGainPercent
+                            __typename
+                        }
+                        __typename
+                    }
+                    __typename
+                }
+            }
+            """
+        )
+        
+        variables = {}
+        if start_date:
+            variables["startDate"] = start_date
+        if end_date:
+            variables["endDate"] = end_date
+        if account_ids:
+            variables["accountIds"] = account_ids
+            
+        return await self.gql_call(
+            operation="GetInvestmentPerformance",
+            graphql_query=query,
+            variables=variables,
+        )
+
     async def get_subscription_details(self) -> Dict[str, Any]:
         """
         The type of subscription for the Monarch Money account.

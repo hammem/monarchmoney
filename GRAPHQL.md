@@ -66,8 +66,12 @@ This document maps the MonarchMoney GraphQL API operations and their implementat
 | Not specified | `upload_account_balance_history()` | ✅ | Upload historical balance data |
 | **Goals & Financial Planning** | | | |
 | `GetGoals` | `get_goals()` | ✅ | Get financial goals and targets with progress tracking |
+| `CreateGoal` | `create_goal()` | ✅ | Create new financial goal with target amount and date |
+| `UpdateGoal` | `update_goal()` | ✅ | Update existing goal details |
+| `DeleteGoal` | `delete_goal()` | ✅ | Delete financial goal |
 | **Net Worth & Analytics** | | | |
 | `GetNetWorthHistory` | `get_net_worth_history()` | ✅ | Get net worth tracking over time with breakdown |
+| `GetInvestmentPerformance` | `get_investment_performance()` | ✅ | Get investment performance metrics and analytics |
 | **Bills & Payments** | | | |
 | `GetBills` | `get_bills()` | ✅ | Get upcoming bills and payments with due dates |
 
@@ -77,17 +81,11 @@ Based on analysis of hammem's repository and common financial API patterns, thes
 
 | Operation | Potential Method | Priority | Description |
 |-----------|------------------|----------|-------------|
-| `CreateGoal` | `create_goal()` | Medium | Create new financial goal |
-| `UpdateGoal` | `update_goal()` | Medium | Update existing goal |
-| `DeleteGoal` | `delete_goal()` | Medium | Delete financial goal |
 | `GetInsights` | `get_insights()` | Low | Financial insights and recommendations |
 | `GetNotifications` | `get_notifications()` | Low | Account notifications and alerts |
 | `GetSettings` | `get_settings()` | Low | User account settings |
 | `UpdateSettings` | `update_settings()` | Low | Update user preferences |
-| `GetInvestmentPerformance` | `get_investment_performance()` | Medium | Investment performance metrics |
-| `GetNetWorthHistory` | `get_net_worth_history()` | Medium | Net worth tracking over time |
 | `GetCreditScore` | `get_credit_score()` | Low | Credit score monitoring |
-| `GetBills` | `get_bills()` | Medium | Upcoming bills and payments |
 
 ## Authentication Operations
 
