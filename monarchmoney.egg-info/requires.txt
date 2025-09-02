@@ -1,3 +1,0 @@
-aiohttp>=3.8.4
-gql>=3.4
-oathtool>=2.3.1
