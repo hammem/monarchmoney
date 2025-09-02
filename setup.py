@@ -10,7 +10,7 @@ except FileNotFoundError:
 
 setup(
     name="monarchmoney-enhanced",
-    version="0.2.2",
+    version="0.3.2",
     description="Enhanced Monarch Money API for Python with authentication fixes",
     long_description=open("README.md", "r").read(),
     long_description_content_type="text/markdown",
