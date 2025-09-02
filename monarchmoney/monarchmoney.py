@@ -2071,6 +2071,230 @@ class MonarchMoney(object):
             variables=variables,
         )
 
+    async def get_insights(self) -> Dict[str, Any]:
+        """
+        Get financial insights and recommendations.
+        
+        :return: Financial insights data
+        """
+        query = gql(
+            """
+            query GetInsights {
+                insights {
+                    id
+                    type
+                    title
+                    description
+                    category
+                    priority
+                    actionRequired
+                    createdAt
+                    dismissedAt
+                    metadata
+                    __typename
+                }
+            }
+            """
+        )
+        
+        return await self.gql_call(
+            operation="GetInsights",
+            graphql_query=query,
+        )
+
+    async def get_notifications(self) -> Dict[str, Any]:
+        """
+        Get account notifications and alerts.
+        
+        :return: Notifications data
+        """
+        query = gql(
+            """
+            query GetNotifications {
+                notifications {
+                    id
+                    type
+                    title
+                    message
+                    read
+                    createdAt
+                    updatedAt
+                    actionUrl
+                    metadata
+                    __typename
+                }
+            }
+            """
+        )
+        
+        return await self.gql_call(
+            operation="GetNotifications",
+            graphql_query=query,
+        )
+
+    async def get_credit_score(self) -> Dict[str, Any]:
+        """
+        Get credit score monitoring data.
+        
+        :return: Credit score information
+        """
+        query = gql(
+            """
+            query GetCreditScore {
+                creditScore {
+                    score
+                    provider
+                    lastUpdated
+                    trend
+                    factors {
+                        factor
+                        impact
+                        description
+                        __typename
+                    }
+                    history {
+                        date
+                        score
+                        __typename
+                    }
+                    __typename
+                }
+            }
+            """
+        )
+        
+        return await self.gql_call(
+            operation="GetCreditScore",
+            graphql_query=query,
+        )
+
+    async def get_settings(self) -> Dict[str, Any]:
+        """
+        Get user account settings and preferences.
+        
+        :return: User settings data
+        """
+        query = gql(
+            """
+            query GetSettings {
+                settings {
+                    timezone
+                    currency
+                    dateFormat
+                    notifications {
+                        email
+                        push
+                        sms
+                        __typename
+                    }
+                    privacy {
+                        dataSharing
+                        analytics
+                        __typename
+                    }
+                    __typename
+                }
+            }
+            """
+        )
+        
+        return await self.gql_call(
+            operation="GetSettings",
+            graphql_query=query,
+        )
+
+    async def update_settings(
+        self,
+        timezone: Optional[str] = None,
+        currency: Optional[str] = None,
+        date_format: Optional[str] = None,
+        email_notifications: Optional[bool] = None,
+        push_notifications: Optional[bool] = None,
+        sms_notifications: Optional[bool] = None,
+    ) -> Dict[str, Any]:
+        """
+        Update user account settings and preferences.
+        
+        :param timezone: User timezone (e.g., "America/New_York")
+        :param currency: Default currency (e.g., "USD")
+        :param date_format: Date format preference
+        :param email_notifications: Enable email notifications
+        :param push_notifications: Enable push notifications
+        :param sms_notifications: Enable SMS notifications
+        :return: Updated settings data
+        """
+        query = gql(
+            """
+            mutation UpdateSettings($input: UpdateSettingsInput!) {
+                updateSettings(input: $input) {
+                    settings {
+                        timezone
+                        currency
+                        dateFormat
+                        notifications {
+                            email
+                            push
+                            sms
+                            __typename
+                        }
+                        __typename
+                    }
+                    errors {
+                        ...PayloadErrorFields
+                        __typename
+                    }
+                    __typename
+                }
+            }
+
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
+            }
+            """
+        )
+        
+        settings_input = {}
+        if timezone is not None:
+            settings_input["timezone"] = timezone
+        if currency is not None:
+            settings_input["currency"] = currency
+        if date_format is not None:
+            settings_input["dateFormat"] = date_format
+        
+        notifications = {}
+        if email_notifications is not None:
+            notifications["email"] = email_notifications
+        if push_notifications is not None:
+            notifications["push"] = push_notifications
+        if sms_notifications is not None:
+            notifications["sms"] = sms_notifications
+        
+        if notifications:
+            settings_input["notifications"] = notifications
+            
+        variables = {"input": settings_input}
+        
+        result = await self.gql_call(
+            operation="UpdateSettings",
+            graphql_query=query,
+            variables=variables,
+        )
+        
+        # Check for errors
+        if result.get("updateSettings", {}).get("errors"):
+            errors = result["updateSettings"]["errors"]
+            if errors.get("message"):
+                raise Exception(f"Settings update failed: {errors['message']}")
+        
+        return result
+
     async def get_subscription_details(self) -> Dict[str, Any]:
         """
         The type of subscription for the Monarch Money account.

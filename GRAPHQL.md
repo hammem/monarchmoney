@@ -2,6 +2,10 @@
 
 This document maps the MonarchMoney GraphQL API operations and their implementation status in monarchmoney-enhanced.
 
+**📊 Implementation Status: 50+ GraphQL operations fully implemented**
+
+All major MonarchMoney API functionality is now available, including advanced transaction rules, goal management, investment analytics, and user settings.
+
 ## Implementation Status
 
 | Operation | Method | Status | Description |
@@ -74,6 +78,13 @@ This document maps the MonarchMoney GraphQL API operations and their implementat
 | `GetInvestmentPerformance` | `get_investment_performance()` | ✅ | Get investment performance metrics and analytics |
 | **Bills & Payments** | | | |
 | `GetBills` | `get_bills()` | ✅ | Get upcoming bills and payments with due dates |
+| **Insights & Monitoring** | | | |
+| `GetInsights` | `get_insights()` | ✅ | Get financial insights and recommendations |
+| `GetNotifications` | `get_notifications()` | ✅ | Get account notifications and alerts |
+| `GetCreditScore` | `get_credit_score()` | ✅ | Get credit score monitoring data |
+| **User Settings** | | | |
+| `GetSettings` | `get_settings()` | ✅ | Get user account settings and preferences |
+| `UpdateSettings` | `update_settings()` | ✅ | Update user preferences and notification settings |
 
 ## Not Yet Implemented
 
@@ -81,11 +92,6 @@ Based on analysis of hammem's repository and common financial API patterns, thes
 
 | Operation | Potential Method | Priority | Description |
 |-----------|------------------|----------|-------------|
-| `GetInsights` | `get_insights()` | Low | Financial insights and recommendations |
-| `GetNotifications` | `get_notifications()` | Low | Account notifications and alerts |
-| `GetSettings` | `get_settings()` | Low | User account settings |
-| `UpdateSettings` | `update_settings()` | Low | Update user preferences |
-| `GetCreditScore` | `get_credit_score()` | Low | Credit score monitoring |
 
 ## Authentication Operations
 

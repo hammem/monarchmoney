@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1] - 2025-09-02
+
+### ✨ Added
+- **Financial Insights**: Added `get_insights()` for financial recommendations and analysis
+- **Notifications**: Added `get_notifications()` for account alerts and notifications
+- **Credit Monitoring**: Added `get_credit_score()` for credit score tracking and history
+- **User Settings**: Added `get_settings()` and `update_settings()` for account preferences
+  - Timezone, currency, date format configuration
+  - Notification preferences (email, push, SMS)
+  - Privacy settings management
+
+### 📚 Documentation
+- **Complete API Coverage**: Now implements 50+ GraphQL operations
+- **Updated Documentation**: GRAPHQL.md reflects comprehensive API implementation
+
 ## [0.3.0] - 2025-09-02
 
 ### ✨ Added
