@@ -169,6 +169,13 @@ As of writing this README, the following methods are supported:
 - `ensure_valid_session` - ensures session is valid, validating if stale
 - `get_session_info` - gets session metadata (creation time, last validation, staleness)
 
+## ⚠️ Experimental Features
+
+**Transaction Rules**: The following methods are experimental and may not work with the current Monarch Money API:
+- `get_transaction_rules`, `create_transaction_rule`, `update_transaction_rule`, `delete_transaction_rule`, `reorder_transaction_rules`, `create_categorization_rule`
+
+See [Issue #19](https://github.com/keithah/monarchmoney-enhanced/issues/19) for investigation status.
+
 For a complete mapping of GraphQL operations and implementation status, see [GRAPHQL.md](GRAPHQL.md).
 
 # Development & Testing

@@ -33,11 +33,11 @@ This document maps the MonarchMoney GraphQL API operations and their implementat
 | `Common_SplitTransactionMutation` | `update_transaction_splits()` | ✅ | Update transaction splits |
 | `Web_TransactionDrawerUpdateTransaction` | `update_transaction()` | ✅ | Update transaction details |
 | **Transaction Rules** | | | |
-| `GetTransactionRules` | `get_transaction_rules()` | ✅ | Get all transaction rules |
-| `CreateTransactionRule` | `create_transaction_rule()` | ✅ | Create new transaction rule |
-| `UpdateTransactionRule` | `update_transaction_rule()` | ✅ | Update existing transaction rule |
-| `DeleteTransactionRule` | `delete_transaction_rule()` | ✅ | Delete transaction rule |
-| `ReorderTransactionRules` | `reorder_transaction_rules()` | ✅ | Reorder rule priority |
+| `GetTransactionRules` | `get_transaction_rules()` | ⚠️ | Get all transaction rules (EXPERIMENTAL - API endpoints unverified) |
+| `CreateTransactionRule` | `create_transaction_rule()` | ⚠️ | Create new transaction rule (EXPERIMENTAL - API endpoints unverified) |
+| `UpdateTransactionRule` | `update_transaction_rule()` | ⚠️ | Update existing transaction rule (EXPERIMENTAL - API endpoints unverified) |
+| `DeleteTransactionRule` | `delete_transaction_rule()` | ⚠️ | Delete transaction rule (EXPERIMENTAL - API endpoints unverified) |
+| `ReorderTransactionRules` | `reorder_transaction_rules()` | ⚠️ | Reorder rule priority (EXPERIMENTAL - API endpoints unverified) |
 | **Categories & Tags** | | | |
 | `GetCategories` | `get_transaction_categories()` | ✅ | Get all transaction categories |
 | `Web_DeleteCategory` | `delete_transaction_category()` | ✅ | Delete a transaction category |
