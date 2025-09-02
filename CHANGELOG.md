@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.5] - 2025-09-02
+
+### 🔧 Fixed
+- **Required Headers**: Added missing MonarchMoney API headers for transaction rules functionality
+  - Added `x-cio-client-platform: web`
+  - Added `x-cio-site-id: 2598be4aa410159198b2`
+  - Added `x-gist-user-anonymous: false`
+  - These headers are required for transaction rules API access
+
 ## [0.2.4] - 2025-09-02
 
 ### 🔧 Fixed
