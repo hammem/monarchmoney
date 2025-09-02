@@ -3,12 +3,14 @@
 import asyncio
 import json
 import sys
+import pytest
 
 sys.path.insert(0, "/home/keith/src/monarchmoney")
 
 from monarchmoney import MonarchMoney
 
 
+@pytest.mark.asyncio
 async def test_basic():
     """Basic test to check if API access is working."""
     mm = MonarchMoney()

@@ -3,6 +3,7 @@
 import asyncio
 import json
 import sys
+import pytest
 
 sys.path.insert(0, "/home/keith/src/monarchmoney")
 
@@ -10,6 +11,7 @@ from monarchmoney import MonarchMoney
 from gql import gql
 
 
+@pytest.mark.asyncio
 async def test_exact_har_queries():
     """Test using the exact GraphQL queries from HAR files."""
     mm = MonarchMoney()

@@ -103,14 +103,14 @@ class TestAccountMethods:
                     "id": "merchant1",
                     "name": "Amazon",
                     "logoUrl": "https://example.com/amazon.png",
-                    "transactionsCount": 25,
+                    "transactionCount": 25,
                     "__typename": "Merchant",
                 },
                 {
                     "id": "merchant2",
                     "name": "Starbucks",
                     "logoUrl": "https://example.com/starbucks.png",
-                    "transactionsCount": 12,
+                    "transactionCount": 12,
                     "__typename": "Merchant",
                 },
             ]
@@ -127,12 +127,12 @@ class TestAccountMethods:
             assert len(merchants["merchants"]) == 2
             assert merchants["merchants"][0]["name"] == "Amazon"
             assert merchants["merchants"][1]["name"] == "Starbucks"
-            assert merchants["merchants"][0]["transactionsCount"] == 25
+            assert merchants["merchants"][0]["transactionCount"] == 25
 
             # Verify the correct operation was called
             mock_gql_call.assert_called_once()
             call_args = mock_gql_call.call_args
-            assert call_args[1]["operation"] == "GetMerchants"
+            assert call_args[1]["operation"] == "GetMerchantsSearch"
 
     @pytest.mark.asyncio
     @pytest.mark.api

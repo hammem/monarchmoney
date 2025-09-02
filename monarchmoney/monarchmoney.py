@@ -361,7 +361,7 @@ class MonarchMoney(object):
         return await self.gql_call(
             operation="GetMerchantsSearch",
             graphql_query=query,
-            variables={"search": "", "limit": 100}
+            variables={"search": "", "limit": 100},
         )
 
     async def get_account_type_options(self) -> Dict[str, Any]:
@@ -540,16 +540,13 @@ class MonarchMoney(object):
         if not end_date:
             end_date = datetime.now().strftime("%Y-%m-%d")
 
-        filters = {
-            "startDate": start_date,
-            "useAdaptiveGranularity": True
-        }
-        
+        filters = {"startDate": start_date, "useAdaptiveGranularity": True}
+
         if end_date:
             filters["endDate"] = end_date
         else:
             filters["endDate"] = None
-            
+
         variables = {"filters": filters}
 
         return await self.gql_call(
@@ -1766,7 +1763,7 @@ class MonarchMoney(object):
     ) -> Dict[str, Any]:
         """
         Create a new financial goal.
-        
+
         :param name: Goal name
         :param target_amount: Target amount for the goal
         :param target_date: Target date (YYYY-MM-DD format)
@@ -1807,7 +1804,7 @@ class MonarchMoney(object):
             }
             """
         )
-        
+
         goal_input = {
             "name": name,
             "targetAmount": target_amount,
@@ -1816,15 +1813,15 @@ class MonarchMoney(object):
             goal_input["targetDate"] = target_date
         if description:
             goal_input["description"] = description
-            
+
         variables = {"input": goal_input}
-        
+
         result = await self.gql_call(
             operation="CreateGoal",
             graphql_query=query,
             variables=variables,
         )
-        
+
         # Check for errors
         if result.get("createGoal", {}).get("errors"):
             errors = result["createGoal"]["errors"]
@@ -1833,9 +1830,11 @@ class MonarchMoney(object):
             elif errors.get("fieldErrors"):
                 field_errors = []
                 for field_error in errors["fieldErrors"]:
-                    field_errors.append(f"{field_error['field']}: {', '.join(field_error['messages'])}")
+                    field_errors.append(
+                        f"{field_error['field']}: {', '.join(field_error['messages'])}"
+                    )
                 raise Exception(f"Goal creation failed: {'; '.join(field_errors)}")
-        
+
         return result
 
     async def update_goal(
@@ -1848,7 +1847,7 @@ class MonarchMoney(object):
     ) -> Dict[str, Any]:
         """
         Update an existing financial goal.
-        
+
         :param goal_id: ID of the goal to update
         :param name: New goal name
         :param target_amount: New target amount
@@ -1890,7 +1889,7 @@ class MonarchMoney(object):
             }
             """
         )
-        
+
         goal_input = {"id": goal_id}
         if name is not None:
             goal_input["name"] = name
@@ -1900,15 +1899,15 @@ class MonarchMoney(object):
             goal_input["targetDate"] = target_date
         if description is not None:
             goal_input["description"] = description
-            
+
         variables = {"input": goal_input}
-        
+
         result = await self.gql_call(
             operation="UpdateGoal",
             graphql_query=query,
             variables=variables,
         )
-        
+
         # Check for errors
         if result.get("updateGoal", {}).get("errors"):
             errors = result["updateGoal"]["errors"]
@@ -1917,15 +1916,17 @@ class MonarchMoney(object):
             elif errors.get("fieldErrors"):
                 field_errors = []
                 for field_error in errors["fieldErrors"]:
-                    field_errors.append(f"{field_error['field']}: {', '.join(field_error['messages'])}")
+                    field_errors.append(
+                        f"{field_error['field']}: {', '.join(field_error['messages'])}"
+                    )
                 raise Exception(f"Goal update failed: {'; '.join(field_errors)}")
-        
+
         return result
 
     async def delete_goal(self, goal_id: str) -> bool:
         """
         Delete a financial goal.
-        
+
         :param goal_id: ID of the goal to delete
         :return: True if successfully deleted
         """
@@ -1954,21 +1955,21 @@ class MonarchMoney(object):
             }
             """
         )
-        
+
         variables = {"id": goal_id}
-        
+
         result = await self.gql_call(
             operation="DeleteGoal",
             graphql_query=query,
             variables=variables,
         )
-        
+
         # Check for errors
         if result.get("deleteGoal", {}).get("errors"):
             errors = result["deleteGoal"]["errors"]
             if errors.get("message"):
                 raise Exception(f"Goal deletion failed: {errors['message']}")
-        
+
         return result.get("deleteGoal", {}).get("deleted", False)
 
     async def update_transaction_rule_retroactive(
@@ -1978,7 +1979,7 @@ class MonarchMoney(object):
     ) -> Dict[str, Any]:
         """
         Update an existing transaction rule to apply retroactively.
-        
+
         :param rule_data: Complete rule data from get_transaction_rules()
         :param apply_to_existing_transactions: Apply rule to existing transactions
         :return: Updated rule data
@@ -2007,20 +2008,28 @@ class MonarchMoney(object):
             }
             """
         )
-        
+
         # Clean function to remove __typename fields
         def clean_graphql_data(obj):
             if isinstance(obj, dict):
-                return {k: clean_graphql_data(v) for k, v in obj.items() if k != '__typename'}
+                return {
+                    k: clean_graphql_data(v)
+                    for k, v in obj.items()
+                    if k != "__typename"
+                }
             elif isinstance(obj, list):
                 return [clean_graphql_data(item) for item in obj]
             return obj
-        
-        # Build rule input using existing rule data 
+
+        # Build rule input using existing rule data
         rule_input = {
             "id": rule_data.get("id"),
-            "merchantCriteriaUseOriginalStatement": rule_data.get("merchantCriteriaUseOriginalStatement", False),
-            "merchantCriteria": clean_graphql_data(rule_data.get("merchantCriteria", [])),
+            "merchantCriteriaUseOriginalStatement": rule_data.get(
+                "merchantCriteriaUseOriginalStatement", False
+            ),
+            "merchantCriteria": clean_graphql_data(
+                rule_data.get("merchantCriteria", [])
+            ),
             "amountCriteria": clean_graphql_data(rule_data.get("amountCriteria")),
             "categoryIds": rule_data.get("categoryIds"),
             "accountIds": rule_data.get("accountIds"),
@@ -2028,7 +2037,7 @@ class MonarchMoney(object):
             "splitTransactionsAction": rule_data.get("splitTransactionsAction"),
             "applyToExistingTransactions": apply_to_existing_transactions,
         }
-        
+
         # Handle setCategoryAction - it's returned as an object but needs to be sent as just the ID
         set_category_action = rule_data.get("setCategoryAction")
         if set_category_action:
@@ -2038,15 +2047,15 @@ class MonarchMoney(object):
                 rule_input["setCategoryAction"] = set_category_action
         else:
             rule_input["setCategoryAction"] = None
-            
+
         variables = {"input": rule_input}
-        
+
         result = await self.gql_call(
             operation="Common_UpdateTransactionRuleMutationV2",
             graphql_query=query,
             variables=variables,
         )
-        
+
         # Check for errors in the response
         errors = result.get("updateTransactionRuleV2", {}).get("errors")
         if errors and (errors.get("message") or errors.get("fieldErrors")):
@@ -2055,162 +2064,163 @@ class MonarchMoney(object):
             elif errors.get("fieldErrors"):
                 field_errors = []
                 for field_error in errors["fieldErrors"]:
-                    field_errors.append(f"{field_error['field']}: {', '.join(field_error['messages'])}")
+                    field_errors.append(
+                        f"{field_error['field']}: {', '.join(field_error['messages'])}"
+                    )
                 raise Exception(f"Rule update failed: {'; '.join(field_errors)}")
-        
+
         return result
 
-    async def apply_rules_to_existing_transactions(self, limit: Optional[int] = None) -> Dict[str, Any]:
+    async def apply_rules_to_existing_transactions(
+        self, limit: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
         Apply all transaction rules to existing transactions retroactively.
-        
+
         This works by updating each rule to set applyToExistingTransactions=true,
         which triggers the MonarchMoney backend to apply the rule retroactively.
-        
+
         :param limit: Maximum number of rules to process (default: all)
         :return: Results of rule application
         """
         print("🔄 Applying rules to existing transactions...")
-        
+
         # Step 1: Get all transaction rules
         print("   📋 Fetching transaction rules...")
         rules_response = await self.get_transaction_rules()
-        rules = rules_response.get('transactionRules', [])
+        rules = rules_response.get("transactionRules", [])
         print(f"   ✅ Found {len(rules)} rules")
-        
+
         if not rules:
             return {"processed": 0, "applied": 0, "message": "No rules to apply"}
-        
+
         # Step 2: Apply each rule retroactively by updating it
         applied_count = 0
         processed_count = min(len(rules), limit) if limit else len(rules)
-        
+
         print(f"   🔄 Updating {processed_count} rules to apply retroactively...")
-        
+
         for i, rule in enumerate(rules[:processed_count]):
-            rule_id = rule.get('id')
+            rule_id = rule.get("id")
             if not rule_id:
                 continue
-                
+
             try:
                 # Update the rule with applyToExistingTransactions=true
                 await self.update_transaction_rule_retroactive(
-                    rule_data=rule,
-                    apply_to_existing_transactions=True
+                    rule_data=rule, apply_to_existing_transactions=True
                 )
                 applied_count += 1
-                
+
                 if i % 10 == 0:  # Progress update every 10 rules
                     print(f"   📊 Progress: {i+1}/{processed_count} rules updated")
-                    
+
             except Exception as e:
                 print(f"   ⚠️  Failed to update rule {rule_id}: {str(e)[:50]}...")
                 continue
-        
-        print(f"   ✅ Successfully applied {applied_count}/{processed_count} rules to existing transactions")
-        
+
+        print(
+            f"   ✅ Successfully applied {applied_count}/{processed_count} rules to existing transactions"
+        )
+
         return {
             "processed": processed_count,
             "applied": applied_count,
             "rules_count": len(rules),
-            "message": f"Successfully applied {applied_count} rules to existing transactions using MonarchMoney API"
+            "message": f"Successfully applied {applied_count} rules to existing transactions using MonarchMoney API",
         }
 
     async def preview_transaction_rule(
-        self,
-        rule_config: Dict[str, Any],
-        offset: int = 0,
-        limit: int = 30
+        self, rule_config: Dict[str, Any], offset: int = 0, limit: int = 30
     ) -> Dict[str, Any]:
         """
         Preview which transactions would be affected by a transaction rule.
-        
-        Alternative implementation using existing working operations since the direct 
+
+        Alternative implementation using existing working operations since the direct
         PreviewTransactionRule GraphQL operation has schema validation issues.
-        
+
         :param rule_config: Rule configuration dict with criteria and actions
-        :param offset: Pagination offset for results  
+        :param offset: Pagination offset for results
         :param limit: Maximum results to return (default 30)
         :return: Preview of transactions that would be affected by the rule
         """
         print("🔍 Previewing transaction rule matches using client-side logic...")
-        
+
         # Get recent transactions to match against
-        transactions_response = await self.get_transactions(limit=limit * 5)  # Get more to filter
-        transactions = transactions_response.get('transactions', [])
-        
+        transactions_response = await self.get_transactions(
+            limit=limit * 5
+        )  # Get more to filter
+        transactions = transactions_response.get("transactions", [])
+
         matches = []
-        
+
         # Simple client-side rule matching
-        merchant_criteria = rule_config.get('merchantCriteria', [])
-        amount_criteria = rule_config.get('amountCriteria')
-        
+        merchant_criteria = rule_config.get("merchantCriteria", [])
+        amount_criteria = rule_config.get("amountCriteria")
+
         for transaction in transactions:
             match_found = True
-            
+
             # Check merchant criteria
             if merchant_criteria:
-                merchant_name = transaction.get('merchant', {}).get('name', '').lower()
+                merchant_name = transaction.get("merchant", {}).get("name", "").lower()
                 merchant_match = False
-                
+
                 for criteria in merchant_criteria:
-                    if criteria.get('operator') == 'contains':
-                        search_value = criteria.get('value', '').lower()
+                    if criteria.get("operator") == "contains":
+                        search_value = criteria.get("value", "").lower()
                         if search_value in merchant_name:
                             merchant_match = True
                             break
-                
+
                 if not merchant_match:
                     match_found = False
-            
-            # Check amount criteria  
+
+            # Check amount criteria
             if amount_criteria and match_found:
-                transaction_amount = abs(transaction.get('amount', 0))
-                criteria_amount = amount_criteria.get('value', 0)
-                operator = amount_criteria.get('operator', 'eq')
-                
-                if operator == 'eq' and transaction_amount != criteria_amount:
+                transaction_amount = abs(transaction.get("amount", 0))
+                criteria_amount = amount_criteria.get("value", 0)
+                operator = amount_criteria.get("operator", "eq")
+
+                if operator == "eq" and transaction_amount != criteria_amount:
                     match_found = False
-                elif operator == 'gt' and transaction_amount <= criteria_amount:
+                elif operator == "gt" and transaction_amount <= criteria_amount:
                     match_found = False
-                elif operator == 'lt' and transaction_amount >= criteria_amount:
+                elif operator == "lt" and transaction_amount >= criteria_amount:
                     match_found = False
-            
+
             if match_found:
                 # Build preview result similar to what the API would return
                 new_category = None
-                if rule_config.get('setCategoryAction'):
+                if rule_config.get("setCategoryAction"):
                     # We'd need to lookup the category name, for now just use ID
                     new_category = {
-                        "id": rule_config['setCategoryAction'],
+                        "id": rule_config["setCategoryAction"],
                         "name": "New Category",
-                        "icon": None
+                        "icon": None,
                     }
-                
+
                 match_result = {
                     "transaction": transaction,
                     "newCategory": new_category,
                     "newTags": None,
                     "newGoal": None,
                     "newHideFromReports": None,
-                    "newSplitTransactions": None
+                    "newSplitTransactions": None,
                 }
-                
+
                 matches.append(match_result)
-                
+
                 if len(matches) >= limit:
                     break
-        
+
         # Apply offset
-        matches = matches[offset:offset + limit] if offset < len(matches) else []
-        
+        matches = matches[offset : offset + limit] if offset < len(matches) else []
+
         result = {
-            "transactionRulePreview": {
-                "totalCount": len(matches),
-                "results": matches
-            }
+            "transactionRulePreview": {"totalCount": len(matches), "results": matches}
         }
-        
+
         print(f"   ✅ Found {len(matches)} matching transactions")
         return result
 
@@ -2222,24 +2232,25 @@ class MonarchMoney(object):
     ) -> Dict[str, Any]:
         """
         Get investment performance metrics and analytics using the real MonarchMoney API.
-        
+
         Uses the Web_GetPortfolio GraphQL operation discovered from HAR analysis.
-        
+
         :param start_date: Start date for performance analysis (YYYY-MM-DD, defaults to 30 days ago)
         :param end_date: End date for performance analysis (YYYY-MM-DD, defaults to today)
         :param account_ids: List of account IDs to include (default: all investment accounts)
         :return: Complete investment performance data from MonarchMoney API
         """
         from datetime import date, timedelta
-        
+
         # Set default dates if not provided (30 days back)
         if not end_date:
             end_date = date.today().isoformat()
         if not start_date:
             start_date = (date.today() - timedelta(days=30)).isoformat()
-        
+
         # Use the real Web_GetPortfolio GraphQL operation from HAR file
-        query = gql("""
+        query = gql(
+            """
             query Web_GetPortfolio($portfolioInput: PortfolioInput) {
               portfolio(input: $portfolioInput) {
                 performance {
@@ -2336,20 +2347,16 @@ class MonarchMoney(object):
                 __typename
               }
             }
-        """)
-        
+        """
+        )
+
         # Build portfolio input with date range
-        variables = {
-            "portfolioInput": {
-                "startDate": start_date,
-                "endDate": end_date
-            }
-        }
-        
+        variables = {"portfolioInput": {"startDate": start_date, "endDate": end_date}}
+
         # Add account filtering if specified
         if account_ids:
             variables["portfolioInput"]["accountIds"] = account_ids
-        
+
         return await self.gql_call(
             operation="Web_GetPortfolio",
             graphql_query=query,
@@ -2359,7 +2366,7 @@ class MonarchMoney(object):
     async def get_insights(self) -> Dict[str, Any]:
         """
         Get financial insights and recommendations.
-        
+
         :return: Financial insights data
         """
         query = gql(
@@ -2381,7 +2388,7 @@ class MonarchMoney(object):
             }
             """
         )
-        
+
         return await self.gql_call(
             operation="GetInsights",
             graphql_query=query,
@@ -2390,7 +2397,7 @@ class MonarchMoney(object):
     async def get_notifications(self) -> Dict[str, Any]:
         """
         Get account notifications and alerts.
-        
+
         :return: Notifications data
         """
         query = gql(
@@ -2411,7 +2418,7 @@ class MonarchMoney(object):
             }
             """
         )
-        
+
         return await self.gql_call(
             operation="GetNotifications",
             graphql_query=query,
@@ -2420,7 +2427,7 @@ class MonarchMoney(object):
     async def get_credit_score(self) -> Dict[str, Any]:
         """
         Get credit score monitoring data.
-        
+
         :return: Credit score information
         """
         query = gql(
@@ -2447,7 +2454,7 @@ class MonarchMoney(object):
             }
             """
         )
-        
+
         return await self.gql_call(
             operation="GetCreditScore",
             graphql_query=query,
@@ -2456,7 +2463,7 @@ class MonarchMoney(object):
     async def get_settings(self) -> Dict[str, Any]:
         """
         Get user account settings and preferences.
-        
+
         :return: User settings data
         """
         query = gql(
@@ -2482,7 +2489,7 @@ class MonarchMoney(object):
             }
             """
         )
-        
+
         return await self.gql_call(
             operation="GetSettings",
             graphql_query=query,
@@ -2499,7 +2506,7 @@ class MonarchMoney(object):
     ) -> Dict[str, Any]:
         """
         Update user account settings and preferences.
-        
+
         :param timezone: User timezone (e.g., "America/New_York")
         :param currency: Default currency (e.g., "USD")
         :param date_format: Date format preference
@@ -2544,7 +2551,7 @@ class MonarchMoney(object):
             }
             """
         )
-        
+
         settings_input = {}
         if timezone is not None:
             settings_input["timezone"] = timezone
@@ -2552,7 +2559,7 @@ class MonarchMoney(object):
             settings_input["currency"] = currency
         if date_format is not None:
             settings_input["dateFormat"] = date_format
-        
+
         notifications = {}
         if email_notifications is not None:
             notifications["email"] = email_notifications
@@ -2560,24 +2567,24 @@ class MonarchMoney(object):
             notifications["push"] = push_notifications
         if sms_notifications is not None:
             notifications["sms"] = sms_notifications
-        
+
         if notifications:
             settings_input["notifications"] = notifications
-            
+
         variables = {"input": settings_input}
-        
+
         result = await self.gql_call(
             operation="UpdateSettings",
             graphql_query=query,
             variables=variables,
         )
-        
+
         # Check for errors
         if result.get("updateSettings", {}).get("errors"):
             errors = result["updateSettings"]["errors"]
             if errors.get("message"):
                 raise Exception(f"Settings update failed: {errors['message']}")
-        
+
         return result
 
     async def get_subscription_details(self) -> Dict[str, Any]:
@@ -3140,20 +3147,26 @@ class MonarchMoney(object):
             graphql_query=query,
             variables=variables,
         )
-        
+
         # Check for GraphQL errors in the response
         errors = result.get("createTransactionRuleV2", {}).get("errors")
         if errors:
             # Only treat as error if there are actual error messages
             if errors.get("message"):
-                raise Exception(f"Transaction rule creation failed: {errors['message']}")
+                raise Exception(
+                    f"Transaction rule creation failed: {errors['message']}"
+                )
             elif errors.get("fieldErrors"):
                 field_errors = []
                 for field_error in errors["fieldErrors"]:
-                    field_errors.append(f"{field_error['field']}: {', '.join(field_error['messages'])}")
-                raise Exception(f"Transaction rule creation failed: {'; '.join(field_errors)}")
+                    field_errors.append(
+                        f"{field_error['field']}: {', '.join(field_error['messages'])}"
+                    )
+                raise Exception(
+                    f"Transaction rule creation failed: {'; '.join(field_errors)}"
+                )
             # If errors object exists but all fields are None/empty, it means success
-        
+
         return result
 
     async def update_transaction_rule(
@@ -3375,7 +3388,7 @@ class MonarchMoney(object):
     ) -> Dict[str, Any]:
         """
         Helper method to create an amount-based rule.
-        
+
         :param amount: Exact amount to match (e.g., 115.32)
         :param operator: Amount operator ("eq" for exact, "gt", "lt", "between")
         :param is_expense: True for expenses (negative), False for income (positive)
@@ -3392,13 +3405,13 @@ class MonarchMoney(object):
                     break
             if not set_category_action:
                 raise ValueError(f"Category '{category_name}' not found")
-        
+
         amount_criteria = {
             "operator": operator,
             "isExpense": is_expense,
             "value": amount,
         }
-        
+
         return await self.create_transaction_rule(
             amount_criteria=amount_criteria,
             set_category_action=set_category_action,
@@ -3416,7 +3429,7 @@ class MonarchMoney(object):
     ) -> Dict[str, Any]:
         """
         Helper method to create combined merchant + amount rules.
-        
+
         :param merchant_contains: Merchant name pattern to match
         :param amount: Amount threshold (e.g., 200 for "> $200")
         :param amount_operator: Amount comparison ("gt", "lt", "eq", "between")
@@ -3433,7 +3446,7 @@ class MonarchMoney(object):
                     break
             if not set_category_action:
                 raise ValueError(f"Category '{category_name}' not found")
-        
+
         merchant_criteria = [{"operator": "contains", "value": merchant_contains}]
         amount_criteria = None
         if amount:
@@ -3442,7 +3455,7 @@ class MonarchMoney(object):
                 "isExpense": True,
                 "value": amount,
             }
-        
+
         return await self.create_transaction_rule(
             merchant_criteria=merchant_criteria,
             amount_criteria=amount_criteria,
@@ -3459,7 +3472,7 @@ class MonarchMoney(object):
     ) -> Dict[str, Any]:
         """
         Helper method to create tax-deductible marking rules.
-        
+
         :param merchant_contains: Merchant pattern to match
         :param amount: Amount threshold
         :param amount_operator: Amount comparison operator
@@ -3469,7 +3482,7 @@ class MonarchMoney(object):
         merchant_criteria = None
         if merchant_contains:
             merchant_criteria = [{"operator": "contains", "value": merchant_contains}]
-        
+
         amount_criteria = None
         if amount:
             amount_criteria = {
@@ -3477,7 +3490,7 @@ class MonarchMoney(object):
                 "isExpense": True,
                 "value": amount,
             }
-        
+
         # Tax deductible functionality requires a tag rather than review status
         # For now, create the rule without the tax deductible marking
         # Users can manually add tags after rule creation
@@ -3496,7 +3509,7 @@ class MonarchMoney(object):
     ) -> Dict[str, Any]:
         """
         Helper method to create "ignore from everything" rules.
-        
+
         :param merchant_contains: Merchant pattern to match
         :param amount: Exact amount to match
         :param amount_operator: Amount comparison operator
@@ -3506,7 +3519,7 @@ class MonarchMoney(object):
         merchant_criteria = None
         if merchant_contains:
             merchant_criteria = [{"operator": "contains", "value": merchant_contains}]
-        
+
         amount_criteria = None
         if amount:
             amount_criteria = {
@@ -3514,7 +3527,7 @@ class MonarchMoney(object):
                 "isExpense": True,
                 "value": amount,
             }
-        
+
         return await self.create_transaction_rule(
             merchant_criteria=merchant_criteria,
             amount_criteria=amount_criteria,
