@@ -1,3 +1,10 @@
+# Environment variables
+.env
+.env.local
+.env.production
+.env.*
+
+# Python
 venv/
 *.egg-info/
 __pycache__/
