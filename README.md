@@ -117,6 +117,7 @@ As of writing this README, the following methods are supported:
 - `get_cashflow` - gets cashflow data (by category, category group, merchant and a summary)
 - `get_cashflow_summary` - gets cashflow summary (income, expense, savings, savings rate)
 - `is_accounts_refresh_complete` - gets the status of a running account refresh
+- `get_security_details` - get the security ID given a stock ticker symbol
 
 ## Mutating Methods
 
@@ -136,6 +137,8 @@ As of writing this README, the following methods are supported:
 - `delete_account` - deletes an account by the provided account id
 - `update_account` - updates settings and/or balance of the provided account id
 - `upload_account_balance_history` - uploads account history csv file for a given account
+- `create_manual_holding_by_ticker` - creates a manual holding given a ticker symbol and account id
+- `delete_manual_holding` - deletes a manual holding given its id (note holding ID, unlike the security ID, only refers to a holding by an account)
 
 # Contributing
 

@@ -795,6 +795,185 @@ class MonarchMoney(object):
             variables=variables,
         )
 
+    async def get_security_details(self, ticker: str) -> Dict[str, Any]:
+        """
+        Get security details including the securityId needed for manual holdings.
+        """
+        query = gql(
+            """
+            query SecuritySearch($search: String!, $limit: Int, $orderByPopularity: Boolean) {
+                securities(
+                    search: $search
+                    limit: $limit
+                    orderByPopularity: $orderByPopularity
+                ) {
+                    id
+                    name
+                    type
+                    logo
+                    ticker
+                    typeDisplay
+                    currentPrice
+                    closingPrice
+                    oneDayChangeDollars
+                    oneDayChangePercent
+                    __typename
+                }
+            }
+            """
+        )
+        
+        variables = {
+            "search": ticker,
+            "limit": 5,
+            "orderByPopularity": True
+        }
+        
+        return await self.gql_call(
+            operation="SecuritySearch",
+            graphql_query=query,
+            variables=variables,
+        )
+
+    async def create_manual_holding(
+        self,
+        account_id: str,
+        security_id: str,
+        quantity: float,
+    ) -> Dict[str, Any]:
+        """
+        Create a manual holding for an investment account.
+        
+        :param account_id: The account ID to add the holding to
+        :param security_id: The security ID (not ticker)
+        :param quantity: The number of shares
+        """
+        query = gql(
+            """
+            mutation Common_CreateManualHolding($input: CreateManualHoldingInput!) {
+                createManualHolding(input: $input) {
+                    holding {
+                        id
+                        ticker
+                        __typename
+                    }
+                    errors {
+                        ...PayloadErrorFields
+                        __typename
+                    }
+                    __typename
+                }
+            }
+            
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
+            }
+            """
+        )
+
+        variables = {
+            "input": {
+                "accountId": account_id,
+                "securityId": security_id,
+                "quantity": quantity,
+            }
+        }
+
+        return await self.gql_call(
+            operation="Common_CreateManualHolding",
+            graphql_query=query,
+            variables=variables,
+        )
+
+    async def create_manual_holding_by_ticker(
+        self,
+        account_id: str,
+        ticker: str,
+        quantity: float,
+    ) -> Dict[str, Any]:
+        """
+        Create a manual holding using ticker symbol (convenience method).
+        
+        :param account_id: The account ID to add the holding to
+        :param ticker: The stock ticker symbol
+        :param quantity: The number of shares
+        """
+        # Get the security ID from the ticker using SecuritySearch
+        try:
+            security_response = await self.get_security_details(ticker)
+            securities = security_response.get("securities", [])
+            
+            # Find exact ticker match
+            security = None
+            for sec in securities:
+                if sec.get("ticker") == ticker:
+                    security = sec
+                    break
+            
+            if not security:
+                return {"errors": [{"message": f"Security not found for ticker: {ticker}"}]}
+            
+            security_id = security.get("id")
+            if not security_id:
+                return {"errors": [{"message": f"Security ID not found for ticker: {ticker}"}]}
+                
+            return await self.create_manual_holding(account_id, security_id, quantity)
+            
+        except Exception as e:
+            return {"errors": [{"message": f"Failed to create holding for {ticker}: {str(e)}"}]}
+
+    async def delete_manual_holding(self, holding_id: str) -> bool:
+        """
+        Delete a manual holding.
+        
+        :param holding_id: The holding ID to delete
+        """
+        query = gql(
+            """
+            mutation Common_DeleteHolding($id: ID!) {
+                deleteHolding(id: $id) {
+                    deleted
+                    errors {
+                        ...PayloadErrorFields
+                        __typename
+                    }
+                    __typename
+                }
+            }
+            
+            fragment PayloadErrorFields on PayloadError {
+                fieldErrors {
+                    field
+                    messages
+                    __typename
+                }
+                message
+                code
+                __typename
+            }
+            """
+        )
+
+        variables = {"id": holding_id}
+
+        response = await self.gql_call(
+            operation="Common_DeleteHolding",
+            graphql_query=query,
+            variables=variables,
+        )
+
+        if not response["deleteHolding"]["deleted"]:
+            raise RequestFailedException(response["deleteHolding"]["errors"])
+
+        return True
+
     async def get_account_history(self, account_id: int) -> Dict[str, Any]:
         """
         Gets historical account snapshot data for the requested account
