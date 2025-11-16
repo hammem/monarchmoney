@@ -2763,6 +2763,82 @@ class MonarchMoney(object):
             "Web_GetUpcomingRecurringTransactionItems", query, variables
         )
 
+    async def get_recurring_transaction_streams(
+        self,
+        include_liabilities: bool = True,
+        filters: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Fetches recurring transaction streams from Monarch Money's API using the same
+        query as their recurring page. This provides more accurate data including:
+        - Live amounts from nextForecastedTransaction.amount
+        - Credit card payment streams with accurate balances
+        - Clean merchant names without "– Payment" suffix
+        - Real-time data from Monarch's recurring page
+        
+        This is more accurate than get_recurring_transactions() which uses static amounts.
+        """
+        query = gql(
+            """
+            query Web_GetAllRecurringTransactionItems($filters: RecurringTransactionFilter, $includeLiabilities: Boolean) {
+              recurringTransactionStreams(
+                filters: $filters
+                includeLiabilities: $includeLiabilities
+              ) {
+                stream {
+                  id
+                  frequency
+                  isActive
+                  isApproximate
+                  name
+                  logoUrl
+                  merchant {
+                    id
+                    __typename
+                  }
+                  creditReportLiabilityAccount {
+                    id
+                    account {
+                      id
+                      __typename
+                    }
+                    __typename
+                  }
+                  __typename
+                }
+                nextForecastedTransaction {
+                  date
+                  amount
+                  __typename
+                }
+                category {
+                  id
+                  name
+                  icon
+                  __typename
+                }
+                account {
+                  id
+                  displayName
+                  icon
+                  logoUrl
+                  __typename
+                }
+                __typename
+              }
+            }
+        """
+        )
+
+        variables = {
+            "includeLiabilities": include_liabilities,
+            "filters": filters or {}
+        }
+
+        return await self.gql_call(
+            "Web_GetAllRecurringTransactionItems", query, variables
+        )
+
     def _get_current_date(self) -> str:
         """
         Returns the current date as a string formatted like %Y-%m-%d.

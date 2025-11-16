@@ -107,6 +107,7 @@ As of writing this README, the following methods are supported:
 - `get_budgets` — all the budgets and the corresponding actual amounts
 - `get_subscription_details` - gets the Monarch Money account's status (e.g. paid or trial)
 - `get_recurring_transactions` - gets the future recurring transactions, including merchant and account details
+- `get_recurring_transaction_streams` - gets recurring transaction streams with live amounts (more accurate than get_recurring_transactions)
 - `get_transactions_summary` - gets the transaction summary data from the transactions page
 - `get_transactions` - gets transaction data, defaults to returning the last 100 transactions; can also be searched by date range
 - `get_transaction_categories` - gets all of the categories configured in the account
@@ -147,6 +148,30 @@ If you plan to submit up a pull request, you can expect a timely review.  There 
   - Ensure you run the unit tests in this project!
     
 Actions are configured in this repo to run against all PRs and merges which will block them if a unit test fails or Black throws an error.
+
+# Recurring Transactions
+
+This library provides two methods for accessing recurring transaction data:
+
+## `get_recurring_transactions()`
+- Uses `recurringTransactionItems` query
+- Returns static amounts that may be outdated
+- Good for basic recurring transaction data
+
+## `get_recurring_transaction_streams()` (Recommended)
+- Uses `recurringTransactionStreams` query (same as Monarch's recurring page)
+- Returns live amounts from `nextForecastedTransaction.amount`
+- Includes credit card payment streams with accurate balances
+- Provides cleaner merchant names without "– Payment" suffix
+- More accurate and up-to-date data
+
+**Example:**
+```python
+# Get live recurring transaction data
+streams = await mm.get_recurring_transaction_streams(include_liabilities=True)
+for item in streams['data']['recurringTransactionStreams']:
+    print(f"{item['stream']['name']}: ${item['nextForecastedTransaction']['amount']}")
+```
 
 # FAQ
 
