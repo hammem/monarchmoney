@@ -1440,9 +1440,9 @@ class MonarchMoney(object):
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         search: str = "",
-        category_ids: List[str] = [],
-        account_ids: List[str] = [],
-        tag_ids: List[str] = [],
+        category_ids: Optional[List[str]] = None,
+        account_ids: Optional[List[str]] = None,
+        tag_ids: Optional[List[str]] = None,
         has_attachments: Optional[bool] = None,
         has_notes: Optional[bool] = None,
         hidden_from_reports: Optional[bool] = None,
@@ -1470,6 +1470,10 @@ class MonarchMoney(object):
         :param imported_from_mint: a bool to filter for whether the transactions were imported from mint.
         :param synced_from_institution: a bool to filter for whether the transactions were synced from an institution.
         """
+
+        category_ids = category_ids or []
+        account_ids = account_ids or []
+        tag_ids = tag_ids or []
 
         query = gql(
             """
