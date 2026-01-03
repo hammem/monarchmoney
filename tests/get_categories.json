@@ -1,0 +1,70 @@
+{
+    "data": {
+        "categories": [
+            {
+                "id": "92233350202671406",
+                "order": 0,
+                "name": "Advertising & Promotion",
+                "icon": "\ud83d\udce3",
+                "systemCategory": "advertising_promotion",
+                "isSystemCategory": true,
+                "isDisabled": false,
+                "group": {
+                    "id": "92233350076842492",
+                    "name": "Business",
+                    "type": "expense",
+                    "__typename": "CategoryGroup"
+                },
+                "__typename": "Category"
+            },
+            {
+                "id": "92233350125076734",
+                "order": 0,
+                "name": "Auto Payment",
+                "icon": "\ud83d\ude97",
+                "systemCategory": "auto_payment",
+                "isSystemCategory": true,
+                "isDisabled": false,
+                "group": {
+                    "id": "92233350063210993",
+                    "name": "Auto & Transport",
+                    "type": "expense",
+                    "__typename": "CategoryGroup"
+                },
+                "__typename": "Category"
+            },
+            {
+                "id": "92233350121931003",
+                "order": 0,
+                "name": "Charity",
+                "icon": "\ud83c\udf97",
+                "systemCategory": "charity",
+                "isSystemCategory": true,
+                "isDisabled": false,
+                "group": {
+                    "id": "92233350062162416",
+                    "name": "Gifts & Donations",
+                    "type": "expense",
+                    "__typename": "CategoryGroup"
+                },
+                "__typename": "Category"
+            },
+            {
+                "id": "92233350180651293",
+                "order": 0,
+                "name": "Child Education",
+                "icon": "\ud83d\udcda",
+                "systemCategory": null,
+                "isSystemCategory": false,
+                "isDisabled": false,
+                "group": {
+                    "id": "92233350070551031",
+                    "name": "Children",
+                    "type": "expense",
+                    "__typename": "CategoryGroup"
+                },
+                "__typename": "Category"
+            }
+        ]
+    }
+}

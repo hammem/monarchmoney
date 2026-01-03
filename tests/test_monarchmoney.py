@@ -158,6 +158,100 @@ class TestMonarchMoney(unittest.IsolatedAsyncioTestCase):
         )
 
     @patch.object(Client, "execute_async")
+    async def test_get_merchants(self, mock_execute_async):
+        """
+        Test the get_merchants method.
+        """
+        # Mock the execute_async method to return test data
+        mock_execute_async.return_value = TestMonarchMoney.loadTestData(
+            filename="get_merchants.json",
+        )
+
+        # Call the get_merchants method
+        result = await self.monarch_money.get_merchants()
+
+        # Assert execute_async was called once
+        mock_execute_async.assert_called_once()
+
+        # Verify result is not None
+        self.assertIsNotNone(result, "Expected result to not be None")
+
+        # Verify merchants data structure
+        self.assertIn("merchants", result, "Expected merchants key in response")
+        self.assertEqual(
+            len(result["merchants"]), 3, "Expected 3 merchants"
+        )
+        self.assertEqual(
+            result["merchants"][0]["name"],
+            "Amazon",
+            "Expected first merchant name to be 'Amazon'"
+        )
+        self.assertEqual(
+            result["merchants"][1]["name"],
+            "Target",
+            "Expected second merchant name to be 'Target'"
+        )
+
+    @patch.object(Client, "execute_async")
+    async def test_get_categories(self, mock_execute_async):
+        """
+        Test the get_categories method.
+        """
+        # Mock the execute_async method to return a test result
+        mock_execute_async.return_value = TestMonarchMoney.loadTestData(
+            filename="get_categories.json",
+        )
+
+        # Call the get_categories method
+        result = await self.monarch_money.get_categories()
+
+        # Assert that the execute_async method was called once
+        mock_execute_async.assert_called_once()
+
+        # Assert that the result is not None
+        self.assertIsNotNone(result, "Expected result to not be None")
+
+        # Assert that the result matches the expected output
+        self.assertEqual(
+            len(result["categories"]), 5, "Expected 5 categories"
+        )
+        self.assertEqual(
+            result["categories"][0]["name"],
+            "Groceries",
+            "Expected first category name to be 'Groceries'",
+        )
+        self.assertEqual(
+            result["categories"][1]["name"],
+            "Utilities",
+            "Expected second category name to be 'Utilities'",
+        )
+        self.assertEqual(
+            result["categories"][2]["name"],
+            "Rent",
+            "Expected third category name to be 'Rent'",
+        )
+        self.assertEqual(
+            result["categories"][3]["name"],
+            "Entertainment",
+            "Expected fourth category name to be 'Entertainment'",
+        )
+        self.assertEqual(
+            result["categories"][4]["name"],
+            "Transportation",
+            "Expected fifth category name to be 'Transportation'",
+        )
+        self.assertEqual(
+            result["accountTypeOptions"][1]["type"]["name"],
+            "brokerage",
+            "Expected second account type option name to be 'brokerage'",
+        )
+        self.assertEqual(
+            result["accountTypeOptions"][2]["type"]["name"],
+            "real_estate",
+            "Expected third account type option name to be 'real_estate'",
+        )
+
+    @patch.object(Client, "execute_async")
     async def test_get_account_holdings(self, mock_execute_async):
         """
         Test the get_account_holdings method.

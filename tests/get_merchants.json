@@ -1,0 +1,34 @@
+{
+    "data": {
+        "merchants": [
+            {
+                "id": "1",
+                "name": "Apple, Inc.",
+                "transactionCount": 645,
+                "createdAt": "2024-08-01 16:50:23.104034+00:00",
+                "logoUrl": null,
+                "recurringTransactionStream": null,
+                "__typename": "Merchant"
+            },
+            {
+                "id": "2",
+                "name": "Amazon",
+                "transactionCount": 470,
+                "createdAt": "2022-02-25 02:53:30.486595+00:00",
+                "logoUrl": "https://res.cloudinary.com/monarch-money/image/authenticated/s--qvSwD8cA--/c_thumb,h_132,w_132/v1/production/merchant_logos/provider/amazon_qefftq",
+                "recurringTransactionStream": null,
+                "__typename": "Merchant"
+            },
+            {
+                "id": "3",
+                "name": "Rando Bank",
+                "transactionCount": 340,
+                "createdAt": "2022-09-02 08:17:00.284680+00:00",
+                "logoUrl": null,
+                "recurringTransactionStream": null,
+                "__typename": "Merchant"
+            }
+        ],
+        "merchantCount": 3
+    }
+}
