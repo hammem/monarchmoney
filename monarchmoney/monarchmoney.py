@@ -2886,6 +2886,7 @@ class MonarchMoney(object):
             ) as resp:
                 if resp.status != 200:
                     try:
+                        raw_response = await resp.text()
                         response = await resp.json()
                         if "detail" in response:
                             error_message = response["detail"]
@@ -2897,7 +2898,7 @@ class MonarchMoney(object):
                         raise LoginFailedException(error_message)
                     except:
                         raise LoginFailedException(
-                            f"HTTP Code {resp.status}: {resp.reason}\nRaw response: {resp.text}"
+                            f"HTTP Code {resp.status}: {resp.reason}\nRaw response: {raw_response}"
                         )
                 response = await resp.json()
                 self.set_token(response["token"])
