@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import json
 from gql import Client
+from gql.graphql_request import GraphQLRequest
 from monarchmoney import MonarchMoney
 from monarchmoney.monarchmoney import LoginFailedException
 
@@ -110,9 +111,12 @@ class TestMonarchMoney(unittest.IsolatedAsyncioTestCase):
 
         mock_execute_async.assert_called_once()
 
-        kwargs = mock_execute_async.call_args.kwargs
-        self.assertEqual(kwargs["operation_name"], "Common_DeleteAccount")
-        self.assertEqual(kwargs["variable_values"], {"id": "170123456789012345"})
+        args = mock_execute_async.call_args.args
+        request = args[0]
+        self.assertEqual(len(args), 1, "execute_async should receive one positional argument (GraphQLRequest)")
+        self.assertIsInstance(request, GraphQLRequest)
+        self.assertEqual(request.operation_name, "Common_DeleteAccount")
+        self.assertEqual(request.variable_values, {"id": "170123456789012345"})
 
         self.assertIsNotNone(result, "Expected result to not be None")
         self.assertEqual(result["deleteAccount"]["deleted"], True)
