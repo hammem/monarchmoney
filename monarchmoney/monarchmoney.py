@@ -24,7 +24,7 @@ SESSION_FILE = f"{SESSION_DIR}/mm_session.pickle"
 
 
 class MonarchMoneyEndpoints(object):
-    BASE_URL = "https://api.monarchmoney.com"
+    BASE_URL = "https://api.monarch.com"
 
     @classmethod
     def getLoginEndpoint(cls) -> str:
@@ -57,13 +57,31 @@ class MonarchMoney(object):
         session_file: str = SESSION_FILE,
         timeout: int = 10,
         token: Optional[str] = None,
+        # Custom header options for client identification
+        device_uuid: Optional[str] = None,
+        client_platform: str = "web",
+        monarch_client: Optional[str] = None,
+        monarch_client_version: Optional[str] = None,
+        user_agent: Optional[str] = None,
     ) -> None:
+        # Build headers with custom values if provided
         self._headers = {
             "Accept": "application/json",
-            "Client-Platform": "web",
             "Content-Type": "application/json",
-            "User-Agent": "MonarchMoneyAPI (https://github.com/hammem/monarchmoney)",
+            "Client-Platform": client_platform,
+            "User-Agent": user_agent or "MonarchMoneyAPI (https://github.com/hammem/monarchmoney)",
         }
+
+        # Add optional headers if provided
+        if device_uuid:
+            self._headers["device-uuid"] = device_uuid
+        if monarch_client:
+            self._headers["monarch-client"] = monarch_client
+        if monarch_client_version:
+            self._headers["monarch-client-version"] = monarch_client_version
+        # Add origin header to match browser behavior
+        self._headers["origin"] = "https://app.monarch.com"
+
         if token:
             self._headers["Authorization"] = f"Token {token}"
 
@@ -2988,7 +3006,9 @@ class MonarchMoney(object):
         data = {
             "password": password,
             "supports_mfa": True,
-            "trusted_device": False,
+            "supports_email_otp": False,
+            "supports_recaptcha": False,
+            "trusted_device": True,
             "username": email,
         }
 
@@ -3019,8 +3039,10 @@ class MonarchMoney(object):
         data = {
             "password": password,
             "supports_mfa": True,
+            "supports_email_otp": False,
+            "supports_recaptcha": False,
             "totp": code,
-            "trusted_device": False,
+            "trusted_device": True,
             "username": email,
         }
 
