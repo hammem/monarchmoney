@@ -1,18 +1,22 @@
-import os
-
 from setuptools import setup
+from pathlib import Path
 
-install_requires = open("requirements.txt", "r").read().split("\n")
+here = Path(__file__).resolve().parent
+requirements_path = here / "requirements.txt"
+install_requires = []
+if requirements_path.exists():
+    install_requires = requirements_path.read_text().splitlines()
 
 setup(
-    name="monarchmoney",
+    name="monarchmoneycommunity",
     description="Monarch Money API for Python",
-    long_description=open("README.md", "r").read(),
+    long_description=(here / "README.md").read_text(),
     long_description_content_type="text/markdown",
-    url="https://github.com/hammem/monarchmoney",
-    author="hammem",
-    author_email="hammem@users.noreply.github.com",
+    url="https://github.com/bradleyseanf/monarchmoneycommunity",
+    author="bradleyseanf",
+    author_email="bradleyseanf@users.noreply.github.com",
     license="MIT",
+    license_files=[],
     keywords="monarch money, financial, money, personal finance",
     install_requires=install_requires,
     packages=["monarchmoney"],

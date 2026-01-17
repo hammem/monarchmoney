@@ -1,10 +1,14 @@
 import asyncio
 import calendar
+import csv
 import getpass
 import json
 import os
 import pickle
 import time
+from dataclasses import dataclass
+from datetime import datetime
+from io import StringIO
 from datetime import datetime, date, timedelta
 from typing import Any, Dict, List, Optional, Union
 
@@ -18,13 +22,22 @@ from graphql import DocumentNode
 AUTH_HEADER_KEY = "authorization"
 CSRF_KEY = "csrftoken"
 DEFAULT_RECORD_LIMIT = 100
+DEFAULT_DELAY_SECS = 10
 ERRORS_KEY = "error_code"
 SESSION_DIR = ".mm"
 SESSION_FILE = f"{SESSION_DIR}/mm_session.pickle"
+DEFAULT_TIMEOUT_SECS = 300
+
+
+@dataclass
+class BalanceHistoryRow:
+    date: datetime
+    amount: float
+    account_name: Optional[str] = None
 
 
 class MonarchMoneyEndpoints(object):
-    BASE_URL = "https://api.monarchmoney.com"
+    BASE_URL = "https://api.monarch.com"
 
     @classmethod
     def getLoginEndpoint(cls) -> str:
@@ -62,7 +75,7 @@ class MonarchMoney(object):
             "Accept": "application/json",
             "Client-Platform": "web",
             "Content-Type": "application/json",
-            "User-Agent": "MonarchMoneyAPI (https://github.com/hammem/monarchmoney)",
+            "User-Agent": "MonarchMoneyAPI (https://github.com/bradleyseanf/monarchmoneycommunity)",
         }
         if token:
             self._headers["Authorization"] = f"Token {token}"
@@ -70,6 +83,16 @@ class MonarchMoney(object):
         self._session_file = session_file
         self._token = token
         self._timeout = timeout
+
+    @staticmethod
+    def _looks_like_jwt(token: str) -> bool:
+        # Ably/features tokens are JWTs (header.payload.signature)
+        return isinstance(token, str) and token.count(".") == 2
+
+    @staticmethod
+    def _is_long_lived(token_expiration) -> bool:
+        # Monarch long-lived browser-style sessions return tokenExpiration = null/None
+        return token_expiration in (None, "null")
 
     @property
     def timeout(self) -> int:
@@ -125,10 +148,25 @@ class MonarchMoney(object):
             self.save_session(self._session_file)
 
     async def multi_factor_authenticate(
-        self, email: str, password: str, code: str
+        self, email: str, password: str, code: str, trusted_device: bool = True
     ) -> None:
-        """Performs multi-factor authentication to access a Monarch Money account."""
-        await self._multi_factor_authenticate(email, password, code)
+        """Performs multi-factor authentication to access a Monarch Money account.
+
+        Set trusted_device=True to request a long-lived token (browser-style session).
+        """
+        await self._multi_factor_authenticate(email, password, code, trusted_device)
+
+
+    async def _upload_form_data(self, url: str, data: FormData) -> dict:
+        """
+        Retrieves the response from the server for a given URL and form data.
+        """
+        async with ClientSession(headers=self._headers) as session:
+            resp = await session.post(url, data=data)
+            if resp.status != 200:
+                raise RequestFailedException(f"HTTP Code {resp.status}: {resp.reason}")
+
+            return await resp.json()
 
     async def get_accounts(self) -> Dict[str, Any]:
         """
@@ -700,8 +738,8 @@ class MonarchMoney(object):
     async def request_accounts_refresh_and_wait(
         self,
         account_ids: Optional[List[str]] = None,
-        timeout: int = 300,
-        delay: int = 10,
+        timeout: int = TIMEOUT,
+        delay: int = DELAY,
     ) -> bool:
         """
         Convenience method for forcing an accounts refresh on Monarch, as well
@@ -1128,187 +1166,130 @@ class MonarchMoney(object):
         :param end_date:
             the latest date to get budget data, in "yyyy-mm-dd" format (default: next month)
         :param use_legacy_goals:
-            Inoperative (plan to remove)
+            Deprecated; legacy goals are no longer supported by the API.
         :param use_v2_goals:
-            Inoperative (paln to remove)
+            Set True to return a list of monthly budget set aside for version 2 goals (default list)
         """
         query = gql(
             """
-            query Common_GetJointPlanningData($startDate: Date!, $endDate: Date!) {
-              budgetSystem
-              budgetData(startMonth: $startDate, endMonth: $endDate) {
-                ...BudgetDataFields
-                __typename
-              }
-              categoryGroups {
-                ...BudgetCategoryGroupFields
-                __typename
-              }
-              goalsV2 {
-                ...BudgetDataGoalsV2Fields
-                __typename
-              }
-            }
-            
-            fragment BudgetDataMonthlyAmountsFields on BudgetMonthlyAmounts {
-              month
-              plannedCashFlowAmount
-              plannedSetAsideAmount
-              actualAmount
-              remainingAmount
-              previousMonthRolloverAmount
-              rolloverType
-              cumulativeActualAmount
-              rolloverTargetAmount
-              __typename
-            }
-            
-            fragment BudgetMonthlyAmountsByCategoryFields on BudgetCategoryMonthlyAmounts {
-              category {
-                id
-                __typename
-              }
-              monthlyAmounts {
-                ...BudgetDataMonthlyAmountsFields
-                __typename
-              }
-              __typename
-            }
-            
-            fragment BudgetMonthlyAmountsByCategoryGroupFields on BudgetCategoryGroupMonthlyAmounts {
-              categoryGroup {
-                id
-                __typename
-              }
-              monthlyAmounts {
-                ...BudgetDataMonthlyAmountsFields
-                __typename
-              }
-              __typename
-            }
-            
-            fragment BudgetMonthlyAmountsForFlexExpenseFields on BudgetFlexMonthlyAmounts {
-              budgetVariability
-              monthlyAmounts {
-                ...BudgetDataMonthlyAmountsFields
-                __typename
-              }
-              __typename
-            }
-            
-            fragment BudgetDataTotalsByMonthFields on BudgetTotals {
-              actualAmount
-              plannedAmount
-              previousMonthRolloverAmount
-              remainingAmount
-              __typename
-            }
-            
-            fragment BudgetTotalsByMonthFields on BudgetMonthTotals {
-              month
-              totalIncome {
-                ...BudgetDataTotalsByMonthFields
-                __typename
-              }
-              totalExpenses {
-                ...BudgetDataTotalsByMonthFields
-                __typename
-              }
-              totalFixedExpenses {
-                ...BudgetDataTotalsByMonthFields
-                __typename
-              }
-              totalNonMonthlyExpenses {
-                ...BudgetDataTotalsByMonthFields
-                __typename
-              }
-              totalFlexibleExpenses {
-                ...BudgetDataTotalsByMonthFields
-                __typename
-              }
-              __typename
-            }
-            
-            fragment BudgetRolloverPeriodFields on BudgetRolloverPeriod {
-              id
-              startMonth
-              endMonth
-              startingBalance
-              targetAmount
-              frequency
-              type
-              __typename
-            }
-            
-            fragment BudgetCategoryFields on Category {
-              id
-              name
-              icon
-              order
-              budgetVariability
-              excludeFromBudget
-              isSystemCategory
-              updatedAt
-              group {
-                id
-                type
-                budgetVariability
-                groupLevelBudgetingEnabled
-                __typename
-              }
-              rolloverPeriod {
-                ...BudgetRolloverPeriodFields
-                __typename
-              }
-              __typename
-            }
-            
-            fragment BudgetDataFields on BudgetData {
+          query GetJointPlanningData($startDate: Date!, $endDate: Date!, $useV2Goals: Boolean!) {
+            budgetData(startMonth: $startDate, endMonth: $endDate) {
               monthlyAmountsByCategory {
-                ...BudgetMonthlyAmountsByCategoryFields
+                category {
+                  id
+                  __typename
+                }
+                monthlyAmounts {
+                  month
+                  plannedCashFlowAmount
+                  plannedSetAsideAmount
+                  actualAmount
+                  remainingAmount
+                  previousMonthRolloverAmount
+                  rolloverType
+                  __typename
+                }
                 __typename
               }
               monthlyAmountsByCategoryGroup {
-                ...BudgetMonthlyAmountsByCategoryGroupFields
+                categoryGroup {
+                  id
+                  __typename
+                }
+                monthlyAmounts {
+                  month
+                  plannedCashFlowAmount
+                  actualAmount
+                  remainingAmount
+                  previousMonthRolloverAmount
+                  rolloverType
+                  __typename
+                }
                 __typename
               }
               monthlyAmountsForFlexExpense {
-                ...BudgetMonthlyAmountsForFlexExpenseFields
+                budgetVariability
+                monthlyAmounts {
+                  month
+                  plannedCashFlowAmount
+                  actualAmount
+                  remainingAmount
+                  previousMonthRolloverAmount
+                  rolloverType
+                  __typename
+                }
                 __typename
               }
               totalsByMonth {
-                ...BudgetTotalsByMonthFields
+                month
+                totalIncome {
+                  plannedAmount
+                  actualAmount
+                  remainingAmount
+                  previousMonthRolloverAmount
+                  __typename
+                }
+                totalExpenses {
+                  plannedAmount
+                  actualAmount
+                  remainingAmount
+                  previousMonthRolloverAmount
+                  __typename
+                }
+                totalFixedExpenses {
+                  plannedAmount
+                  actualAmount
+                  remainingAmount
+                  previousMonthRolloverAmount
+                  __typename
+                }
+                totalNonMonthlyExpenses {
+                  plannedAmount
+                  actualAmount
+                  remainingAmount
+                  previousMonthRolloverAmount
+                  __typename
+                }
+                totalFlexibleExpenses {
+                  plannedAmount
+                  actualAmount
+                  remainingAmount
+                  previousMonthRolloverAmount
+                  __typename
+                }
                 __typename
               }
               __typename
             }
-            
-            fragment BudgetCategoryGroupFields on CategoryGroup {
+            categoryGroups {
               id
               name
               order
-              type
-              budgetVariability
-              updatedAt
               groupLevelBudgetingEnabled
-              categories {
-                ...BudgetCategoryFields
-                __typename
-              }
+              budgetVariability
               rolloverPeriod {
                 id
-                type
                 startMonth
                 endMonth
-                startingBalance
-                frequency
-                targetAmount
                 __typename
               }
+              categories {
+                id
+                name
+                order
+                budgetVariability
+                rolloverPeriod {
+                  id
+                  startMonth
+                  endMonth
+                  __typename
+                }
+                __typename
+              }
+              type
               __typename
             }
-            
-            fragment BudgetDataGoalsV2Fields on GoalV2 {
+            goalsV2 @include(if: $useV2Goals) {
               id
               name
               archivedAt
@@ -1328,13 +1309,16 @@ class MonarchMoney(object):
                 __typename
               }
               __typename
-            }            
-            """
+            }
+            budgetSystem
+          }
+        """
         )
 
         variables = {
             "startDate": start_date,
             "endDate": end_date,
+            "useV2Goals": use_v2_goals,
         }
 
         if not start_date and not end_date:
@@ -1369,7 +1353,7 @@ class MonarchMoney(object):
             )
 
         return await self.gql_call(
-            operation="Common_GetJointPlanningData",
+            operation="GetJointPlanningData",
             graphql_query=query,
             variables=variables,
         )
@@ -2673,29 +2657,119 @@ class MonarchMoney(object):
         )
 
     async def upload_account_balance_history(
-        self, account_id: str, csv_content: str
-    ) -> None:
+        self,
+        account_id: str,
+        csv_content: List[BalanceHistoryRow],
+        timeout: int = TIMEOUT,
+        delay: int = DELAY,
+    ) -> bool:
         """
-        Uploads the account balance history csv for a given account.
+        Uploads the account balance history CSV for a specified account.
 
         :param account_id: The account ID to apply the history to.
         :param csv_content: CSV representation of the balance history.
+                            Headers: Date, Amount, and Account Name.
+        :param timeout: The number of seconds to wait before timing out
+        :param delay: The number of seconds to wait for each check on whether parsing is completed
         """
         if not account_id or not csv_content:
             raise RequestFailedException("account_id and csv_content cannot be empty")
 
+        csv_string = self._convert_to_csv_string(csv_content)
+
         filename = "upload.csv"
         form = FormData()
-        form.add_field("files", csv_content, filename=filename, content_type="text/csv")
+        form.add_field("files", csv_string, filename=filename, content_type="text/csv")
         form.add_field("account_files_mapping", json.dumps({filename: account_id}))
 
-        async with ClientSession(headers=self._headers) as session:
-            resp = await session.post(
-                MonarchMoneyEndpoints.getAccountBalanceHistoryUploadEndpoint(),
-                json=form,
-            )
-            if resp.status != 200:
-                raise RequestFailedException(f"HTTP Code {resp.status}: {resp.reason}")
+        upload_response = await self._upload_form_data(
+            url=MonarchMoneyEndpoints.getAccountBalanceHistoryUploadEndpoint(),
+            data=form,
+        )
+
+        session_key = upload_response["session_key"]
+
+        parse_response = await self._initiate_upload_balance_history_session(
+            session_key=session_key
+        )
+
+        is_completed = (
+            parse_response["parseBalanceHistory"]["uploadBalanceHistorySession"][
+                "status"
+            ]
+            == "completed"
+        )
+
+        start = time.time()
+        while not is_completed and (time.time() <= (start + timeout)):
+            await asyncio.sleep(delay)
+
+            is_completed = (
+                await self._is_upload_balance_history_complete(session_key)
+            )["uploadBalanceHistorySession"]["status"] == "completed"
+
+        return is_completed
+
+    async def _initiate_upload_balance_history_session(self, session_key: str) -> dict:
+        """
+        Triggers parsing of the uploaded balance history CSV file.
+
+        :param session_key: The session key for the uploaded file.
+        """
+
+        query = gql(
+            """
+            mutation Web_ParseUploadBalanceHistorySession($input: ParseBalanceHistoryInput!) {
+                parseBalanceHistory(input: $input) {
+                    uploadBalanceHistorySession {
+                        ...UploadBalanceHistorySessionFields
+                        __typename
+                    }
+                    __typename
+                }
+            }
+            fragment UploadBalanceHistorySessionFields on UploadBalanceHistorySession {
+                sessionKey
+                status
+                __typename
+            }
+            """
+        )
+
+        variables = {"input": {"sessionKey": session_key}}
+
+        return await self.gql_call(
+            "Web_ParseUploadBalanceHistorySession", query, variables
+        )
+
+    async def _is_upload_balance_history_complete(self, session_key: str):
+        """
+        Retrieves the status of the upload balance history session.
+
+        :param session_key: The session key for the uploaded file.
+        """
+
+        query = gql(
+            """
+            query Web_GetUploadBalanceHistorySession($sessionKey: String!) {
+                uploadBalanceHistorySession(sessionKey: $sessionKey) {
+                    ...UploadBalanceHistorySessionFields
+                    __typename
+                }
+            }
+            fragment UploadBalanceHistorySessionFields on UploadBalanceHistorySession {
+                sessionKey
+                status
+                __typename
+            }
+            """
+        )
+
+        variables = {"sessionKey": session_key}
+
+        return await self.gql_call(
+            "Web_GetUploadBalanceHistorySession", query, variables
+        )
 
     async def get_recurring_transactions(
         self,
@@ -2802,16 +2876,27 @@ class MonarchMoney(object):
     def save_session(self, filename: Optional[str] = None) -> None:
         """
         Saves the auth token needed to access a Monarch Money account.
+        Never persists short-lived features JWTs (1-hour).
         """
         if filename is None:
             filename = self._session_file
         filename = os.path.abspath(filename)
 
-        session_data = {"token": self._token}
+        if not self._token:
+            raise LoginFailedException("No token set; cannot save session.")
 
+        # Guard: features/Ably JWTs have two dots and expire hourly.
+        if isinstance(self._token, str) and self._token.count(".") == 2:
+            raise LoginFailedException(
+                "Refusing to save a JWT-style token to session; this looks like the 1-hour "
+                "features token, not the long-lived login session token."
+            )
+
+        session_data = {"token": self._token}
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, "wb") as fh:
             pickle.dump(session_data, fh)
+
 
     def load_session(self, filename: Optional[str] = None) -> None:
         """
@@ -2836,47 +2921,81 @@ class MonarchMoney(object):
             os.remove(filename)
 
     async def _login_user(
-        self, email: str, password: str, mfa_secret_key: Optional[str]
+      self, email: str, password: str, mfa_secret_key: Optional[str]
     ) -> None:
-        """
-        Performs the initial login to a Monarch Money account.
-        """
-        data = {
-            "password": password,
-            "supports_mfa": True,
-            "trusted_device": False,
-            "username": email,
-        }
+      """
+      Performs the initial login to a Monarch Money account.
+      Requires/persists only the long-lived login token (NOT the 1-hour features JWT).
+      """
+      data = {
+          "password": password,
+          "supports_mfa": True,
+          "trusted_device": True,
+          "username": email,
+      }
+      if mfa_secret_key:
+          data["totp"] = oathtool.generate_otp(mfa_secret_key)
 
-        if mfa_secret_key:
-            data["totp"] = oathtool.generate_otp(mfa_secret_key)
+      async with ClientSession(headers=self._headers) as session:
+          async with session.post(
+              MonarchMoneyEndpoints.getLoginEndpoint(), json=data
+          ) as resp:
+              if resp.status == 403:
+                  # Server demands MFA
+                  raise RequireMFAException("Multi-Factor Auth Required")
+              if resp.status != 200:
+                  # Surface server message if present
+                  try:
+                      response = await resp.json()
+                      if "detail" in response:
+                          raise LoginFailedException(response["detail"])
+                      if "error_code" in response:
+                          raise LoginFailedException(response["error_code"])
+                      raise LoginFailedException(f"Unrecognized error: {response}")
+                  except Exception:
+                      raise LoginFailedException(
+                          f"HTTP Code {resp.status}: {resp.reason}"
+                      )
 
-        async with ClientSession(headers=self._headers) as session:
-            async with session.post(
-                MonarchMoneyEndpoints.getLoginEndpoint(), json=data
-            ) as resp:
-                if resp.status == 403:
-                    raise RequireMFAException("Multi-Factor Auth Required")
-                elif resp.status != 200:
-                    raise LoginFailedException(
-                        f"HTTP Code {resp.status}: {resp.reason}"
-                    )
+              response = await resp.json()
+              tok = response.get("token")
+              tokexp = response.get("tokenExpiration")
 
-                response = await resp.json()
-                self.set_token(response["token"])
-                self._headers["Authorization"] = f"Token {self._token}"
+              if not tok:
+                  raise LoginFailedException("Login succeeded but no token returned.")
+              # Reject 1-hour features/Ably JWTs (they look like header.payload.signature)
+              if isinstance(tok, str) and tok.count(".") == 2:
+                  raise LoginFailedException(
+                      "Received a JWT-style token (likely 1-hour features token). "
+                      "Refusing to save; ensure we are using /auth/login/ token."
+                  )
+              # Long-lived browser-style sessions come with tokenExpiration == null
+              if tokexp not in (None, "null"):
+                  raise LoginFailedException(
+                      f"Short-lived token returned (tokenExpiration={tokexp}). "
+                      "Retry with trusted_device=True or complete MFA as trusted device."
+                  )
 
+              self.set_token(tok)
+              self._headers["Authorization"] = f"Token {self._token}"
+        
     async def _multi_factor_authenticate(
-        self, email: str, password: str, code: str
+        self,
+        email: str,
+        password: str,
+        code: Optional[str] = None,
+        trusted_device: bool = True,
     ) -> None:
         """
         Performs the MFA step of login.
+        Requires/persists only the long-lived login token (NOT the 1-hour features JWT).
         """
+
         data = {
             "password": password,
             "supports_mfa": True,
             "totp": code,
-            "trusted_device": False,
+            "trusted_device": bool(trusted_device),  # request trusted device token
             "username": email,
         }
 
@@ -2888,19 +3007,37 @@ class MonarchMoney(object):
                     try:
                         response = await resp.json()
                         if "detail" in response:
-                            error_message = response["detail"]
-                            raise RequireMFAException(error_message)
-                        elif "error_code" in response:
-                            error_message = response["error_code"]
-                        else:
-                            error_message = f"Unrecognized error message: '{response}'"
-                        raise LoginFailedException(error_message)
-                    except:
+                            raise RequireMFAException(response["detail"])
+                        if "error_code" in response:
+                            raise LoginFailedException(response["error_code"])
+                        raise LoginFailedException(f"Unrecognized error: {response}")
+                    except Exception:
                         raise LoginFailedException(
-                            f"HTTP Code {resp.status}: {resp.reason}\nRaw response: {resp.text}"
+                            f"HTTP Code {resp.status}: {resp.reason}"
                         )
+
                 response = await resp.json()
-                self.set_token(response["token"])
+                tok = response.get("token")
+                tokexp = response.get("tokenExpiration")
+
+                if not tok:
+                    raise LoginFailedException("MFA succeeded but no token returned.")
+
+                # Reject 1-hour features/Ably JWTs (look like header.payload.signature)
+                if isinstance(tok, str) and tok.count(".") == 2:
+                    raise LoginFailedException(
+                        "Received a JWT-style token (likely 1-hour features token). "
+                        "Refusing to save; ensure this is the /auth/login/ token."
+                    )
+
+                # Must be long-lived (tokenExpiration == null)
+                if tokexp not in (None, "null"):
+                    raise LoginFailedException(
+                        f"MFA returned short-lived token (tokenExpiration={tokexp}). "
+                        "Make sure trusted_device=True when performing MFA."
+                    )
+
+                self.set_token(tok)
                 self._headers["Authorization"] = f"Token {self._token}"
 
     def _get_graphql_client(self) -> Client:
@@ -2921,3 +3058,23 @@ class MonarchMoney(object):
             fetch_schema_from_transport=False,
             execute_timeout=self._timeout,
         )
+
+    def _convert_to_csv_string(self, csv_content: List[BalanceHistoryRow]) -> str:
+        """
+        Converts a list of BalanceHistoryRow to CSV string
+        :param csv_content: A list of BalanceHistoryRow to upload to the account balance
+        """
+
+        if not csv_content:
+            return ""
+
+        csv_string = StringIO()
+        writer = csv.writer(csv_string)
+        writer.writerow(["Date", "Amount", "Account Name"])
+
+        for row in csv_content:
+            writer.writerow(
+                [row.date.strftime("%Y-%m-%d"), row.amount, row.account_name]
+            )
+
+        return csv_string.getvalue()

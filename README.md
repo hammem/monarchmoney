@@ -1,4 +1,15 @@
-# Monarch Money
+<p align="center">
+  <img src=".github/assets/monarch-logo.svg" alt="Monarch Money Community logo" />
+</p>
+
+<blockquote style="border-left:4px solid #f1c40f; margin:16px 0; padding:8px 12px;">
+  <span style="color:#f1c40f;">&#9888;</span> <strong>Warning</strong><br />
+  This project was forked from https://github.com/hammem/monarchmoney and would not be possible without it.
+  The upstream fork is no longer maintained. This fork fixes issues that prevent the library from working today, including the Monarch Money domain change to `api.monarch.com`, auth persistence, and the `get_budget()` GraphQL query.
+  Moving forward, please report issues here.
+</blockquote>
+
+# Monarch Money Community
 
 Python library for accessing [Monarch Money](https://www.monarchmoney.com/referral/ngam2i643l) data.
 
@@ -8,11 +19,13 @@ Python library for accessing [Monarch Money](https://www.monarchmoney.com/referr
 
 Clone this repository from Git
 
-`git clone https://github.com/hammem/monarchmoney.git`
+`git clone https://github.com/bradleyseanf/monarchmoneycommunity.git`
 
 ## Via `pip`
 
-`pip install monarchmoney`
+`pip install monarchmoneycommunity`
+
+Import the library as `monarchmoney` after installation.
 # Instantiate & Login
 
 There are two ways to use this library: interactive and non-interactive.
@@ -158,6 +171,6 @@ Don't forget to use a password unique to your Monarch account and to enable mult
 
 # Projects Using This Library
 
-*Disclaimer: These projects are neither affiliated nor endorsed by the `monarchmoney` project.*
+*Disclaimer: These projects are neither affiliated nor endorsed by Monarch Money.*
 
-- [monarch-money-amazon-connector](https://github.com/elsell/monarch-money-amazon-connector): Automate annotating and tagging Amazon transactions (ALPHA)
+None yet, but please start an issue if you would like to add your project to this list.
