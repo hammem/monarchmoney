@@ -161,3 +161,6 @@ Don't forget to use a password unique to your Monarch account and to enable mult
 *Disclaimer: These projects are neither affiliated nor endorsed by the `monarchmoney` project.*
 
 - [monarch-money-amazon-connector](https://github.com/elsell/monarch-money-amazon-connector): Automate annotating and tagging Amazon transactions (ALPHA)
+- 
+- [monarch-mcp](https://github.com/robcerda/monarch-mcp-server): MCP server for use Monarch with LLMs
+
