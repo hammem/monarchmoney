@@ -6,7 +6,7 @@ import os
 import pickle
 import time
 from datetime import datetime, date, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Tuple
 
 import oathtool
 from aiohttp import ClientSession, FormData
@@ -1450,6 +1450,8 @@ class MonarchMoney(object):
         is_recurring: Optional[bool] = None,
         imported_from_mint: Optional[bool] = None,
         synced_from_institution: Optional[bool] = None,
+        is_credit: Optional[bool] = None,
+        abs_amount_range: Optional[Tuple[Optional[float], Optional[float]]] = None,
     ) -> Dict[str, Any]:
         """
         Gets transaction data from the account.
@@ -1469,6 +1471,11 @@ class MonarchMoney(object):
         :param is_recurring: a bool to filter for whether the transactions are recurring.
         :param imported_from_mint: a bool to filter for whether the transactions were imported from mint.
         :param synced_from_institution: a bool to filter for whether the transactions were synced from an institution.
+        :param is_credit: a bool to filter for whether the transactions were credit (positive) or debit (negative).
+        :param abs_amount_range: a tuple of optional floats to filter the amount.
+            The tuple contains the lower and upper bounds, inclusively. The bound could be `None` to be ignored.
+            The bound has to be positive, as this is to filter the absolute amount.
+            If you need to filter positive/negative transactions, use the `is_credit` parameter instead.
         """
 
         query = gql(
@@ -1573,6 +1580,23 @@ class MonarchMoney(object):
 
         if synced_from_institution is not None:
             variables["filters"]["syncedFromInstitution"] = synced_from_institution
+
+        if is_credit is not None:
+            if is_credit:
+                variables["filters"]["creditsOnly"] = True
+            else:
+                variables["filters"]["debitsOnly"] = True
+
+        if abs_amount_range is not None:
+            if len(abs_amount_range) != 2:
+                raise Exception(
+                    "abs_amount_range must be a tuple with length 2, but instead it is "
+                    + len(abs_amount_range)
+                )
+            if abs_amount_range[0] is not None:
+                variables["filters"]["absAmountGte"] = abs_amount_range[0]
+            if abs_amount_range[1] is not None:
+                variables["filters"]["absAmountLte"] = abs_amount_range[1]
 
         if start_date and end_date:
             variables["filters"]["startDate"] = start_date
