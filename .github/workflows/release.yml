@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/monarchmoney
+      url: https://pypi.org/p/monarchmoney-grablair
     permissions:
       id-token: write
     steps:

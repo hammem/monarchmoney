@@ -5,13 +5,13 @@ from setuptools import setup
 install_requires = open("requirements.txt", "r").read().split("\n")
 
 setup(
-    name="monarchmoney",
+    name="monarchmoney-grablair",
     description="Monarch Money API for Python",
     long_description=open("README.md", "r").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/hammem/monarchmoney",
-    author="hammem",
-    author_email="hammem@users.noreply.github.com",
+    url="https://github.com/hammem/monarchmoney-grablair",
+    author="grablair",
+    author_email="grablair@users.noreply.github.com",
     license="MIT",
     keywords="monarch money, financial, money, personal finance",
     install_requires=install_requires,

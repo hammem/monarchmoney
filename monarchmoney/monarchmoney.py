@@ -24,7 +24,7 @@ SESSION_FILE = f"{SESSION_DIR}/mm_session.pickle"
 
 
 class MonarchMoneyEndpoints(object):
-    BASE_URL = "https://api.monarchmoney.com"
+    BASE_URL = "https://api.monarch.com"
 
     @classmethod
     def getLoginEndpoint(cls) -> str:
@@ -134,8 +134,7 @@ class MonarchMoney(object):
         """
         Gets the list of accounts configured in the Monarch Money account.
         """
-        query = gql(
-            """
+        query = gql("""
           query GetAccounts {
             accounts {
               ...AccountFields
@@ -207,8 +206,7 @@ class MonarchMoney(object):
             }
             __typename
           }
-        """
-        )
+        """)
         return await self.gql_call(
             operation="GetAccounts",
             graphql_query=query,
@@ -218,8 +216,7 @@ class MonarchMoney(object):
         """
         Retrieves a list of available account types and their subtypes.
         """
-        query = gql(
-            """
+        query = gql("""
             query GetAccountTypeOptions {
                 accountTypeOptions {
                     type {
@@ -241,8 +238,7 @@ class MonarchMoney(object):
                     __typename
                 }
             }
-        """
-        )
+        """)
         return await self.gql_call(
             operation="GetAccountTypeOptions",
             graphql_query=query,
@@ -259,8 +255,7 @@ class MonarchMoney(object):
         if start_date is None:
             start_date = (date.today() - timedelta(days=31)).isoformat()
 
-        query = gql(
-            """
+        query = gql("""
             query GetAccountRecentBalances($startDate: Date!) {
                 accounts {
                     id
@@ -268,8 +263,7 @@ class MonarchMoney(object):
                     __typename
                 }
             }
-        """
-        )
+        """)
         return await self.gql_call(
             operation="GetAccountRecentBalances",
             graphql_query=query,
@@ -290,8 +284,7 @@ class MonarchMoney(object):
         if timeframe not in ("year", "month"):
             raise Exception(f'Unknown timeframe "{timeframe}"')
 
-        query = gql(
-            """
+        query = gql("""
             query GetSnapshotsByAccountType($startDate: Date!, $timeframe: Timeframe!) {
                 snapshotsByAccountType(startDate: $startDate, timeframe: $timeframe) {
                     accountType
@@ -305,8 +298,7 @@ class MonarchMoney(object):
                     __typename
                 }
             }
-        """
-        )
+        """)
         return await self.gql_call(
             operation="GetSnapshotsByAccountType",
             graphql_query=query,
@@ -324,8 +316,7 @@ class MonarchMoney(object):
         and optionally only for accounts of type `account_type`.
         Both `start_date` and `end_date` are ISO datestrings, formatted as YYYY-MM-DD
         """
-        query = gql(
-            """
+        query = gql("""
             query GetAggregateSnapshots($filters: AggregateSnapshotFilters) {
                 aggregateSnapshots(filters: $filters) {
                     date
@@ -333,8 +324,7 @@ class MonarchMoney(object):
                     __typename
                 }
             }
-        """
-        )
+        """)
 
         if start_date is None:
             # The mobile app defaults to 150 years ago today
@@ -373,8 +363,7 @@ class MonarchMoney(object):
         :param account_name: The string of the account name
         :param display_balance: a float of the amount of the account balance when the account is created
         """
-        query = gql(
-            """
+        query = gql("""
             mutation Web_CreateManualAccount($input: CreateManualAccountMutationInput!) {
                 createManualAccount(input: $input) {
                     account {
@@ -398,8 +387,7 @@ class MonarchMoney(object):
                 code
                 __typename
             }
-            """
-        )
+            """)
         variables = {
             "input": {
                 "type": account_type,
@@ -443,8 +431,7 @@ class MonarchMoney(object):
         :param hide_from_summary_list: A boolean if the account should be hidden in the "Accounts" view
         :param hide_transactions_from_reports: A boolean if the account should be excluded from budgets and reports
         """
-        query = gql(
-            """
+        query = gql("""
             mutation Common_UpdateAccount($input: UpdateAccountMutationInput!) {
                 updateAccount(input: $input) {
                     account {
@@ -532,8 +519,7 @@ class MonarchMoney(object):
                 code
                 __typename
             }
-            """
-        )
+            """)
 
         variables = {
             "id": str(account_id),
@@ -567,8 +553,7 @@ class MonarchMoney(object):
         """
         Deletes an account
         """
-        query = gql(
-            """
+        query = gql("""
             mutation Common_DeleteAccount($id: UUID!) {
                 deleteAccount(id: $id) {
                     deleted
@@ -589,8 +574,7 @@ class MonarchMoney(object):
                 code
                 __typename
             }
-            """
-        )
+            """)
 
         variables = {"id": account_id}
 
@@ -607,8 +591,7 @@ class MonarchMoney(object):
 
         Otherwise, throws a `RequestFailedException`.
         """
-        query = gql(
-            """
+        query = gql("""
           mutation Common_ForceRefreshAccountsMutation($input: ForceRefreshAccountsInput!) {
             forceRefreshAccounts(input: $input) {
               success
@@ -630,8 +613,7 @@ class MonarchMoney(object):
             code
             __typename
           }
-          """
-        )
+          """)
 
         variables = {
             "input": {
@@ -665,8 +647,7 @@ class MonarchMoney(object):
         :param account_ids: The list of accounts IDs to check on the status of.
           If set to None, all account IDs will be checked.
         """
-        query = gql(
-            """
+        query = gql("""
           query ForceRefreshAccountsQuery {
             accounts {
               id
@@ -674,8 +655,7 @@ class MonarchMoney(object):
               __typename
             }
           }
-          """
-        )
+          """)
 
         response = await self.gql_call(
             operation="ForceRefreshAccountsQuery",
@@ -729,8 +709,7 @@ class MonarchMoney(object):
         """
         Get the holdings information for a brokerage or similar type of account.
         """
-        query = gql(
-            """
+        query = gql("""
           query Web_GetHoldings($input: PortfolioInput) {
             portfolio(input: $input) {
               aggregateHoldings {
@@ -777,8 +756,7 @@ class MonarchMoney(object):
               __typename
             }
           }
-        """
-        )
+        """)
 
         variables = {
             "input": {
@@ -806,8 +784,7 @@ class MonarchMoney(object):
           json object with all historical snapshots of requested account's balances
         """
 
-        query = gql(
-            """
+        query = gql("""
             query AccountDetails_getAccount($id: UUID!, $filters: TransactionFilterInput) {
               account(id: $id) {
                 id
@@ -1002,8 +979,7 @@ class MonarchMoney(object):
               }
               __typename
             }
-            """
-        )
+            """)
 
         variables = {"id": str(account_id)}
 
@@ -1029,8 +1005,7 @@ class MonarchMoney(object):
         Gets institution data from the account.
         """
 
-        query = gql(
-            """
+        query = gql("""
             query Web_GetInstitutionSettings {
               credentials {
                 id
@@ -1102,8 +1077,7 @@ class MonarchMoney(object):
               }
               __typename
             }
-        """
-        )
+        """)
         return await self.gql_call(
             operation="Web_GetInstitutionSettings",
             graphql_query=query,
@@ -1132,8 +1106,7 @@ class MonarchMoney(object):
         :param use_v2_goals:
             Inoperative (paln to remove)
         """
-        query = gql(
-            """
+        query = gql("""
             query Common_GetJointPlanningData($startDate: Date!, $endDate: Date!) {
               budgetSystem
               budgetData(startMonth: $startDate, endMonth: $endDate) {
@@ -1329,8 +1302,7 @@ class MonarchMoney(object):
               }
               __typename
             }            
-            """
-        )
+            """)
 
         variables = {
             "startDate": start_date,
@@ -1378,8 +1350,7 @@ class MonarchMoney(object):
         """
         The type of subscription for the Monarch Money account.
         """
-        query = gql(
-            """
+        query = gql("""
           query GetSubscriptionDetails {
             subscription {
               id
@@ -1390,8 +1361,7 @@ class MonarchMoney(object):
               __typename
             }
           }
-        """
-        )
+        """)
         return await self.gql_call(
             operation="GetSubscriptionDetails",
             graphql_query=query,
@@ -1402,8 +1372,7 @@ class MonarchMoney(object):
         Gets transactions summary from the account.
         """
 
-        query = gql(
-            """
+        query = gql("""
             query GetTransactionsPage($filters: TransactionFilterInput) {
               aggregates(filters: $filters) {
                 summary {
@@ -1426,8 +1395,7 @@ class MonarchMoney(object):
               last
               __typename
             }
-        """
-        )
+        """)
         return await self.gql_call(
             operation="GetTransactionsPage",
             graphql_query=query,
@@ -1450,6 +1418,7 @@ class MonarchMoney(object):
         is_recurring: Optional[bool] = None,
         imported_from_mint: Optional[bool] = None,
         synced_from_institution: Optional[bool] = None,
+        show_all_transactions: Optional[bool] = True,
     ) -> Dict[str, Any]:
         """
         Gets transaction data from the account.
@@ -1469,10 +1438,11 @@ class MonarchMoney(object):
         :param is_recurring: a bool to filter for whether the transactions are recurring.
         :param imported_from_mint: a bool to filter for whether the transactions were imported from mint.
         :param synced_from_institution: a bool to filter for whether the transactions were synced from an institution.
+        :param show_all_transactions: a bool to filter for whether to include all transactions, even those that are
+                                      hidden from accounts hidden from lists, reports, and budgets. Defaults to True.
         """
 
-        query = gql(
-            """
+        query = gql("""
           query GetTransactionsList($offset: Int, $limit: Int, $filters: TransactionFilterInput, $orderBy: TransactionOrdering) {
             allTransactions(filters: $filters) {
               totalCount
@@ -1495,6 +1465,7 @@ class MonarchMoney(object):
             pending
             date
             hideFromReports
+            hiddenByAccount
             plaidName
             notes
             isRecurring
@@ -1537,8 +1508,7 @@ class MonarchMoney(object):
             }
             __typename
           }
-        """
-        )
+        """)
 
         variables = {
             "offset": offset,
@@ -1574,6 +1544,9 @@ class MonarchMoney(object):
         if synced_from_institution is not None:
             variables["filters"]["syncedFromInstitution"] = synced_from_institution
 
+        if show_all_transactions:
+            variables["filters"]["transactionVisibility"] = "all_transactions"
+
         if start_date and end_date:
             variables["filters"]["startDate"] = start_date
             variables["filters"]["endDate"] = end_date
@@ -1599,8 +1572,7 @@ class MonarchMoney(object):
         """
         Creates a transaction with the given parameters
         """
-        query = gql(
-            """
+        query = gql("""
           mutation Common_CreateTransactionMutation($input: CreateTransactionMutationInput!) {
             createTransaction(input: $input) {
               errors {
@@ -1624,8 +1596,7 @@ class MonarchMoney(object):
             code
             __typename
           }
-        """
-        )
+        """)
 
         variables = {
             "input": {
@@ -1651,8 +1622,7 @@ class MonarchMoney(object):
 
         :param transaction_id: the ID of the transaction targeted for deletion.
         """
-        query = gql(
-            """
+        query = gql("""
           mutation Common_DeleteTransactionMutation($input: DeleteTransactionMutationInput!) {
             deleteTransaction(input: $input) {
               deleted
@@ -1674,8 +1644,7 @@ class MonarchMoney(object):
             code
             __typename
           }
-        """
-        )
+        """)
 
         variables = {
             "input": {
@@ -1698,8 +1667,7 @@ class MonarchMoney(object):
         """
         Gets all the categories configured in the account.
         """
-        query = gql(
-            """
+        query = gql("""
           query GetCategories {
             categories {
               ...CategoryFields
@@ -1724,13 +1692,11 @@ class MonarchMoney(object):
             }
             __typename
           }
-        """
-        )
+        """)
         return await self.gql_call(operation="GetCategories", graphql_query=query)
 
     async def delete_transaction_category(self, category_id: str) -> bool:
-        query = gql(
-            """
+        query = gql("""
           mutation Web_DeleteCategory($id: UUID!, $moveToCategoryId: UUID) {
             deleteCategory(id: $id, moveToCategoryId: $moveToCategoryId) {
               errors {
@@ -1752,8 +1718,7 @@ class MonarchMoney(object):
             code
             __typename
           }
-        """
-        )
+        """)
 
         variables = {
             "id": category_id,
@@ -1783,8 +1748,7 @@ class MonarchMoney(object):
         """
         Gets all the category groups configured in the account.
         """
-        query = gql(
-            """
+        query = gql("""
           query ManageGetCategoryGroups {
               categoryGroups {
                   id
@@ -1796,8 +1760,7 @@ class MonarchMoney(object):
                   __typename
               }
           }
-        """
-        )
+        """)
         return await self.gql_call(
             operation="ManageGetCategoryGroups", graphql_query=query
         )
@@ -1821,8 +1784,7 @@ class MonarchMoney(object):
         :param rollover_type: The budget roll over type
         """
 
-        query = gql(
-            """
+        query = gql("""
             mutation Web_CreateCategory($input: CreateCategoryInput!) {
                 createCategory(input: $input) {
                     errors {
@@ -1870,8 +1832,7 @@ class MonarchMoney(object):
                 }
                 __typename
             }
-            """
-        )
+            """)
         variables = {
             "input": {
                 "group": group_id,
@@ -1899,8 +1860,7 @@ class MonarchMoney(object):
           More information can be found https://en.wikipedia.org/wiki/Web_colors#Hex_triplet.
           Does not appear to be limited to the color selections in the dashboard.
         """
-        mutation = gql(
-            """
+        mutation = gql("""
             mutation Common_CreateTransactionTag($input: CreateTransactionTagInput!) {
               createTransactionTag(input: $input) {
                 tag {
@@ -1918,8 +1878,7 @@ class MonarchMoney(object):
                 __typename
               }
             }
-            """
-        )
+            """)
         variables = {"input": {"name": name, "color": color}}
 
         return await self.gql_call(
@@ -1932,8 +1891,7 @@ class MonarchMoney(object):
         """
         Gets all the tags configured in the account.
         """
-        query = gql(
-            """
+        query = gql("""
           query GetHouseholdTransactionTags($search: String, $limit: Int, $bulkParams: BulkTransactionDataParams) {
             householdTransactionTags(
               search: $search
@@ -1948,8 +1906,7 @@ class MonarchMoney(object):
               __typename
             }
           }
-        """
-        )
+        """)
         return await self.gql_call(
             operation="GetHouseholdTransactionTags", graphql_query=query
         )
@@ -1966,8 +1923,7 @@ class MonarchMoney(object):
           Overwrites existing tags. Empty list removes all tags.
         """
 
-        query = gql(
-            """
+        query = gql("""
           mutation Web_SetTransactionTags($input: SetTransactionTagsInput!) {
             setTransactionTags(input: $input) {
               errors {
@@ -1996,8 +1952,7 @@ class MonarchMoney(object):
             code
             __typename
           }
-          """
-        )
+          """)
 
         variables = {
             "input": {"transactionId": transaction_id, "tagIds": tag_ids},
@@ -2018,8 +1973,7 @@ class MonarchMoney(object):
         :param transaction_id: the transaction to fetch.
         :param redirect_posted: whether to redirect posted transactions. Defaults to True.
         """
-        query = gql(
-            """
+        query = gql("""
           query GetTransactionDrawer($id: UUID!, $redirectPosted: Boolean) {
             getTransaction(id: $id, redirectPosted: $redirectPosted) {
               id
@@ -2147,8 +2101,7 @@ class MonarchMoney(object):
             }
             __typename
           }
-        """
-        )
+        """)
 
         variables = {
             "id": transaction_id,
@@ -2165,8 +2118,7 @@ class MonarchMoney(object):
 
         :param transaction_id: the transaction to query.
         """
-        query = gql(
-            """
+        query = gql("""
           query TransactionSplitQuery($id: UUID!) {
             getTransaction(id: $id) {
               id
@@ -2200,8 +2152,7 @@ class MonarchMoney(object):
               __typename
             }
           }
-        """
-        )
+        """)
 
         variables = {"id": transaction_id}
 
@@ -2224,8 +2175,7 @@ class MonarchMoney(object):
           split_data takes the shape: [{"merchantName": "...", "amount": -12.34, "categoryId": "231"}, split2, split3, ...]
           sum([split.amount for split in split_data]) must equal transaction_id.amount.
         """
-        query = gql(
-            """
+        query = gql("""
           mutation Common_SplitTransactionMutation($input: UpdateTransactionSplitMutationInput!) {
             updateTransactionSplit(input: $input) {
               errors {
@@ -2267,8 +2217,7 @@ class MonarchMoney(object):
             code
             __typename
           }
-        """
-        )
+        """)
 
         if split_data is None:
             split_data = []
@@ -2292,8 +2241,7 @@ class MonarchMoney(object):
         """
         Gets all the categories configured in the account.
         """
-        query = gql(
-            """
+        query = gql("""
           query Web_GetCashFlowPage($filters: TransactionFilterInput) {
             byCategory: aggregates(filters: $filters, groupBy: ["category"]) {
               groupBy {
@@ -2359,8 +2307,7 @@ class MonarchMoney(object):
               __typename
             }
           }
-        """
-        )
+        """)
 
         variables = {
             "limit": limit,
@@ -2397,8 +2344,7 @@ class MonarchMoney(object):
         """
         Gets all the categories configured in the account.
         """
-        query = gql(
-            """
+        query = gql("""
           query Web_GetCashFlowPage($filters: TransactionFilterInput) {
             summary: aggregates(filters: $filters, fillEmptyValues: true) {
               summary {
@@ -2411,8 +2357,7 @@ class MonarchMoney(object):
               __typename
             }
           }
-        """
-        )
+        """)
 
         variables = {
             "limit": limit,
@@ -2506,8 +2451,7 @@ class MonarchMoney(object):
                 notes=f'Updated On: {datetime.now().strftime("%m/%d/%Y %H:%M:%S")}',
             )
         """
-        query = gql(
-            """
+        query = gql("""
         mutation Web_TransactionDrawerUpdateTransaction($input: UpdateTransactionMutationInput!) {
             updateTransaction(input: $input) {
             transaction {
@@ -2559,8 +2503,7 @@ class MonarchMoney(object):
             code
             __typename
         }
-        """
-        )
+        """)
 
         variables: dict[str, Any] = {
             "input": {
@@ -2637,8 +2580,7 @@ class MonarchMoney(object):
                 "You must specify either a category_id OR category_group_id; not both"
             )
 
-        query = gql(
-            """
+        query = gql("""
           mutation Common_UpdateBudgetItem($input: UpdateOrCreateBudgetItemMutationInput!) {
             updateOrCreateBudgetItem(input: $input) {
               budgetItem {
@@ -2649,8 +2591,7 @@ class MonarchMoney(object):
               __typename
             }
           }
-        """
-        )
+        """)
 
         variables = {
             "input": {
@@ -2706,8 +2647,7 @@ class MonarchMoney(object):
         Fetches upcoming recurring transactions from Monarch Money's API.  This includes
         all merchant data, as well as the accounts where the charge will take place.
         """
-        query = gql(
-            """
+        query = gql("""
             query Web_GetUpcomingRecurringTransactionItems($startDate: Date!, $endDate: Date!, $filters: RecurringTransactionFilter) {
               recurringTransactionItems(
                 startDate: $startDate
@@ -2746,8 +2686,7 @@ class MonarchMoney(object):
                 __typename
               }
             }
-        """
-        )
+        """)
 
         variables = {"startDate": start_date, "endDate": end_date}
 
