@@ -152,7 +152,7 @@ Actions are configured in this repo to run against all PRs and merges which will
 
 **How do I use this API if I login to Monarch via Google?**
 
-If you currently use Google or 'Continue with Google' to access your Monarch account, you'll need to set a password to leverage this API.  You can set a password on your Monarch account by going to your [security settings](https://app.monarchmoney.com/settings/security).  
+If you currently use Google or 'Continue with Google' to access your Monarch account, you'll need to set a password to leverage this API.  You can set a password on your Monarch account by going to your [security settings](https://app.monarch.com/settings/security).  
 
 Don't forget to use a password unique to your Monarch account and to enable multi-factor authentication!
 
