@@ -24,7 +24,7 @@ SESSION_FILE = f"{SESSION_DIR}/mm_session.pickle"
 
 
 class MonarchMoneyEndpoints(object):
-    BASE_URL = "https://api.monarchmoney.com"
+    BASE_URL = "https://api.monarch.com"
 
     @classmethod
     def getLoginEndpoint(cls) -> str:
@@ -86,6 +86,7 @@ class MonarchMoney(object):
 
     def set_token(self, token: str) -> None:
         self._token = token
+        self._headers["Authorization"] = f"Token {token}"
 
     async def interactive_login(
         self, use_saved_session: bool = True, save_session: bool = True
@@ -1142,10 +1143,6 @@ class MonarchMoney(object):
               }
               categoryGroups {
                 ...BudgetCategoryGroupFields
-                __typename
-              }
-              goalsV2 {
-                ...BudgetDataGoalsV2Fields
                 __typename
               }
             }
