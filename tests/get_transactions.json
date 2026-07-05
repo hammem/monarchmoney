@@ -1,0 +1,48 @@
+{
+  "allTransactions": {
+    "totalCount": 1,
+    "results": [
+      {
+        "id": "transaction_1",
+        "amount": -4.5,
+        "pending": false,
+        "date": "2026-07-04",
+        "hideFromReports": false,
+        "plaidName": "COFFEE SHOP",
+        "notes": "",
+        "isRecurring": false,
+        "reviewStatus": "reviewed",
+        "needsReview": false,
+        "attachments": [],
+        "isSplitTransaction": false,
+        "createdAt": "2026-07-04T12:00:00Z",
+        "updatedAt": "2026-07-04T12:00:00Z",
+        "category": {
+          "id": "category_1",
+          "name": "Coffee Shops",
+          "__typename": "TransactionCategory"
+        },
+        "merchant": {
+          "name": "Coffee Shop",
+          "id": "merchant_1",
+          "transactionsCount": 1,
+          "__typename": "Merchant"
+        },
+        "account": {
+          "id": "account_1",
+          "displayName": "Checking",
+          "__typename": "Account"
+        },
+        "tags": [],
+        "__typename": "Transaction"
+      }
+    ],
+    "__typename": "TransactionCollection"
+  },
+  "transactionRules": [
+    {
+      "id": "rule_1",
+      "__typename": "TransactionRule"
+    }
+  ]
+}

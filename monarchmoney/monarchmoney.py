@@ -1582,9 +1582,20 @@ class MonarchMoney(object):
                 "You must specify both a startDate and endDate, not just one of them."
             )
 
-        return await self.gql_call(
+        result = await self.gql_call(
             operation="GetTransactionsList", graphql_query=query, variables=variables
         )
+
+        all_transactions = result.get("allTransactions")
+        if isinstance(all_transactions, dict):
+            if "transactions" not in result and isinstance(
+                all_transactions.get("results"), list
+            ):
+                result["transactions"] = all_transactions["results"]
+            if "totalCount" not in result and "totalCount" in all_transactions:
+                result["totalCount"] = all_transactions["totalCount"]
+
+        return result
 
     async def create_transaction(
         self,
