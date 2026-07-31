@@ -69,6 +69,7 @@ class MonarchMoney(object):
 
         self._session_file = session_file
         self._token = token
+        self._cookie_session: Optional[Dict[str, str]] = None
         self._timeout = timeout
 
     @property
@@ -86,6 +87,57 @@ class MonarchMoney(object):
 
     def set_token(self, token: str) -> None:
         self._token = token
+
+    def set_cookie_session(
+        self,
+        cookie_header: str,
+        csrf_token: Optional[str] = None,
+        origin: str = "https://app.monarch.com",
+    ) -> None:
+        """
+        Authenticates with a browser cookie session instead of a token.
+
+        This is currently the only way in for Google/Apple SSO accounts (which
+        have no Monarch password) since the web app moved to session-cookie
+        authentication: copy the full `cookie:` request header from any
+        signed-in browser request to the GraphQL API (DevTools -> Network tab
+        -> click a `graphql` request -> Request Headers -> copy the cookie
+        line's value) and pass it here, then `save_session()` as usual.
+
+        :param cookie_header: the full Cookie header value the browser sends
+            to the API. A leading "Cookie:" prefix is tolerated and stripped.
+        :param csrf_token: the csrftoken cookie's value. Extracted from
+            cookie_header automatically when omitted. The API rejects
+            cookie-authenticated POSTs without a matching X-CSRFToken header
+            (Django CSRF protection), so this is required one way or the other.
+        :param origin: the web app origin, sent as Origin/Referer so the
+            CSRF origin check passes.
+        """
+        cookie_header = cookie_header.strip()
+        if cookie_header.lower().startswith("cookie:"):
+            cookie_header = cookie_header[len("cookie:") :].strip()
+        if csrf_token is None:
+            for part in cookie_header.split(";"):
+                name, _, value = part.strip().partition("=")
+                if name == "csrftoken":
+                    csrf_token = value.strip()
+                    break
+        if not cookie_header or not csrf_token:
+            raise LoginFailedException(
+                "Cookie session needs the full Cookie header including a "
+                "csrftoken cookie (or pass csrf_token explicitly)."
+            )
+        self._cookie_session = {
+            "cookie": cookie_header,
+            "csrf_token": csrf_token,
+            "origin": origin,
+        }
+        self._token = None
+        self._headers.pop("Authorization", None)
+        self._headers["Cookie"] = cookie_header
+        self._headers["X-CSRFToken"] = csrf_token
+        self._headers["Origin"] = origin
+        self._headers["Referer"] = origin + "/"
 
     async def interactive_login(
         self, use_saved_session: bool = True, save_session: bool = True
@@ -2808,6 +2860,8 @@ class MonarchMoney(object):
         filename = os.path.abspath(filename)
 
         session_data = {"token": self._token}
+        if self._cookie_session:
+            session_data["cookie_session"] = self._cookie_session
 
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, "wb") as fh:
@@ -2822,8 +2876,16 @@ class MonarchMoney(object):
 
         with open(filename, "rb") as fh:
             data = pickle.load(fh)
-            self.set_token(data["token"])
-            self._headers["Authorization"] = f"Token {self._token}"
+            cookie_session = data.get("cookie_session")
+            if cookie_session:
+                self.set_cookie_session(
+                    cookie_session["cookie"],
+                    cookie_session["csrf_token"],
+                    cookie_session["origin"],
+                )
+            else:
+                self.set_token(data["token"])
+                self._headers["Authorization"] = f"Token {self._token}"
 
     def delete_session(self, filename: Optional[str] = None) -> None:
         """

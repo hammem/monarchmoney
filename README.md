@@ -93,6 +93,35 @@ mm.load_session()
 await mm.get_accounts()
 ```
 
+# Use a Browser Cookie Session (Google / Apple SSO accounts)
+
+If your Monarch account signs in with Google or Apple SSO, there is no
+password for `login()` to use. The web app now authenticates with a Django
+session cookie + CSRF token, and this library can replay that session:
+
+1. Sign in to Monarch in your browser, open DevTools (F12) → **Network** tab,
+   and click any request named `graphql`.
+2. Under **Request Headers**, copy the full value of the `cookie:` header
+   (right-click → copy value — it is one long line containing your session
+   cookie and `csrftoken`).
+3. Hand it to the library; the CSRF token is extracted automatically:
+
+```python
+from monarchmoney import MonarchMoney
+
+mm = MonarchMoney()
+mm.set_cookie_session("<paste the cookie header here>")
+mm.save_session()   # cookie sessions persist/load like token sessions
+
+await mm.get_accounts()
+```
+
+Notes:
+- Close the browser tab rather than logging out — logging out invalidates
+  the session server-side. Re-copy the cookie when it eventually expires.
+- Cookie-authenticated POSTs are rejected without a matching `X-CSRFToken`
+  and `Origin` (Django CSRF); `set_cookie_session` sets these for you.
+
 # Accessing Data
 
 As of writing this README, the following methods are supported:

@@ -255,5 +255,58 @@ class TestMonarchMoney(unittest.IsolatedAsyncioTestCase):
         self.monarch_money.delete_session("temp_session.pickle")
 
 
+class TestCookieSession(unittest.TestCase):
+    """Tests for cookie-session authentication (SSO accounts)."""
+
+    COOKIE = "sessionid=abc123; csrftoken=csrf456; other=x"
+
+    def test_set_cookie_session_sets_headers(self):
+        mm = MonarchMoney(token="stale_token")
+        mm.set_cookie_session(self.COOKIE)
+        self.assertNotIn("Authorization", mm._headers)
+        self.assertEqual(mm._headers["Cookie"], self.COOKIE)
+        self.assertEqual(mm._headers["X-CSRFToken"], "csrf456")
+        self.assertEqual(mm._headers["Origin"], "https://app.monarch.com")
+        self.assertEqual(mm._headers["Referer"], "https://app.monarch.com/")
+
+    def test_cookie_prefix_is_stripped(self):
+        mm = MonarchMoney()
+        mm.set_cookie_session("Cookie: " + self.COOKIE)
+        self.assertEqual(mm._headers["Cookie"], self.COOKIE)
+
+    def test_explicit_csrf_token_wins(self):
+        mm = MonarchMoney()
+        mm.set_cookie_session("sessionid=abc123", csrf_token="explicit789")
+        self.assertEqual(mm._headers["X-CSRFToken"], "explicit789")
+
+    def test_missing_csrf_token_raises(self):
+        mm = MonarchMoney()
+        with self.assertRaises(LoginFailedException):
+            mm.set_cookie_session("sessionid=abc123")
+
+    def test_save_and_load_session_roundtrip(self):
+        mm = MonarchMoney()
+        mm.set_cookie_session(self.COOKIE)
+        mm.save_session("temp_cookie_session.pickle")
+        try:
+            mm2 = MonarchMoney()
+            mm2.load_session("temp_cookie_session.pickle")
+            self.assertEqual(mm2._headers["Cookie"], self.COOKIE)
+            self.assertEqual(mm2._headers["X-CSRFToken"], "csrf456")
+            self.assertNotIn("Authorization", mm2._headers)
+        finally:
+            os.remove("temp_cookie_session.pickle")
+
+    def test_token_sessions_still_load(self):
+        with open("temp_token_session.pickle", "wb") as fh:
+            pickle.dump({"token": "tok"}, fh)
+        try:
+            mm = MonarchMoney()
+            mm.load_session("temp_token_session.pickle")
+            self.assertEqual(mm._headers["Authorization"], "Token tok")
+        finally:
+            os.remove("temp_token_session.pickle")
+
+
 if __name__ == "__main__":
     unittest.main()
