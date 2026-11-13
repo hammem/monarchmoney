@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import json
 from gql import Client
-from monarchmoney import MonarchMoney
+from monarchmoney import MonarchMoney, MonarchMoneyEndpoints
 from monarchmoney.monarchmoney import LoginFailedException
 
 
@@ -240,6 +240,27 @@ class TestMonarchMoney(unittest.IsolatedAsyncioTestCase):
         """
         with self.assertRaises(LoginFailedException):
             await self.monarch_money.interactive_login(use_saved_session=False)
+
+    def test_endpoints(self):
+        """
+        Test that MonarchMoneyEndpoints point to https://api.monarch.com.
+        """
+        self.assertEqual(
+            MonarchMoneyEndpoints.BASE_URL,
+            "https://api.monarch.com",
+        )
+        self.assertEqual(
+            MonarchMoneyEndpoints.getLoginEndpoint(),
+            "https://api.monarch.com/auth/login/",
+        )
+        self.assertEqual(
+            MonarchMoneyEndpoints.getGraphQL(),
+            "https://api.monarch.com/graphql",
+        )
+        self.assertEqual(
+            MonarchMoneyEndpoints.getAccountBalanceHistoryUploadEndpoint(),
+            "https://api.monarch.com/account-balance-history/upload/",
+        )
 
     @classmethod
     def loadTestData(cls, filename) -> dict:

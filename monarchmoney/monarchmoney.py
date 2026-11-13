@@ -24,7 +24,7 @@ SESSION_FILE = f"{SESSION_DIR}/mm_session.pickle"
 
 
 class MonarchMoneyEndpoints(object):
-    BASE_URL = "https://api.monarchmoney.com"
+    BASE_URL = "https://api.monarch.com"
 
     @classmethod
     def getLoginEndpoint(cls) -> str:
